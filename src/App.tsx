@@ -22,6 +22,9 @@ import AdminVideosPage from './pages/admin/AdminVideosPage';
 import AdminABTestsPage from './pages/admin/AdminABTestsPage';
 import AdminABTestEditorPage from './pages/admin/AdminABTestEditorPage';
 import VideoLessonsPage from './pages/VideoLessonsPage';
+import SimulationConfigPage from './pages/SimulationConfigPage';
+import SimulationPage from './pages/SimulationPage';
+import SimulationResultPage from './pages/SimulationResultPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import { useAuthStore } from './stores/useAuthStore';
@@ -108,6 +111,22 @@ function App() {
           <Route path="/study-plan/setup" element={
             <ProtectedRoute>
               <StudyPlanSetupPage />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/simulation/config" element={
+            <ProtectedRoute>
+              <SimulationConfigPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/simulation/start" element={
+            <ProtectedRoute>
+              <SimulationPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/simulation/result" element={
+            <ProtectedRoute>
+              <SimulationResultPage />
             </ProtectedRoute>
           } />
           

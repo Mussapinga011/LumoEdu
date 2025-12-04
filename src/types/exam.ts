@@ -5,6 +5,8 @@ export interface Question {
   options: string[]; // [A, B, C, D]
   correctOption: string; // The value of the correct option
   explanation?: string;
+  disciplineId?: string;
+  difficulty?: number;
 }
 
 export interface Exam {

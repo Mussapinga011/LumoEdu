@@ -7,11 +7,15 @@ import { Timer, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import RichTextRenderer from '../components/RichTextRenderer';
 import { Timestamp } from 'firebase/firestore';
 import clsx from 'clsx';
+import { useModal } from '../hooks/useNotifications';
+import Modal from '../components/Modal';
+import { useABTest } from '../hooks/useABTest';
 
 const ChallengePage = () => {
   const { examId } = useParams();
   const navigate = useNavigate();
   const { user, updateUser } = useAuthStore();
+  const { modalState, showConfirm, closeModal } = useModal();
   
   const [exam, setExam] = useState<Exam | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -22,12 +26,35 @@ const ChallengePage = () => {
   const [timeLeft, setTimeLeft] = useState(90 * 30); // 90 minutes in seconds
   const [isFinished, setIsFinished] = useState(false);
   const [score, setScore] = useState(0);
+  const [limitReached, setLimitReached] = useState(false);
 
   useEffect(() => {
-    if (examId) {
+    if (examId && user) {
+      checkDailyLimit();
       fetchExamData(examId);
     }
-  }, [examId]);
+  }, [examId, user]);
+
+  const checkDailyLimit = () => {
+    if (!user) return;
+    
+    // Premium users bypass limits
+    if (user.isPremium) return;
+    
+    // Check if user already took a challenge today
+    if (user.lastChallengeDate) {
+      const lastChallengeDate = user.lastChallengeDate.toDate();
+      const today = new Date();
+      
+      if (
+        lastChallengeDate.getDate() === today.getDate() &&
+        lastChallengeDate.getMonth() === today.getMonth() &&
+        lastChallengeDate.getFullYear() === today.getFullYear()
+      ) {
+        setLimitReached(true);
+      }
+    }
+  };
 
   useEffect(() => {
     if (!loading && !isFinished && timeLeft > 0) {
@@ -116,9 +143,102 @@ const ChallengePage = () => {
 
     updateUser(updates);
   };
+  const { content: abTestContent, trackClick: trackABClick } = useABTest('challenge_limit_screen');
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Carregando desafio...</div>;
+  }
+
+  if (limitReached) {
+    // Se houver teste A/B ativo, usar conteúdo do teste
+    if (abTestContent) {
+      const buttonColorClass = {
+        yellow: 'bg-yellow-500 hover:bg-yellow-600',
+        green: 'bg-green-500 hover:bg-green-600',
+        blue: 'bg-blue-500 hover:bg-blue-600',
+        red: 'bg-red-500 hover:bg-red-600'
+      }[abTestContent.buttonColor || 'yellow'];
+
+      return (
+        <div className="max-w-2xl mx-auto p-8">
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center space-y-6">
+            {abTestContent.emoji && (
+              <div className="text-6xl">{abTestContent.emoji}</div>
+            )}
+            <h2 className="text-2xl font-bold text-gray-800">{abTestContent.title}</h2>
+            <p className="text-gray-600">{abTestContent.message}</p>
+            
+            {abTestContent.extraInfo && (
+              <p className="text-xl font-bold text-yellow-600">{abTestContent.extraInfo}</p>
+            )}
+            
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
+              <h3 className="font-bold text-yellow-800 mb-2">Com Premium você tem:</h3>
+              <ul className="text-left text-sm text-yellow-700 space-y-1">
+                <li>✓ Desafios ilimitados por dia</li>
+                <li>✓ Acesso ao Modo Aprender</li>
+                <li>✓ Estatísticas detalhadas</li>
+                <li>✓ Sem anúncios</li>
+              </ul>
+            </div>
+            
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => navigate('/challenge')}
+                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-colors"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={async () => {
+                  await trackABClick();
+                  navigate('/profile');
+                }}
+                className={`px-6 py-3 text-white rounded-xl font-bold transition-colors ${buttonColorClass}`}
+              >
+                {abTestContent.buttonText}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Fallback: Tela padrão se não houver teste ativo
+    return (
+      <div className="max-w-2xl mx-auto p-8">
+        <div className="bg-white rounded-2xl shadow-lg p-8 text-center space-y-6">
+          <div className="text-6xl">🚫</div>
+          <h2 className="text-2xl font-bold text-gray-800">Limite Diário Atingido</h2>
+          <p className="text-gray-600">
+            Você já completou um desafio hoje. Volte amanhã ou atualize para Premium para desafios ilimitados!
+          </p>
+          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
+            <h3 className="font-bold text-yellow-800 mb-2">Com Premium você tem:</h3>
+            <ul className="text-left text-sm text-yellow-700 space-y-1">
+              <li>✓ Desafios ilimitados por dia</li>
+              <li>✓ Acesso ao Modo Aprender</li>
+              <li>✓ Estatísticas detalhadas</li>
+              <li>✓ Sem anúncios</li>
+            </ul>
+          </div>
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={() => navigate('/challenge')}
+              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-colors"
+            >
+              Voltar
+            </button>
+            <button
+              onClick={() => navigate('/profile')}
+              className="px-6 py-3 bg-yellow-500 text-white rounded-xl font-bold hover:bg-yellow-600 transition-colors"
+            >
+              ⭐ Atualizar para Premium
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!exam) {
@@ -337,9 +457,13 @@ const ChallengePage = () => {
           <div className="mt-auto">
             <button
               onClick={() => {
-                if (window.confirm("Tem certeza que deseja finalizar o desafio?")) {
-                  handleSubmit();
-                }
+                showConfirm(
+                  'Finalizar Desafio',
+                  'Tem certeza que deseja finalizar o desafio? Você não poderá mais alterar suas respostas.',
+                  handleSubmit,
+                  'Finalizar',
+                  'Continuar'
+                );
               }}
               className="w-full bg-primary text-white py-3 rounded-xl font-bold hover:bg-primary-hover transition-colors"
             >
@@ -361,9 +485,13 @@ const ChallengePage = () => {
         
         <button
           onClick={() => {
-            if (window.confirm("Tem certeza que deseja finalizar o desafio?")) {
-              handleSubmit();
-            }
+            showConfirm(
+              'Finalizar Desafio',
+              'Tem certeza que deseja finalizar o desafio?',
+              handleSubmit,
+              'Finalizar',
+              'Continuar'
+            );
           }}
           className="bg-primary text-white px-6 py-2 rounded-lg font-bold text-sm"
         >
@@ -378,6 +506,19 @@ const ChallengePage = () => {
           <ChevronRight size={24} />
         </button>
       </div>
+
+      {/* Modal */}
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        onConfirm={modalState.onConfirm}
+        title={modalState.title}
+        message={modalState.message}
+        type={modalState.type}
+        confirmText={modalState.confirmText}
+        cancelText={modalState.cancelText}
+        showCancel={modalState.showCancel}
+      />
     </div>
   );
 };

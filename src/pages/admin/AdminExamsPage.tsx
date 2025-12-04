@@ -4,6 +4,10 @@ import { getAllExams, deleteExam } from '../../services/dbService';
 import { Exam } from '../../types/exam';
 import { Plus, Edit, Trash2, Search } from 'lucide-react';
 import { useContentStore } from '../../stores/useContentStore';
+import { useModal, useToast } from '../../hooks/useNotifications';
+import Modal from '../../components/Modal';
+import Toast from '../../components/Toast';
+import { getErrorMessage } from '../../utils/errorMessages';
 
 const AdminExamsPage = () => {
   const [exams, setExams] = useState<Exam[]>([]);
@@ -12,6 +16,9 @@ const AdminExamsPage = () => {
   const [selectedDiscipline, setSelectedDiscipline] = useState<string>('all');
   const navigate = useNavigate();
   const { disciplines } = useContentStore();
+  const { modalState, showConfirm, closeModal } = useModal();
+  const { toastState, showSuccess, showError, closeToast } = useToast();
+  const [examToDelete, setExamToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     fetchExams();
@@ -24,20 +31,31 @@ const AdminExamsPage = () => {
       setExams(data);
     } catch (error) {
       console.error("Error fetching exams:", error);
+      showError(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este exame? Esta ação não pode ser desfeita.')) {
-      try {
-        await deleteExam(id);
-        setExams(exams.filter(e => e.id !== id));
-      } catch (error) {
-        console.error("Error deleting exam:", error);
-        alert("Falha ao excluir exame");
-      }
+  const handleDeleteClick = (id: string) => {
+    setExamToDelete(id);
+    showConfirm(
+      'Excluir Exame',
+      'Tem certeza que deseja excluir este exame? Esta ação não pode ser desfeita.',
+      () => handleDeleteConfirm(id),
+      'Excluir',
+      'Cancelar'
+    );
+  };
+
+  const handleDeleteConfirm = async (id: string) => {
+    try {
+      await deleteExam(id);
+      setExams(exams.filter(e => e.id !== id));
+      showSuccess('Exame excluído com sucesso!');
+    } catch (error) {
+      console.error("Error deleting exam:", error);
+      showError(getErrorMessage(error));
     }
   };
 
@@ -127,7 +145,7 @@ const AdminExamsPage = () => {
                         <Edit size={18} />
                       </button>
                       <button
-                        onClick={() => handleDelete(exam.id)}
+                        onClick={() => handleDeleteClick(exam.id)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Excluir"
                       >
@@ -141,6 +159,28 @@ const AdminExamsPage = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Modal */}
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        onConfirm={modalState.onConfirm}
+        title={modalState.title}
+        message={modalState.message}
+        type={modalState.type}
+        confirmText={modalState.confirmText}
+        cancelText={modalState.cancelText}
+        showCancel={modalState.showCancel}
+      />
+
+      {/* Toast */}
+      {toastState.isOpen && (
+        <Toast
+          message={toastState.message}
+          type={toastState.type}
+          onClose={closeToast}
+        />
+      )}
     </div>
   );
 };

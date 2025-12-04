@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContentStore } from '../stores/useContentStore';
+import { useAuthStore } from '../stores/useAuthStore';
 import { ArrowRight } from 'lucide-react';
 import clsx from 'clsx';
 
 const DisciplinesPage = () => {
   const { disciplines, fetchDisciplines, loading } = useContentStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
   const [selectedUniversity, setSelectedUniversity] = useState<'UEM' | 'UP'>('UEM');
 
@@ -34,10 +36,10 @@ const DisciplinesPage = () => {
       <div className="p-6">
         <h2 className="text-xl font-bold text-gray-800 mb-2">{discipline.title}</h2>
         <p className="text-gray-500 text-sm mb-4">
-          Access past exams and practice questions for {discipline.title}.
+          Aceda a exames anteriores e questões de prática para {discipline.title}.
         </p>
         <div className="flex items-center text-secondary font-bold text-sm uppercase tracking-wide">
-          View Exams <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
+          Ver Exames <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
         </div>
       </div>
     </button>
@@ -46,7 +48,7 @@ const DisciplinesPage = () => {
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold text-gray-800">Choose a Discipline</h1>
+        <h1 className="text-3xl font-bold text-gray-800">Escolha uma Disciplina</h1>
         
         {/* University Tabs */}
         <div className="bg-gray-100 p-1 rounded-xl inline-flex">
@@ -75,6 +77,28 @@ const DisciplinesPage = () => {
         </div>
       </div>
 
+      {/* Premium Feature Banner for Free Users */}
+      {user && !user.isPremium && (
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-yellow-800 mb-1">
+                ⭐ Modo Aprender - Exclusivo Premium
+              </h3>
+              <p className="text-sm text-yellow-700">
+                Atualize para Premium para ter acesso ilimitado ao modo de estudo com explicações detalhadas!
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/profile')}
+              className="px-4 py-2 bg-yellow-500 text-white rounded-lg font-bold hover:bg-yellow-600 transition-colors text-sm whitespace-nowrap"
+            >
+              ⭐ Atualizar
+            </button>
+          </div>
+        </div>
+      )}
+
       <div>
         <h2 className="text-xl font-bold text-gray-700 mb-6">
           {selectedUniversity === 'UEM' ? 'Universidade Eduardo Mondlane' : 'Universidade Pedagógica'}
@@ -88,7 +112,7 @@ const DisciplinesPage = () => {
           </div>
         ) : (
           <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-            <p className="text-gray-500">No disciplines found for this university.</p>
+            <p className="text-gray-500">Nenhuma disciplina encontrada para esta universidade.</p>
           </div>
         )}
       </div>

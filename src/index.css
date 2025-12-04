@@ -1,3 +1,79 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    /* Cores sincronizadas com o ícone */
+    --color-primary: 99 102 241; /* #6366F1 em RGB */
+    --color-primary-hover: 79 70 229; /* #4F46E5 em RGB */
+    --color-secondary: 139 92 246; /* #8B5CF6 em RGB */
+    --color-accent: 236 72 153; /* #EC4899 em RGB */
+    
+    /* Gradientes baseados no ícone */
+    --gradient-primary: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+    --gradient-accent: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+  }
+  
+  body {
+    @apply font-sans antialiased;
+  }
+}
+
+@layer components {
+  /* Botão com efeito 3D sincronizado com as cores do ícone */
+  .btn-primary-3d {
+    @apply bg-primary hover:bg-primary-hover text-white font-bold py-3 px-8 rounded-xl;
+    box-shadow: 0 4px 0 0 theme('colors.primary.shade');
+    transition: all 0.1s ease;
+  }
+  
+  .btn-primary-3d:active {
+    box-shadow: none;
+    transform: translateY(4px);
+  }
+}
+
+/* Animations for Modal and Toast */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s ease-out;
+}

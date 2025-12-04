@@ -8,11 +8,17 @@ import { useOffline } from '../hooks/useOffline';
 import { Timer, ChevronLeft, ChevronRight, Flag, WifiOff } from 'lucide-react';
 import RichTextRenderer from '../components/RichTextRenderer';
 import clsx from 'clsx';
+import { useModal, useToast } from '../hooks/useNotifications';
+import Modal from '../components/Modal';
+import Toast from '../components/Toast';
+import { getErrorMessage } from '../utils/errorMessages';
 
 const SimulationPage = () => {
   const { examId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { modalState, showConfirm, closeModal, showError: showErrorModal } = useModal();
+  const { toastState, showError, closeToast } = useToast();
   
   const [exam, setExam] = useState<Exam | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -69,13 +75,13 @@ const SimulationPage = () => {
           setQuestions(offlineData.questions);
           setIsOfflineMode(true);
         } else {
-          throw new Error('Exam not available offline');
+          throw new Error('Exame não disponível offline');
         }
       }
     } catch (error) {
       console.error("Error fetching exam:", error);
-      alert('Erro ao carregar exame. Certifique-se de que está online ou que baixou este exame.');
-      navigate(-1);
+      showError(getErrorMessage(error));
+      setTimeout(() => navigate(-1), 2000);
     } finally {
       setLoading(false);
     }
@@ -305,9 +311,13 @@ const SimulationPage = () => {
           <div className="mt-auto">
             <button
               onClick={() => {
-                if (window.confirm("Tem certeza que deseja finalizar o simulado?")) {
-                  handleSubmit();
-                }
+                showConfirm(
+                  'Finalizar Simulado',
+                  'Tem certeza que deseja finalizar o simulado? Você não poderá mais alterar suas respostas.',
+                  handleSubmit,
+                  'Finalizar',
+                  'Continuar'
+                );
               }}
               className="w-full bg-primary text-white py-3 rounded-xl font-bold hover:bg-primary-hover transition-colors"
             >
@@ -329,9 +339,13 @@ const SimulationPage = () => {
         
         <button
           onClick={() => {
-            if (window.confirm("Tem certeza que deseja finalizar o simulado?")) {
-              handleSubmit();
-            }
+            showConfirm(
+              'Finalizar Simulado',
+              'Tem certeza que deseja finalizar o simulado?',
+              handleSubmit,
+              'Finalizar',
+              'Continuar'
+            );
           }}
           className="bg-primary text-white px-6 py-2 rounded-lg font-bold text-sm"
         >
@@ -346,6 +360,28 @@ const SimulationPage = () => {
           <ChevronRight size={24} />
         </button>
       </div>
+
+      {/* Modal */}
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        onConfirm={modalState.onConfirm}
+        title={modalState.title}
+        message={modalState.message}
+        type={modalState.type}
+        confirmText={modalState.confirmText}
+        cancelText={modalState.cancelText}
+        showCancel={modalState.showCancel}
+      />
+
+      {/* Toast */}
+      {toastState.isOpen && (
+        <Toast
+          message={toastState.message}
+          type={toastState.type}
+          onClose={closeToast}
+        />
+      )}
     </div>
   );
 };

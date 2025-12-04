@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signInWithEmail } from '../services/authService';
 import { useAuthStore } from '../stores/useAuthStore';
+import { getErrorMessage } from '../utils/errorMessages';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -24,7 +25,7 @@ const LoginPage = () => {
         navigate('/disciplines');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to login');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -33,7 +34,7 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Login</h2>
+        <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Entrar</h2>
         {error && <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -47,7 +48,7 @@ const LoginPage = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-700 mb-2">Password</label>
+            <label className="block text-gray-700 mb-2">Senha</label>
             <input
               type="password"
               value={password}
@@ -60,14 +61,14 @@ const LoginPage = () => {
             type="submit"
             className="w-full bg-secondary hover:bg-secondary-hover text-white font-bold py-3 rounded-xl transition-colors shadow-[0_4px_0_0_#1899d6] active:shadow-none active:translate-y-[4px]"
           >
-            LOGIN
+            ENTRAR
           </button>
         </form>
         <div className="mt-6 text-center">
           <p className="text-gray-600">
-            Don't have an account?{' '}
+            Não tem uma conta?{' '}
             <Link to="/register" className="text-secondary font-bold hover:underline">
-              Sign up
+              Registar
             </Link>
           </p>
         </div>

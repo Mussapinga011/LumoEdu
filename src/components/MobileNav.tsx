@@ -29,7 +29,7 @@ const MobileNav = ({ navItems, isAdmin = false }: MobileNavProps) => {
         isAdmin ? "bg-gray-900 border-gray-800 text-white" : "bg-white border-gray-200"
       )}>
         <div className="font-bold text-xl">
-          {isAdmin ? 'Admin Panel' : 'AdmissionPrep'}
+          {isAdmin ? 'Painel Admin' : 'AdmissionPrep'}
         </div>
         <button 
           onClick={toggleMenu}
@@ -78,7 +78,7 @@ const MobileNav = ({ navItems, isAdmin = false }: MobileNavProps) => {
                 )}
               >
                 <LogOut size={24} />
-                {isAdmin ? 'Sair' : 'Logout'}
+                Sair
               </button>
             </div>
           </nav>

@@ -115,7 +115,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <h2 className="text-xl font-bold text-gray-800">Management</h2>
+      <h2 className="text-xl font-bold text-gray-800">Gestão</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         <button
           onClick={() => navigate('/admin/exams')}
@@ -124,8 +124,8 @@ const AdminDashboard = () => {
           <div className="p-4 bg-purple-100 text-purple-600 rounded-xl w-fit mb-4 group-hover:scale-110 transition-transform">
             <FileText size={32} />
           </div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">Manage Exams</h3>
-          <p className="text-gray-500">Create, edit, and delete exams and questions.</p>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">Gerenciar Exames</h3>
+          <p className="text-gray-500">Criar, editar e excluir exames e questões.</p>
         </button>
 
         <button
@@ -135,8 +135,8 @@ const AdminDashboard = () => {
           <div className="p-4 bg-blue-100 text-blue-600 rounded-xl w-fit mb-4 group-hover:scale-110 transition-transform">
             <Users size={32} />
           </div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">Manage Users</h3>
-          <p className="text-gray-500">View users, manage roles and permissions.</p>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">Gerenciar Usuários</h3>
+          <p className="text-gray-500">Ver usuários, gerenciar papéis e permissões.</p>
         </button>
       </div>
     </div>

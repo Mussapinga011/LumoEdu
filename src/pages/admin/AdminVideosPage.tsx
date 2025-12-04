@@ -3,11 +3,17 @@ import { createVideoLesson, deleteVideoLesson, getVideoLessons } from '../../ser
 import { VideoLesson } from '../../types/video';
 import { Plus, Trash2, RefreshCw } from 'lucide-react';
 import { extractYoutubeId, getYoutubeThumbnail } from '../../lib/youtubeUtils';
+import { useModal, useToast } from '../../hooks/useNotifications';
+import Modal from '../../components/Modal';
+import Toast from '../../components/Toast';
+import { getErrorMessage } from '../../utils/errorMessages';
 
 const AdminVideosPage = () => {
   const [videos, setVideos] = useState<VideoLesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const { modalState, showConfirm, closeModal } = useModal();
+  const { toastState, showSuccess, showError, showWarning, closeToast } = useToast();
   
   // Form State
   const [title, setTitle] = useState('');
@@ -68,24 +74,32 @@ const AdminVideosPage = () => {
       
       // Refresh list
       await fetchVideos();
+      showSuccess('Aula adicionada com sucesso!');
     } catch (error) {
       console.error("Error creating video:", error);
-      alert("Erro ao adicionar video");
+      showError(getErrorMessage(error));
     } finally {
       setIsCreating(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir este vídeo?')) return;
-    
-    try {
-      await deleteVideoLesson(id);
-      setVideos(videos.filter(v => v.id !== id));
-    } catch (error) {
-      console.error("Error deleting video:", error);
-      alert("Erro ao excluir video");
-    }
+    showConfirm(
+      'Excluir Aula',
+      'Tem certeza que deseja excluir esta aula? Esta ação não pode ser desfeita.',
+      async () => {
+        try {
+          await deleteVideoLesson(id);
+          setVideos(videos.filter(v => v.id !== id));
+          showSuccess('Aula excluída com sucesso!');
+        } catch (error) {
+          console.error("Error deleting video:", error);
+          showError(getErrorMessage(error));
+        }
+      },
+      'Excluir',
+      'Cancelar'
+    );
   };
 
   return (
@@ -254,6 +268,28 @@ const AdminVideosPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal */}
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        onConfirm={modalState.onConfirm}
+        title={modalState.title}
+        message={modalState.message}
+        type={modalState.type}
+        confirmText={modalState.confirmText}
+        cancelText={modalState.cancelText}
+        showCancel={modalState.showCancel}
+      />
+
+      {/* Toast */}
+      {toastState.isOpen && (
+        <Toast
+          message={toastState.message}
+          type={toastState.type}
+          onClose={closeToast}
+        />
+      )}
     </div>
   );
 };

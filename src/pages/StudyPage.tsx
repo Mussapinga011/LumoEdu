@@ -34,21 +34,10 @@ const StudyPage = () => {
   const checkDailyLimit = () => {
     if (!user) return;
     
-    // Premium users bypass limits
-    if (user.isPremium) return;
-    
-    // Check if user already took an exam today
-    if (user.lastExamDate) {
-      const lastExamDate = user.lastExamDate.toDate();
-      const today = new Date();
-      
-      if (
-        lastExamDate.getDate() === today.getDate() &&
-        lastExamDate.getMonth() === today.getMonth() &&
-        lastExamDate.getFullYear() === today.getFullYear()
-      ) {
-        setLimitReached(true);
-      }
+    // Free users cannot access Study mode (Aprender)
+    if (!user.isPremium) {
+      setLimitReached(true);
+      return;
     }
   };
 
@@ -108,7 +97,7 @@ const StudyPage = () => {
         // Record Activity
         await addUserActivity(user.uid, {
           type: 'exam',
-          title: `Completed Exam: ${exam?.name || 'Exam'}`,
+          title: `Exame Concluído: ${exam?.name || 'Exame'}`,
           timestamp: Timestamp.now(),
           score: grade,
           xpEarned: 50
@@ -138,23 +127,32 @@ const StudyPage = () => {
     return (
       <div className="max-w-2xl mx-auto p-8">
         <div className="bg-white rounded-2xl shadow-lg p-8 text-center space-y-6">
-          <div className="text-6xl">🚫</div>
-          <h2 className="text-2xl font-bold text-gray-800">Daily Limit Reached</h2>
+          <div className="text-6xl">⭐</div>
+          <h2 className="text-2xl font-bold text-gray-800">Modo Aprender - Premium</h2>
           <p className="text-gray-600">
-            You've already completed an exam today. Come back tomorrow or upgrade to Premium for unlimited access!
+            O modo Aprender é exclusivo para usuários Premium. Atualize sua conta para ter acesso ilimitado a todos os recursos de estudo!
           </p>
+          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
+            <h3 className="font-bold text-yellow-800 mb-2">Benefícios Premium:</h3>
+            <ul className="text-left text-sm text-yellow-700 space-y-1">
+              <li>✓ Acesso ilimitado ao Modo Aprender</li>
+              <li>✓ Desafios ilimitados por dia</li>
+              <li>✓ Explicações detalhadas de todas as questões</li>
+              <li>✓ Estatísticas avançadas de desempenho</li>
+            </ul>
+          </div>
           <div className="flex gap-4 justify-center">
             <button
               onClick={() => navigate('/disciplines')}
               className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-colors"
             >
-              Back to Disciplines
+              Voltar às Disciplinas
             </button>
             <button
               onClick={() => navigate('/profile')}
               className="px-6 py-3 bg-yellow-500 text-white rounded-xl font-bold hover:bg-yellow-600 transition-colors"
             >
-              ⭐ Upgrade to Premium
+              ⭐ Atualizar para Premium
             </button>
           </div>
         </div>
@@ -351,17 +349,17 @@ const StudyPage = () => {
                 </div>
                 <div>
                   <h3 className={clsx("font-bold text-lg mb-1", status === 'correct' ? "text-green-800" : "text-red-800")}>
-                    {status === 'correct' ? 'Excellent!' : 'Incorrect'}
+                    {status === 'correct' ? 'Excelente!' : 'Incorreto'}
                   </h3>
                   {status === 'incorrect' && (
                     <div className="text-red-600 mb-2">
-                      <span className="font-bold">Correct answer: </span>
+                      <span className="font-bold">Resposta correta: </span>
                       <RichTextRenderer content={currentQuestion.correctOption} />
                     </div>
                   )}
                   {currentQuestion.explanation && (
                     <div className="text-gray-600 text-sm bg-white/50 p-3 rounded-lg mt-2">
-                      <span className="font-bold block mb-1">Explanation:</span>
+                      <span className="font-bold block mb-1">Explicação:</span>
                       <RichTextRenderer content={currentQuestion.explanation} />
                     </div>
                   )}
@@ -373,7 +371,7 @@ const StudyPage = () => {
                     status === 'correct' ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
                   )}
                 >
-                  Continue
+                  Continuar
                 </button>
               </div>
             )}
@@ -414,7 +412,7 @@ const StudyPage = () => {
                   selectedOption ? "bg-primary hover:bg-primary-hover shadow-primary-shade" : "bg-gray-300 cursor-not-allowed"
                 )}
               >
-                Check
+                Verificar
               </button>
             )}
           </div>
@@ -432,7 +430,7 @@ const StudyPage = () => {
                 selectedOption ? "bg-primary hover:bg-primary-hover shadow-primary-shade" : "bg-gray-300 cursor-not-allowed"
               )}
             >
-              Check
+              Verificar
             </button>
           ) : (
              <button
@@ -442,7 +440,7 @@ const StudyPage = () => {
                   status === 'correct' ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
                 )}
               >
-                Continue
+                Continuar
               </button>
           )}
       </div>

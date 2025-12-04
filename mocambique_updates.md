@@ -52,23 +52,7 @@
 
 ---
 
-### 3. Conteúdo Localizado
 
-#### Exames do SNE (Sistema Nacional de Educação)
-- **Prioridade**: 🔴 Alta
-- **Descrição**: Adicionar exames de admissão específicos de Moçambique
-- **Conteúdo**:
-  - Exames de admissão da UEM (Universidade Eduardo Mondlane)
-  - Exames da UP (Universidade Pedagógica)
-  - Simulados baseados no currículo moçambicano
-
-#### Disciplinas Adicionais
-- **Prioridade**: 🟡 Média
-- **Novas Disciplinas**:
-  - **Educação Moral e Cívica**
-  - **Noções de Empreendedorismo**
-  - **Agro-Pecuária** (para cursos técnicos)
-  - **Informática Básica**
 
 #### Conteúdo em Português de Moçambique
 - **Prioridade**: 🟢 Baixa
@@ -81,17 +65,6 @@
 
 ---
 
-### 4. Otimização de Dados
-
-#### Compressão de Imagens
-- **Prioridade**: 🟡 Média
-- **Descrição**: Reduzir tamanho de imagens e recursos
-- **Justificativa**: Dados móveis caros em Moçambique
-- **Implementação**:
-  - Formato WebP para imagens
-  - Lazy loading
-  - Opção "Modo Economia de Dados"
-
 #### Modo Lite
 - **Prioridade**: 🟡 Média
 - **Descrição**: Versão simplificada da interface
@@ -103,77 +76,7 @@
 
 ---
 
-### 5. Funcionalidades Educacionais
 
-#### Grupos de Estudo
-- **Prioridade**: 🟡 Média
-- **Descrição**: Criar grupos de estudo colaborativos
-- **Funcionalidades**:
-  - Criar/juntar grupos por escola ou região
-  - Chat de grupo (texto apenas para economizar dados)
-  - Desafios entre grupos
-  - Ranking de grupos
-  - Partilha de dúvidas e respostas
-
-#### Mentoria
-- **Prioridade**: 🟢 Baixa
-- **Descrição**: Conectar estudantes com mentores
-- **Implementação**:
-  - Estudantes universitários como mentores voluntários
-  - Sessões de Q&A agendadas
-  - Sistema de reputação para mentores
-
-#### Simulados Completos
-- **Prioridade**: 🔴 Alta
-- **Descrição**: Simulados completos de exames de admissão
-- **Características**:
-  - Formato idêntico ao exame real
-  - Tempo real de prova (3-4 horas)
-  - Correção automática
-  - Relatório detalhado de desempenho
-  - Sugestões de áreas a melhorar
-
----
-
-### 6. Gamificação Localizada
-
-#### Ranking por Província
-- **Prioridade**: 🟡 Média
-- **Descrição**: Rankings regionais além do nacional
-- **Províncias**:
-  - Maputo Cidade, Maputo Província, Gaza, Inhambane
-  - Sofala, Manica, Tete, Zambézia
-  - Nampula, Niassa, Cabo Delgado
-- **Benefício**: Competição mais justa e motivadora
-
-#### Badges Culturais
-- **Prioridade**: 🟢 Baixa
-- **Exemplos**:
-  - 🦁 "Leão de Maputo" - Top 1 em Maputo
-  - 🌊 "Guardião do Índico" - Domínio em Geografia
-  - 🎓 "Futuro Doutor" - 100 exames completados
-  - 🇲🇿 "Orgulho Nacional" - Top 10 nacional
-
-#### Eventos Especiais
-- **Prioridade**: 🟢 Baixa
-- **Descrição**: Competições e eventos temáticos
-- **Exemplos**:
-  - "Semana da Independência" - Desafios especiais
-  - "Maratona de Estudos" - Eventos mensais
-  - Prêmios para vencedores (bolsas de estudo, livros, etc.)
-
----
-
-### 7. Acessibilidade e Inclusão
-
-#### Suporte para Baixa Literacia Digital
-- **Prioridade**: 🟡 Média
-- **Descrição**: Interface mais intuitiva para iniciantes
-- **Funcionalidades**:
-  - Tutorial interativo na primeira utilização
-  - Dicas contextuais
-  - Vídeos explicativos curtos
-  - Suporte por WhatsApp
 
 #### Múltiplos Idiomas
 - **Prioridade**: 🟢 Baixa
@@ -297,51 +200,3 @@
 3. ✅ Múltiplos idiomas
 4. ✅ Dashboard para pais
 5. ✅ Eventos especiais
-
----
-
-## 💡 Considerações Técnicas
-
-### Infraestrutura
-- **Hosting**: Considerar servidores locais ou africanos para menor latência
-- **CDN**: Cloudflare com cache agressivo
-- **Database**: Otimizar queries para conexões lentas
-- **API**: Implementar rate limiting e caching
-
-### Segurança
-- **Pagamentos**: Certificação PCI-DSS
-- **Dados**: GDPR compliance (mesmo em Moçambique)
-- **Backup**: Redundância de dados
-- **Autenticação**: 2FA opcional
-
-### Monitoramento
-- **Performance**: Google Analytics, Sentry
-- **Uso de Dados**: Monitorar consumo médio
-- **Feedback**: Sistema de avaliação e sugestões
-- **A/B Testing**: Testar features antes de lançar
-
----
-
-## 🎯 Impacto Esperado
-
-### Social
-- Democratização do acesso à educação de qualidade
-- Redução da desigualdade educacional entre regiões
-- Preparação mais eficaz para exames de admissão
-- Aumento de aprovações em universidades
-
-### Económico
-- Modelo de negócio sustentável
-- Geração de emprego (professores, moderadores)
-- Redução de custos com explicações presenciais
-- Escalabilidade para outros países da CPLP
-
-### Educacional
-- Melhoria da qualidade de ensino
-- Identificação de lacunas no sistema educacional
-- Dados para políticas públicas
-- Cultura de estudo autónomo
-
----
-
-**Nota Final**: Estas sugestões devem ser validadas com pesquisa de mercado, feedback de utilizadores moçambicanos, e análise de viabilidade técnica e financeira. A priorização pode ser ajustada conforme recursos disponíveis e feedback da comunidade.

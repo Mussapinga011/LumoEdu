@@ -3,14 +3,12 @@ import {
   signInWithEmailAndPassword, 
   signOut as firebaseSignOut,
   onAuthStateChanged,
-  User,
   updateProfile
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { useAuthStore } from '../stores/useAuthStore';
 import { createUserProfile, getUserProfile } from './dbService';
 import { UserProfile } from '../types/user';
-import { Timestamp } from 'firebase/firestore';
 
 export const signUpWithEmail = async (email: string, password: string, name: string) => {
   try {
@@ -29,7 +27,13 @@ export const signUpWithEmail = async (email: string, password: string, name: str
       level: 1,
       streak: 0,
       lastStudyDate: null,
-      dailyExercisesCount: 0
+      lastExamDate: null,
+      lastChallengeDate: null,
+      dailyExercisesCount: 0,
+      examsCompleted: 0,
+      challengesCompleted: 0,
+      averageGrade: 0,
+      score: 0
     };
 
     await createUserProfile(newUser);

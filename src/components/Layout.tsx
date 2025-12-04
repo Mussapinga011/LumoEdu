@@ -16,12 +16,12 @@ const Layout = () => {
   const location = useLocation();
 
   const navItems = [
-    { name: 'Learn', path: '/disciplines', icon: BookOpen },
+    { name: 'Aprender', path: '/disciplines', icon: BookOpen },
     { name: 'Aulas', path: '/lessons', icon: Video },
-    { name: 'Challenge', path: '/challenge', icon: Zap },
+    { name: 'Desafio', path: '/challenge', icon: Zap },
     { name: 'Ranking', path: '/ranking', icon: Trophy },
     { name: 'Downloads', path: '/downloads', icon: Download },
-    { name: 'Profile', path: '/profile', icon: User },
+    { name: 'Perfil', path: '/profile', icon: User },
   ];
 
 
@@ -61,7 +61,7 @@ const Layout = () => {
             className="flex items-center gap-4 px-4 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 w-full uppercase tracking-wide text-sm"
           >
             <LogOut size={24} />
-            Logout
+            Sair
           </button>
         </div>
       </aside>

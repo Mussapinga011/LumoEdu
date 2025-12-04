@@ -1,25 +1,62 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signUpWithEmail } from '../services/authService';
+import { checkDisplayNameExists } from '../services/dbService';
 import { useAuthStore } from '../stores/useAuthStore';
+import { getErrorMessage } from '../utils/errorMessages';
 
 const RegisterPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [nameError, setNameError] = useState('');
+  const [isCheckingName, setIsCheckingName] = useState(false);
   const navigate = useNavigate();
   const { setLoading } = useAuthStore();
+
+  // Validate name uniqueness in real-time
+  const handleNameChange = async (value: string) => {
+    setName(value);
+    setNameError('');
+
+    // Only validate if name has at least 3 characters
+    if (value.length >= 3) {
+      setIsCheckingName(true);
+      try {
+        const exists = await checkDisplayNameExists(value);
+        if (exists) {
+          setNameError('Este nome já está em uso. Por favor, escolha outro nome.');
+        }
+      } catch (err) {
+        console.error('Error checking name:', err);
+      } finally {
+        setIsCheckingName(false);
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    // Validate name before submission
+    if (name.length < 3) {
+      setError('O nome deve ter pelo menos 3 caracteres');
+      return;
+    }
+
+    if (nameError) {
+      setError('Por favor, escolha um nome diferente');
+      return;
+    }
+
     setLoading(true);
     try {
       await signUpWithEmail(email, password, name);
       navigate('/disciplines');
     } catch (err: any) {
-      setError(err.message || 'Failed to register');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -28,18 +65,35 @@ const RegisterPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Create Account</h2>
+        <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Criar Conta</h2>
         {error && <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-gray-700 mb-2">Name</label>
+            <label className="block text-gray-700 mb-2">Nome</label>
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+              onChange={(e) => handleNameChange(e.target.value)}
+              className={`w-full p-3 border rounded-xl focus:outline-none focus:ring-2 ${
+                nameError 
+                  ? 'border-red-500 focus:ring-red-500' 
+                  : name.length >= 3 && !isCheckingName
+                  ? 'border-green-500 focus:ring-green-500'
+                  : 'border-gray-300 focus:ring-primary'
+              }`}
+              placeholder="Escolha um nome único"
+              minLength={3}
               required
             />
+            {isCheckingName && (
+              <p className="text-sm text-gray-500 mt-1">Verificando disponibilidade...</p>
+            )}
+            {nameError && (
+              <p className="text-sm text-red-600 mt-1">{nameError}</p>
+            )}
+            {name.length >= 3 && !nameError && !isCheckingName && (
+              <p className="text-sm text-green-600 mt-1">✓ Nome disponível</p>
+            )}
           </div>
           <div>
             <label className="block text-gray-700 mb-2">Email</label>
@@ -52,7 +106,7 @@ const RegisterPage = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-700 mb-2">Password</label>
+            <label className="block text-gray-700 mb-2">Senha</label>
             <input
               type="password"
               value={password}
@@ -65,14 +119,14 @@ const RegisterPage = () => {
             type="submit"
             className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3 rounded-xl transition-colors shadow-[0_4px_0_0_#58a700] active:shadow-none active:translate-y-[4px]"
           >
-            CREATE ACCOUNT
+            CRIAR CONTA
           </button>
         </form>
         <div className="mt-6 text-center">
           <p className="text-gray-600">
-            Already have an account?{' '}
+            Já tem uma conta?{' '}
             <Link to="/login" className="text-primary font-bold hover:underline">
-              Login
+              Entrar
             </Link>
           </p>
         </div>

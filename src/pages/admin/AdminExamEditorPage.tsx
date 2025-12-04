@@ -14,12 +14,18 @@ import { useContentStore } from '../../stores/useContentStore';
 import { ArrowLeft, Plus, Save, Trash2, Check, X, Edit, Eye, HelpCircle } from 'lucide-react';
 import clsx from 'clsx';
 import RichTextRenderer from '../../components/RichTextRenderer';
+import { useModal, useToast } from '../../hooks/useNotifications';
+import Modal from '../../components/Modal';
+import Toast from '../../components/Toast';
+import { getErrorMessage } from '../../utils/errorMessages';
 
 const AdminExamEditorPage = () => {
   const { examId } = useParams();
   const navigate = useNavigate();
   const { disciplines } = useContentStore();
   const isEditing = !!examId;
+  const { modalState, showConfirm, closeModal } = useModal();
+  const { toastState, showSuccess, showError, showWarning, closeToast } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [examData, setExamData] = useState<Partial<Exam>>({
@@ -68,7 +74,7 @@ const AdminExamEditorPage = () => {
 
   const handleSaveExam = async () => {
     if (!examData.name || !examData.disciplineId) {
-      alert("Por favor, preencha todos os campos obrigatórios");
+      showWarning('Por favor, preencha todos os campos obrigatórios');
       return;
     }
 
@@ -79,14 +85,15 @@ const AdminExamEditorPage = () => {
           ...examData, 
           questionsCount: questions.length 
         });
-        alert("Exame atualizado com sucesso");
+        showSuccess('Exame atualizado com sucesso!');
       } else {
         const newId = await createExam(examData as Omit<Exam, 'id'>);
+        showSuccess('Exame criado com sucesso!');
         navigate(`/admin/exams/${newId}/edit`);
       }
     } catch (error) {
       console.error("Error saving exam:", error);
-      alert("Falha ao salvar exame");
+      showError(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -94,7 +101,7 @@ const AdminExamEditorPage = () => {
 
   const handleSaveQuestion = async () => {
     if (!questionForm.statement || !questionForm.correctOption || questionForm.options?.some(o => !o)) {
-      alert("Por favor, preencha todos os campos da questão");
+      showWarning('Por favor, preencha todos os campos da questão');
       return;
     }
 
@@ -105,10 +112,12 @@ const AdminExamEditorPage = () => {
         await updateQuestion(editingQuestionId, questionForm);
         setQuestions(questions.map(q => q.id === editingQuestionId ? { ...q, ...questionForm } as Question : q));
         setEditingQuestionId(null);
+        showSuccess('Questão atualizada com sucesso!');
       } else {
         const newQ = { ...questionForm, examId } as Omit<Question, 'id'>;
         const id = await createQuestion(newQ);
         setQuestions([...questions, { ...newQ, id }]);
+        showSuccess('Questão adicionada com sucesso!');
       }
       
       // Reset form
@@ -124,6 +133,7 @@ const AdminExamEditorPage = () => {
       
     } catch (error) {
       console.error("Error saving question:", error);
+      showError(getErrorMessage(error));
     }
   };
 
@@ -133,17 +143,25 @@ const AdminExamEditorPage = () => {
   };
 
   const handleDeleteQuestion = async (id: string) => {
-    if (window.confirm("Excluir esta questão?")) {
-      try {
-        await deleteQuestion(id);
-        setQuestions(questions.filter(q => q.id !== id));
-        if (examId) {
-          await updateExam(examId, { questionsCount: questions.length - 1 });
+    showConfirm(
+      'Excluir Questão',
+      'Tem certeza que deseja excluir esta questão? Esta ação não pode ser desfeita.',
+      async () => {
+        try {
+          await deleteQuestion(id);
+          setQuestions(questions.filter(q => q.id !== id));
+          if (examId) {
+            await updateExam(examId, { questionsCount: questions.length - 1 });
+          }
+          showSuccess('Questão excluída com sucesso!');
+        } catch (error) {
+          console.error("Error deleting question:", error);
+          showError(getErrorMessage(error));
         }
-      } catch (error) {
-        console.error("Error deleting question:", error);
-      }
-    }
+      },
+      'Excluir',
+      'Cancelar'
+    );
   };
 
   const handleOptionChange = (index: number, value: string) => {
@@ -250,27 +268,27 @@ const AdminExamEditorPage = () => {
 
           {/* Question Form */}
           <div className="bg-gray-50 p-4 md:p-6 rounded-xl border-2 border-dashed border-gray-300">
-            <h3 className="font-bold text-gray-700 mb-4">{editingQuestionId ? 'Edit Question' : 'Add New Question'}</h3>
+            <h3 className="font-bold text-gray-700 mb-4">{editingQuestionId ? 'Editar Questão' : 'Adicionar Nova Questão'}</h3>
             <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-sm font-medium text-gray-700">Statement</label>
+                <label className="block text-sm font-medium text-gray-700">Enunciado</label>
                 <button
                   type="button"
                   onClick={() => setShowHelp(!showHelp)}
                   className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
                 >
                   <HelpCircle size={14} />
-                  Syntax Help
+                  Ajuda de Sintaxe
                 </button>
               </div>
               {showHelp && (
                 <div className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs space-y-1">
-                  <p className="font-bold text-blue-900">LaTeX Math:</p>
-                  <p><code className="bg-white px-1 rounded">$x^2 + 5$</code> → inline formula</p>
-                  <p><code className="bg-white px-1 rounded">$$\frac{'{a}'}{'{b}'}$$</code> → block formula</p>
-                  <p className="font-bold text-blue-900 mt-2">Images:</p>
-                  <p><code className="bg-white px-1 rounded">![description](image-url)</code></p>
+                  <p className="font-bold text-blue-900">Matemática LaTeX:</p>
+                  <p><code className="bg-white px-1 rounded">$x^2 + 5$</code> → fórmula em linha</p>
+                  <p><code className="bg-white px-1 rounded">$$\frac{'{a}'}{'{b}'}$$</code> → fórmula em bloco</p>
+                  <p className="font-bold text-blue-900 mt-2">Imagens:</p>
+                  <p><code className="bg-white px-1 rounded">![descrição](url-da-imagem)</code></p>
                 </div>
               )}
               <textarea
@@ -282,7 +300,7 @@ const AdminExamEditorPage = () => {
               {showPreview && questionForm.statement && (
                 <div className="mt-2 p-3 bg-gray-50 rounded border">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs text-gray-500 font-medium">Preview:</p>
+                    <p className="text-xs text-gray-500 font-medium">Pré-visualização:</p>
                     <button
                       type="button"
                       onClick={() => setShowPreview(false)}
@@ -301,7 +319,7 @@ const AdminExamEditorPage = () => {
                   className="mt-1 text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
                 >
                   <Eye size={14} />
-                  Show Preview
+                  Mostrar Pré-visualização
                 </button>
               )}
             </div>
@@ -309,7 +327,7 @@ const AdminExamEditorPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {questionForm.options?.map((opt, idx) => (
                   <div key={idx}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Option {String.fromCharCode(65 + idx)}</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Opção {String.fromCharCode(65 + idx)}</label>
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -414,6 +432,28 @@ const AdminExamEditorPage = () => {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Modal */}
+      <Modal
+        isOpen={modalState.isOpen}
+        onClose={closeModal}
+        onConfirm={modalState.onConfirm}
+        title={modalState.title}
+        message={modalState.message}
+        type={modalState.type}
+        confirmText={modalState.confirmText}
+        cancelText={modalState.cancelText}
+        showCancel={modalState.showCancel}
+      />
+
+      {/* Toast */}
+      {toastState.isOpen && (
+        <Toast
+          message={toastState.message}
+          type={toastState.type}
+          onClose={closeToast}
+        />
       )}
     </div>
   );

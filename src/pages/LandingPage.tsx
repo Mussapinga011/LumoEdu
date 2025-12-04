@@ -12,7 +12,7 @@ const LandingPage = () => {
             to="/login" 
             className="font-bold text-gray-500 hover:text-gray-700 uppercase tracking-wide text-xs md:text-sm"
           >
-            I already have an account
+            Já tenho uma conta
           </Link>
         </div>
       </header>
@@ -31,20 +31,20 @@ const LandingPage = () => {
         
         <div className="flex-1 text-center md:text-left space-y-6 md:space-y-8">
           <h2 className="text-3xl md:text-5xl font-bold text-gray-800 leading-tight px-4 md:px-0">
-            The free, fun, and effective way to learn for exams!
+            A forma grátis, divertida e eficaz de estudar para exames!
           </h2>
           <div className="flex flex-col gap-4 max-w-xs mx-auto md:mx-0">
             <Link 
               to="/register" 
               className="bg-primary hover:bg-primary-hover text-white font-bold py-3 px-8 rounded-xl shadow-[0_4px_0_0_#58a700] active:shadow-none active:translate-y-[4px] transition-all text-center uppercase tracking-wide"
             >
-              Get Started
+              Começar Agora
             </Link>
             <Link 
               to="/login" 
               className="bg-white border-2 border-gray-200 hover:bg-gray-50 text-secondary font-bold py-3 px-8 rounded-xl shadow-[0_4px_0_0_#e5e5e5] active:shadow-none active:translate-y-[4px] transition-all text-center uppercase tracking-wide"
             >
-              I already have an account
+              Já tenho uma conta
             </Link>
           </div>
         </div>
@@ -55,18 +55,18 @@ const LandingPage = () => {
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
           <div className="flex flex-col items-center gap-4">
             <CheckCircle className="text-secondary" size={48} />
-            <h3 className="text-xl font-bold text-gray-700">Effective Learning</h3>
-            <p className="text-gray-500">Gamified lessons that help you retain information.</p>
+            <h3 className="text-xl font-bold text-gray-700">Aprendizagem Eficaz</h3>
+            <p className="text-gray-500">Lições gamificadas que ajudam a reter informação.</p>
           </div>
           <div className="flex flex-col items-center gap-4">
             <Zap className="text-accent" size={48} />
-            <h3 className="text-xl font-bold text-gray-700">Stay Motivated</h3>
-            <p className="text-gray-500">Earn points, streaks, and climb the leaderboards.</p>
+            <h3 className="text-xl font-bold text-gray-700">Mantenha-se Motivado</h3>
+            <p className="text-gray-500">Ganhe pontos, sequências e suba no ranking.</p>
           </div>
           <div className="flex flex-col items-center gap-4">
             <Shield className="text-danger" size={48} />
-            <h3 className="text-xl font-bold text-gray-700">Exam Ready</h3>
-            <p className="text-gray-500">Practice with real past exams and challenges.</p>
+            <h3 className="text-xl font-bold text-gray-700">Pronto para o Exame</h3>
+            <p className="text-gray-500">Pratique com exames anteriores reais e desafios.</p>
           </div>
         </div>
       </footer>

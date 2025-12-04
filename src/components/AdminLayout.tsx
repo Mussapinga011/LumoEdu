@@ -4,7 +4,8 @@ import {
   Users, 
   FileText, 
   LogOut,
-  Video
+  Video,
+  TrendingUp
 } from 'lucide-react';
 import { signOut } from '../services/authService';
 import clsx from 'clsx';
@@ -18,7 +19,7 @@ const AdminLayout = () => {
     { name: 'Gerenciar Usuários', path: '/admin/users', icon: Users },
     { name: 'Gerenciar Exames', path: '/admin/exams', icon: FileText },
     { name: 'Gerenciar Aulas', path: '/admin/videos', icon: Video },
-    // Add more admin items here as needed
+    { name: 'Testes A/B', path: '/admin/ab-tests', icon: TrendingUp },
   ];
 
   return (

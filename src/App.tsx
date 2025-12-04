@@ -19,6 +19,8 @@ import AdminExamsPage from './pages/admin/AdminExamsPage';
 import AdminExamEditorPage from './pages/admin/AdminExamEditorPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminVideosPage from './pages/admin/AdminVideosPage';
+import AdminABTestsPage from './pages/admin/AdminABTestsPage';
+import AdminABTestEditorPage from './pages/admin/AdminABTestEditorPage';
 import VideoLessonsPage from './pages/VideoLessonsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
@@ -152,6 +154,21 @@ function App() {
           <Route path="/admin/videos" element={
             <AdminRoute>
               <AdminVideosPage />
+            </AdminRoute>
+          } />
+          <Route path="/admin/ab-tests" element={
+            <AdminRoute>
+              <AdminABTestsPage />
+            </AdminRoute>
+          } />
+          <Route path="/admin/ab-tests/new" element={
+            <AdminRoute>
+              <AdminABTestEditorPage />
+            </AdminRoute>
+          } />
+          <Route path="/admin/ab-tests/edit/:testId" element={
+            <AdminRoute>
+              <AdminABTestEditorPage />
             </AdminRoute>
           } />
         </Route>

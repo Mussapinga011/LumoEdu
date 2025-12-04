@@ -1,21 +1,21 @@
 import { useAuthStore } from '../stores/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { User, Trophy, Flame, Star, Calendar, Award } from 'lucide-react';
-import { BADGES, getBadgeById } from '../services/badgeService';
+import { BADGES } from '../services/badgeService';
 import { updateUserProfile } from '../services/dbService';
 import clsx from 'clsx';
 import OptimizedImage from '../components/OptimizedImage';
 
 
 const ProfilePage = () => {
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const navigate = useNavigate();
 
   if (!user) return null;
 
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-bold text-gray-800">My Profile</h1>
+      <h1 className="text-3xl font-bold text-gray-800">Meu Perfil</h1>
 
       {/* Header Card */}
       <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col md:flex-row items-center gap-6 border-2 border-gray-100">
@@ -28,19 +28,19 @@ const ProfilePage = () => {
         </div>
         <div className="flex-1 text-center md:text-left">
           <h2 className="text-2xl font-bold text-gray-800">{user.displayName}</h2>
-          <p className="text-gray-500">Joined {new Date().toLocaleDateString()}</p>
+          <p className="text-gray-500">Membro desde {new Date().toLocaleDateString('pt-PT')}</p>
           <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-secondary font-bold text-sm">
-            {user.isPremium ? 'PREMIUM MEMBER' : 'FREE MEMBER'}
+            {user.isPremium ? 'MEMBRO PREMIUM' : 'MEMBRO GRÁTIS'}
           </div>
         </div>
         <div className="flex gap-4 w-full md:w-auto justify-center md:justify-start">
            <div className="text-center">
              <div className="text-2xl font-bold text-accent">{user.level}</div>
-             <div className="text-xs text-gray-500 font-bold uppercase">Level</div>
+             <div className="text-xs text-gray-500 font-bold uppercase">Nível</div>
            </div>
            <div className="text-center">
              <div className="text-2xl font-bold text-primary">{user.xp}</div>
-             <div className="text-xs text-gray-500 font-bold uppercase">Total XP</div>
+             <div className="text-xs text-gray-500 font-bold uppercase">XP Total</div>
            </div>
         </div>
       </div>
@@ -50,7 +50,7 @@ const ProfilePage = () => {
         <div className="bg-white p-3 md:p-4 rounded-xl border-2 border-gray-100 flex flex-col items-center gap-2">
           <Flame className="text-orange-500" size={24} />
           <div className="text-lg md:text-xl font-bold">{user.streak}</div>
-          <div className="text-[10px] md:text-xs text-gray-400 font-bold uppercase text-center">Day Streak</div>
+          <div className="text-[10px] md:text-xs text-gray-400 font-bold uppercase text-center">Sequência</div>
         </div>
         <div className="bg-white p-3 md:p-4 rounded-xl border-2 border-gray-100 flex flex-col items-center gap-2">
           <Star className="text-yellow-500" size={24} />
@@ -60,12 +60,12 @@ const ProfilePage = () => {
         <div className="bg-white p-3 md:p-4 rounded-xl border-2 border-gray-100 flex flex-col items-center gap-2">
           <Trophy className="text-blue-500" size={24} />
           <div className="text-lg md:text-xl font-bold">Top 10%</div>
-          <div className="text-[10px] md:text-xs text-gray-400 font-bold uppercase text-center">League</div>
+          <div className="text-[10px] md:text-xs text-gray-400 font-bold uppercase text-center">Liga</div>
         </div>
         <div className="bg-white p-3 md:p-4 rounded-xl border-2 border-gray-100 flex flex-col items-center gap-2">
           <Calendar className="text-green-500" size={24} />
           <div className="text-lg md:text-xl font-bold">{user.dailyExercisesCount}</div>
-          <div className="text-[10px] md:text-xs text-gray-400 font-bold uppercase text-center">Exercises Today</div>
+          <div className="text-[10px] md:text-xs text-gray-400 font-bold uppercase text-center">Exercícios Hoje</div>
         </div>
       </div>
 
@@ -73,7 +73,7 @@ const ProfilePage = () => {
       <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
         <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
           <Award className="text-yellow-500" />
-          Achievements
+          Conquistas
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {BADGES.map((badge) => {
@@ -98,7 +98,7 @@ const ProfilePage = () => {
                 </div>
                 {isUnlocked && (
                   <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full uppercase tracking-wide">
-                    Unlocked
+                    Desbloqueado
                   </span>
                 )}
               </div>
@@ -109,11 +109,11 @@ const ProfilePage = () => {
 
       {/* Settings Section */}
       <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Settings</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Configurações</h3>
         <div className="flex items-center justify-between">
           <div>
-            <h4 className="font-bold text-gray-700">Data Saver Mode</h4>
-            <p className="text-sm text-gray-500">Reduce data usage by not loading images automatically</p>
+            <h4 className="font-bold text-gray-700">Modo Poupança de Dados</h4>
+            <p className="text-sm text-gray-500">Reduza o uso de dados não carregando imagens automaticamente</p>
           </div>
           <button
             onClick={async () => {

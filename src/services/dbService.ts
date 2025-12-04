@@ -20,7 +20,21 @@ import { checkNewBadges } from './badgeService';
 
 // --- User Operations ---
 
+// Check if displayName already exists
+export const checkDisplayNameExists = async (displayName: string): Promise<boolean> => {
+  const usersRef = collection(db, 'users');
+  const q = query(usersRef, where('displayName', '==', displayName));
+  const querySnapshot = await getDocs(q);
+  return !querySnapshot.empty;
+};
+
 export const createUserProfile = async (user: UserProfile) => {
+  // Check if displayName already exists
+  const nameExists = await checkDisplayNameExists(user.displayName);
+  if (nameExists) {
+    throw new Error('This name is already taken. Please choose a different name.');
+  }
+
   const userRef = doc(db, 'users', user.uid);
   // Ensure all new fields are initialized
   const newUser: UserProfile = {

@@ -7,26 +7,26 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Duolingo-inspired palette
+        // Cores sincronizadas com o ícone da aplicação
         primary: {
-          DEFAULT: '#58CC02', // Green
-          hover: '#46A302',
-          shade: '#58a700', // Darker green for 3D effect
+          DEFAULT: '#6366F1', // Indigo/Purple do ícone
+          hover: '#4F46E5',
+          shade: '#4338CA', // Darker shade para efeito 3D
         },
         secondary: {
-          DEFAULT: '#1CB0F6', // Blue
-          hover: '#118CDB',
-          shade: '#1899d6',
+          DEFAULT: '#8B5CF6', // Purple/Violet do ícone
+          hover: '#7C3AED',
+          shade: '#6D28D9',
         },
         accent: {
-          DEFAULT: '#FFC800', // Yellow
-          hover: '#E5B400',
-          shade: '#e5b400',
+          DEFAULT: '#EC4899', // Pink/Magenta do ícone
+          hover: '#DB2777',
+          shade: '#BE185D',
         },
         danger: {
-          DEFAULT: '#FF4B4B', // Red
-          hover: '#D33131',
-          shade: '#d33131',
+          DEFAULT: '#EF4444', // Red
+          hover: '#DC2626',
+          shade: '#B91C1C',
         },
         gray: {
           100: '#F7F7F7',

@@ -18,19 +18,35 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminExamsPage from './pages/admin/AdminExamsPage';
 import AdminExamEditorPage from './pages/admin/AdminExamEditorPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminVideosPage from './pages/admin/AdminVideosPage';
+import VideoLessonsPage from './pages/VideoLessonsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import { useAuthStore } from './stores/useAuthStore';
+
+import OfflineIndicator from './components/OfflineIndicator';
 
 function App() {
   const { initAuth } = useAuthStore();
 
   useEffect(() => {
     initAuth();
+    
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then((registration) => {
+          console.log('Service Worker registered:', registration);
+        })
+        .catch((error) => {
+          console.error('Service Worker registration failed:', error);
+        });
+    }
   }, [initAuth]);
 
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <OfflineIndicator />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -40,6 +56,11 @@ function App() {
           <Route path="/disciplines" element={
             <ProtectedRoute>
               <DisciplinesPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/lessons" element={
+            <ProtectedRoute>
+              <VideoLessonsPage />
             </ProtectedRoute>
           } />
           <Route path="/disciplines/:disciplineId/exams" element={
@@ -126,6 +147,11 @@ function App() {
           <Route path="/admin/users" element={
             <AdminRoute>
               <AdminUsersPage />
+            </AdminRoute>
+          } />
+          <Route path="/admin/videos" element={
+            <AdminRoute>
+              <AdminVideosPage />
             </AdminRoute>
           } />
         </Route>

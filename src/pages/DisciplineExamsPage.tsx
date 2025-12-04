@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+// Force update
 import { useParams, useNavigate } from 'react-router-dom';
 import { getExamsByDiscipline } from '../services/dbService';
 import { Exam } from '../types/exam';
@@ -26,6 +27,8 @@ const DisciplineExamsPage = ({ mode = 'study' }: DisciplineExamsPageProps) => {
     }
   }, [disciplineId]);
 
+
+
   const fetchExams = async (id: string) => {
     setLoading(true);
     try {
@@ -45,6 +48,8 @@ const DisciplineExamsPage = ({ mode = 'study' }: DisciplineExamsPageProps) => {
       navigate(`/study/${examId}`);
     }
   };
+
+
 
   if (!discipline) {
     return <div className="p-8 text-center">Discipline not found</div>;
@@ -101,18 +106,12 @@ const DisciplineExamsPage = ({ mode = 'study' }: DisciplineExamsPageProps) => {
                   <span>{exam.questionsCount} Questions</span>
                 </div>
               </div>
-              <div className="flex gap-2 mt-4">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleExamClick(exam.id);
-                  }}
-                  className="flex-1 bg-blue-50 text-blue-600 py-2 rounded-lg font-bold text-sm hover:bg-blue-100 transition-colors"
-                >
-                  {mode === 'challenge' ? 'Start Challenge' : 'Practice Mode'}
-                </button>
-
-              </div>
+              <button
+                onClick={() => handleExamClick(exam.id)}
+                className="w-full bg-blue-50 text-blue-600 py-2 rounded-lg font-bold text-sm hover:bg-blue-100 transition-colors mt-4"
+              >
+                {mode === 'challenge' ? 'Start Challenge' : 'Practice Mode'}
+              </button>
             </div>
           ))}
         </div>

@@ -32,6 +32,7 @@ export const createUserProfile = async (user: UserProfile) => {
     challengesCompleted: 0,
     averageGrade: 0,
     score: 0,
+    dataSaverMode: false,
     createdAt: Timestamp.now()
   };
   await setDoc(userRef, newUser);
@@ -208,4 +209,97 @@ export const checkAndAwardBadges = async (uid: string) => {
     }
   }
   return [];
+};
+
+// --- Video Lesson Operations ---
+
+import { VideoLesson } from '../types/video';
+import { startAfter, limit } from 'firebase/firestore';
+import { extractYoutubeId, getYoutubeThumbnail } from '../lib/youtubeUtils';
+
+export const createVideoLesson = async (video: Omit<VideoLesson, 'id' | 'createdAt' | 'youtubeId' | 'thumbnailUrl'>) => {
+  const youtubeId = extractYoutubeId(video.youtubeUrl);
+  if (!youtubeId) {
+    throw new Error("Invalid YouTube URL");
+  }
+
+  const thumbnailUrl = getYoutubeThumbnail(youtubeId, 'hq');
+
+  const videosRef = collection(db, 'videos');
+  const docRef = await addDoc(videosRef, {
+    ...video,
+    youtubeId,
+    thumbnailUrl,
+    createdAt: Timestamp.now()
+  });
+  await updateDoc(docRef, { id: docRef.id });
+  return docRef.id;
+};
+
+export const updateVideoLesson = async (videoId: string, data: Partial<VideoLesson>) => {
+  const videoRef = doc(db, 'videos', videoId);
+  
+  // If URL is updated, we must update ID and thumbnail too
+  if (data.youtubeUrl) {
+    const youtubeId = extractYoutubeId(data.youtubeUrl);
+    if (youtubeId) {
+      data.youtubeId = youtubeId;
+      data.thumbnailUrl = getYoutubeThumbnail(youtubeId, 'hq');
+    }
+  }
+  
+  await updateDoc(videoRef, data);
+};
+
+export const getVideoLessons = async (
+  lastDoc: any = null, 
+  pageSize: number = 20,
+  filters?: { subject?: string }
+): Promise<{ videos: VideoLesson[]; lastDoc: any }> => {
+  const videosRef = collection(db, 'videos');
+  
+  // Construct base query with filters
+  let qBase = query(videosRef);
+  if (filters && filters.subject) {
+    qBase = query(qBase, where('subject', '==', filters.subject));
+  }
+
+  // Try with ordering first
+  try {
+    let q = query(qBase, orderBy('order', 'asc'), limit(pageSize));
+    if (lastDoc) {
+      q = query(q, startAfter(lastDoc));
+    }
+    
+    const querySnapshot = await getDocs(q);
+    const videos = querySnapshot.docs.map(doc => doc.data() as VideoLesson);
+    const newLastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+    return { videos, lastDoc: newLastDoc };
+
+  } catch (error: any) {
+    // If error is due to missing index (failed-precondition), try without ordering
+    if (error.code === 'failed-precondition' || error.message.includes('index')) {
+      console.warn("Firestore Index missing. Falling back to unordered query. Please create the index using the link in console.");
+      
+      let q = query(qBase, limit(pageSize));
+      if (lastDoc) {
+        q = query(q, startAfter(lastDoc));
+      }
+      
+      const querySnapshot = await getDocs(q);
+      const videos = querySnapshot.docs.map(doc => doc.data() as VideoLesson);
+      
+      // Sort in memory (best effort for current page)
+      videos.sort((a, b) => a.order - b.order);
+      
+      const newLastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+      return { videos, lastDoc: newLastDoc };
+    }
+    throw error;
+  }
+};
+
+export const deleteVideoLesson = async (videoId: string) => {
+  const videoRef = doc(db, 'videos', videoId);
+  await deleteDoc(videoRef);
 };

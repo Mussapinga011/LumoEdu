@@ -2,6 +2,9 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { User, Trophy, Flame, Star, Calendar, Award } from 'lucide-react';
 import { BADGES, getBadgeById } from '../services/badgeService';
+import { updateUserProfile } from '../services/dbService';
+import clsx from 'clsx';
+import OptimizedImage from '../components/OptimizedImage';
 
 
 const ProfilePage = () => {
@@ -18,7 +21,7 @@ const ProfilePage = () => {
       <div className="bg-white rounded-2xl shadow-lg p-6 flex flex-col md:flex-row items-center gap-6 border-2 border-gray-100">
         <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center text-gray-400">
           {user.photoURL ? (
-            <img src={user.photoURL} alt={user.displayName} className="w-full h-full rounded-full object-cover" />
+            <OptimizedImage src={user.photoURL} alt={user.displayName} className="w-full h-full rounded-full object-cover" />
           ) : (
             <User size={48} />
           )}
@@ -104,7 +107,37 @@ const ProfilePage = () => {
         </div>
       </div>
 
-      {/* Recent Activity Placeholder */}
+      {/* Settings Section */}
+      <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Settings</h3>
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="font-bold text-gray-700">Data Saver Mode</h4>
+            <p className="text-sm text-gray-500">Reduce data usage by not loading images automatically</p>
+          </div>
+          <button
+            onClick={async () => {
+              if (user) {
+                const newStatus = !user.dataSaverMode;
+                await updateUserProfile(user.uid, { dataSaverMode: newStatus });
+                updateUser({ dataSaverMode: newStatus });
+              }
+            }}
+            className={clsx(
+              "w-14 h-8 rounded-full p-1 transition-colors duration-300 ease-in-out",
+              user.dataSaverMode ? "bg-primary" : "bg-gray-300"
+            )}
+          >
+            <div 
+              className={clsx(
+                "w-6 h-6 bg-white rounded-full shadow-sm transform transition-transform duration-300 ease-in-out",
+                user.dataSaverMode ? "translate-x-6" : "translate-x-0"
+              )} 
+            />
+          </button>
+        </div>
+      </div>
+
       {/* Study Plan Section */}
       <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
         <div className="flex justify-between items-center mb-4">

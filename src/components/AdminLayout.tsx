@@ -3,7 +3,8 @@ import {
   LayoutDashboard, 
   Users, 
   FileText, 
-  LogOut
+  LogOut,
+  Video
 } from 'lucide-react';
 import { signOut } from '../services/authService';
 import clsx from 'clsx';
@@ -16,6 +17,7 @@ const AdminLayout = () => {
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
     { name: 'Gerenciar Usuários', path: '/admin/users', icon: Users },
     { name: 'Gerenciar Exames', path: '/admin/exams', icon: FileText },
+    { name: 'Gerenciar Aulas', path: '/admin/videos', icon: Video },
     // Add more admin items here as needed
   ];
 

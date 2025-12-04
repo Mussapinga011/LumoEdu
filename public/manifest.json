@@ -1,0 +1,45 @@
+{
+  "name": "AdmissionPrep - Preparação para Exames",
+  "short_name": "AdmissionPrep",
+  "description": "Plataforma completa de preparação para exames de admissão universitária em Moçambique (UEM e UP)",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "lang": "pt-MZ",
+  "dir": "ltr",
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Estudar",
+      "short_name": "Estudar",
+      "description": "Acessar modo de estudo",
+      "url": "/disciplines",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Desafio",
+      "short_name": "Desafio",
+      "description": "Iniciar um desafio",
+      "url": "/challenge",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

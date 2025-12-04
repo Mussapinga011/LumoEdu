@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getExam, getQuestionsByExam, addUserActivity, updateUserScore } from '../services/dbService';
+import { getExam, getQuestionsByExam, addUserActivity } from '../services/dbService';
+import { getOfflineExam, saveOfflineProgress } from '../services/offlineService';
 import { Exam, Question } from '../types/exam';
 import { useAuthStore } from '../stores/useAuthStore';
-import { Timer, ChevronLeft, ChevronRight, Flag, CheckCircle, AlertCircle } from 'lucide-react';
+import { useOffline } from '../hooks/useOffline';
+import { Timer, ChevronLeft, ChevronRight, Flag, WifiOff } from 'lucide-react';
 import RichTextRenderer from '../components/RichTextRenderer';
 import clsx from 'clsx';
 
@@ -21,6 +23,8 @@ const SimulationPage = () => {
   const [timeLeft, setTimeLeft] = useState(90 * 60); // 90 minutes in seconds
   const [isFinished, setIsFinished] = useState(false);
   const [score, setScore] = useState(0);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const isOnline = useOffline();
 
   useEffect(() => {
     if (examId) {
@@ -42,12 +46,36 @@ const SimulationPage = () => {
   const fetchExamData = async (id: string) => {
     setLoading(true);
     try {
-      const examData = await getExam(id);
-      const questionsData = await getQuestionsByExam(id);
-      setExam(examData);
-      setQuestions(questionsData);
+      // Try online first
+      if (isOnline) {
+        const examData = await getExam(id);
+        const questionsData = await getQuestionsByExam(id);
+        setExam(examData);
+        setQuestions(questionsData);
+        setIsOfflineMode(false);
+      } else {
+        // Fallback to offline
+        const offlineData = await getOfflineExam(id);
+        if (offlineData) {
+          setExam({
+            id: offlineData.id,
+            disciplineId: offlineData.disciplineId,
+            name: offlineData.title,
+            year: offlineData.year,
+            season: '1ª época',
+            questionsCount: offlineData.questions.length,
+            createdAt: null,
+          });
+          setQuestions(offlineData.questions);
+          setIsOfflineMode(true);
+        } else {
+          throw new Error('Exam not available offline');
+        }
+      }
     } catch (error) {
       console.error("Error fetching exam:", error);
+      alert('Erro ao carregar exame. Certifique-se de que está online ou que baixou este exame.');
+      navigate(-1);
     } finally {
       setLoading(false);
     }
@@ -90,14 +118,19 @@ const SimulationPage = () => {
     const finalScore = Math.round((correctCount / questions.length) * 20); // 0-20 scale
     setScore(finalScore);
 
-    // Save activity
-    await addUserActivity(user.uid, {
-      type: 'exam',
-      title: `Simulado: ${exam.name}`,
-      timestamp: new Date() as any, // Cast for now, should be Timestamp
-      score: finalScore,
-      xpEarned: finalScore * 10
-    });
+    // Save activity (only if online)
+    if (isOnline && !isOfflineMode) {
+      await addUserActivity(user.uid, {
+        type: 'exam',
+        title: `Simulado: ${exam.name}`,
+        timestamp: new Date() as any,
+        score: finalScore,
+        xpEarned: finalScore * 10
+      });
+    } else if (isOfflineMode) {
+      // Save progress locally for sync later
+      await saveOfflineProgress(examId!, user.uid, answers);
+    }
 
     // Update global score (optional, maybe separate simulation score?)
     // await updateUserScore(user.uid); 
@@ -151,6 +184,22 @@ const SimulationPage = () => {
     );
   }
 
+  if (questions.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen p-8">
+        <div className="text-6xl mb-4">📝</div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Sem Questões</h2>
+        <p className="text-gray-500 mb-6">Este exame ainda não possui questões cadastradas.</p>
+        <button
+          onClick={() => navigate('/disciplines')}
+          className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary-hover transition-colors"
+        >
+          Voltar
+        </button>
+      </div>
+    );
+  }
+
   const currentQuestion = questions[currentQuestionIndex];
 
   return (
@@ -161,12 +210,20 @@ const SimulationPage = () => {
           <h1 className="font-bold text-gray-800 truncate max-w-[200px] md:max-w-md">{exam.name}</h1>
           <p className="text-xs text-gray-500">Questão {currentQuestionIndex + 1} de {questions.length}</p>
         </div>
-        <div className={clsx(
-          "flex items-center gap-2 px-3 py-1.5 rounded-lg font-mono font-bold",
-          timeLeft < 300 ? "bg-red-100 text-red-600" : "bg-blue-50 text-blue-600"
-        )}>
-          <Timer size={18} />
-          {formatTime(timeLeft)}
+        <div className="flex items-center gap-2">
+          {isOfflineMode && (
+            <div className="flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-medium">
+              <WifiOff size={14} />
+              Offline
+            </div>
+          )}
+          <div className={clsx(
+            "flex items-center gap-2 px-3 py-1.5 rounded-lg font-mono font-bold",
+            timeLeft < 300 ? "bg-red-100 text-red-600" : "bg-blue-50 text-blue-600"
+          )}>
+            <Timer size={18} />
+            {formatTime(timeLeft)}
+          </div>
         </div>
       </div>
 

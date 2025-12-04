@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getExam, getQuestionsByExam, addUserActivity, updateUserScore, updateUserProfile, updateUserDisciplineScore } from '../services/dbService';
 import { Exam, Question } from '../types/exam';
 import { useAuthStore } from '../stores/useAuthStore';
-import { Timer, ChevronLeft, ChevronRight, Flag, CheckCircle, AlertCircle } from 'lucide-react';
+import { Timer, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import RichTextRenderer from '../components/RichTextRenderer';
 import { Timestamp } from 'firebase/firestore';
 import clsx from 'clsx';
@@ -126,41 +126,116 @@ const ChallengePage = () => {
   }
 
   if (isFinished) {
+    const correctAnswers = Object.keys(answers).filter(id => answers[id] === questions.find(q => q.id === id)?.correctOption).length;
+    const incorrectAnswers = questions.length - correctAnswers;
+    const percentage = Math.round((correctAnswers / questions.length) * 100);
+    const timeTaken = (90 * 30) - timeLeft;
+    const minutesTaken = Math.floor(timeTaken / 60);
+    const secondsTaken = timeTaken % 60;
+
     return (
-      <div className="max-w-2xl mx-auto p-6 space-y-8">
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center border-2 border-gray-100">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Desafio Concluído!</h1>
-          <p className="text-gray-500 mb-8">Aqui está o seu resultado:</p>
-          
-          <div className="flex justify-center gap-8 mb-8">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-primary">{score}/20</div>
-              <div className="text-sm text-gray-400 font-bold uppercase">Nota Final</div>
+      <div className="min-h-screen bg-gray-50 py-8 px-4">
+        <div className="max-w-3xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center border-2 border-gray-100">
+            <div className="text-6xl mb-4">
+              {percentage >= 80 ? '🎉' : percentage >= 60 ? '👍' : '💪'}
             </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-green-500">
-                {Object.keys(answers).filter(id => answers[id] === questions.find(q => q.id === id)?.correctOption).length}
-                <span className="text-xl text-gray-400">/{questions.length}</span>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Desafio Concluído!</h1>
+            <p className="text-gray-500">
+              {percentage >= 80 ? 'Excelente desempenho!' : 
+               percentage >= 60 ? 'Bom trabalho!' : 
+               'Continue praticando!'}
+            </p>
+          </div>
+
+          {/* Performance Stats */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
+            <h2 className="text-xl font-bold text-gray-800 mb-6">Relatório Detalhado</h2>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="text-center p-4 bg-blue-50 rounded-xl">
+                <div className="text-3xl font-bold text-blue-600">{score}/20</div>
+                <div className="text-xs text-gray-500 font-bold uppercase mt-1">Nota Final</div>
               </div>
-              <div className="text-sm text-gray-400 font-bold uppercase">Acertos</div>
+              <div className="text-center p-4 bg-green-50 rounded-xl">
+                <div className="text-3xl font-bold text-green-600">{correctAnswers}</div>
+                <div className="text-xs text-gray-500 font-bold uppercase mt-1">Acertos</div>
+              </div>
+              <div className="text-center p-4 bg-red-50 rounded-xl">
+                <div className="text-3xl font-bold text-red-600">{incorrectAnswers}</div>
+                <div className="text-xs text-gray-500 font-bold uppercase mt-1">Erros</div>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-xl">
+                <div className="text-3xl font-bold text-purple-600">{percentage}%</div>
+                <div className="text-xs text-gray-500 font-bold uppercase mt-1">Aproveitamento</div>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mb-6">
+              <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <span>Progresso</span>
+                <span>{correctAnswers}/{questions.length} questões</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-500"
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Time Taken */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+              <div className="flex items-center gap-2">
+                <Timer className="text-gray-400" size={20} />
+                <span className="text-gray-700 font-medium">Tempo Utilizado</span>
+              </div>
+              <span className="font-bold text-gray-800">{minutesTaken}:{secondsTaken.toString().padStart(2, '0')}</span>
             </div>
           </div>
 
-          <div className="flex justify-center gap-4">
-            <button 
-              onClick={() => navigate('/disciplines')}
-              className="bg-gray-100 text-gray-700 px-6 py-2 rounded-xl font-bold hover:bg-gray-200 transition-colors"
-            >
-              Voltar ao Início
-            </button>
-            <button 
-              onClick={() => window.location.reload()}
-              className="bg-primary text-white px-6 py-2 rounded-xl font-bold hover:bg-primary-hover transition-colors"
-            >
-              Tentar Novamente
-            </button>
+          {/* Action Buttons */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <button 
+                onClick={() => navigate('/ranking')}
+                className="flex items-center justify-center gap-2 bg-yellow-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-yellow-600 transition-colors"
+              >
+                🏆 Ver Ranking
+              </button>
+              <button 
+                onClick={() => window.location.reload()}
+                className="flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary-hover transition-colors"
+              >
+                🔄 Tentar Novamente
+              </button>
+              <button 
+                onClick={() => navigate('/challenge')}
+                className="flex items-center justify-center gap-2 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+              >
+                🏠 Voltar ao Início
+              </button>
+            </div>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen p-8">
+        <div className="text-6xl mb-4">📝</div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Sem Questões</h2>
+        <p className="text-gray-500 mb-6">Este exame ainda não possui questões cadastradas.</p>
+        <button
+          onClick={() => navigate('/challenge')}
+          className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary-hover transition-colors"
+        >
+          Voltar
+        </button>
       </div>
     );
   }

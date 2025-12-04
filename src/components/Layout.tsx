@@ -5,7 +5,8 @@ import {
   User, 
   LogOut, 
   Download,
-  Zap
+  Zap,
+  Video
 } from 'lucide-react';
 import { signOut } from '../services/authService';
 import clsx from 'clsx';
@@ -16,6 +17,7 @@ const Layout = () => {
 
   const navItems = [
     { name: 'Learn', path: '/disciplines', icon: BookOpen },
+    { name: 'Aulas', path: '/lessons', icon: Video },
     { name: 'Challenge', path: '/challenge', icon: Zap },
     { name: 'Ranking', path: '/ranking', icon: Trophy },
     { name: 'Downloads', path: '/downloads', icon: Download },

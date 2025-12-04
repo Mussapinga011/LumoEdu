@@ -22,6 +22,7 @@ const StudyPage = () => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'correct' | 'incorrect'>('idle');
   const [correctCount, setCorrectCount] = useState(0);
+  const [showSummary, setShowSummary] = useState(false);
 
   useEffect(() => {
     if (examId && user) {
@@ -79,7 +80,7 @@ const StudyPage = () => {
     }
   };
 
-  const handleNext = async () => {
+  const handleNext = async () =>{
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
       setSelectedOption(null);
@@ -120,12 +121,8 @@ const StudyPage = () => {
 
         updateUser(updates);
       }
-      // Navigate back to the exam list for this discipline
-      if (exam) {
-        navigate(`/disciplines/${exam.disciplineId}/exams`);
-      } else {
-        navigate('/disciplines');
-      }
+      // Show summary instead of navigating
+      setShowSummary(true);
     }
   };
 
@@ -166,7 +163,105 @@ const StudyPage = () => {
   }
 
   if (!exam || questions.length === 0) {
-    return <div className="p-8 text-center">Exam not found or has no questions.</div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-screen p-8">
+        <div className="text-6xl mb-4">📝</div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Sem Questões</h2>
+        <p className="text-gray-500 mb-6">Este exame ainda não possui questões cadastradas.</p>
+        <button
+          onClick={() => navigate('/disciplines')}
+          className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary-hover transition-colors"
+        >
+          Voltar
+        </button>
+      </div>
+    );
+  }
+
+  if (showSummary) {
+    const incorrectCount = questions.length - correctCount;
+    const percentage = Math.round((correctCount / questions.length) * 100);
+
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 px-4">
+        <div className="max-w-3xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center border-2 border-gray-100">
+            <div className="text-6xl mb-4">
+              {percentage >= 80 ? '🎉' : percentage >= 60 ? '👍' : '📚'}
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Estudo Concluído!</h1>
+            <p className="text-gray-500">
+              {percentage >= 80 ? 'Excelente trabalho!' : 
+               percentage >= 60 ? 'Bom progresso!' : 
+               'Continue estudando!'}
+            </p>
+          </div>
+
+          {/* Performance Stats */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
+            <h2 className="text-xl font-bold text-gray-800 mb-6">Resumo do Desempenho</h2>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="text-center p-4 bg-blue-50 rounded-xl">
+                <div className="text-3xl font-bold text-blue-600">{questions.length}</div>
+                <div className="text-xs text-gray-500 font-bold uppercase mt-1">Questões</div>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded-xl">
+                <div className="text-3xl font-bold text-green-600">{correctCount}</div>
+                <div className="text-xs text-gray-500 font-bold uppercase mt-1">Acertos</div>
+              </div>
+              <div className="text-center p-4 bg-red-50 rounded-xl">
+                <div className="text-3xl font-bold text-red-600">{incorrectCount}</div>
+                <div className="text-xs text-gray-500 font-bold uppercase mt-1">Erros</div>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-xl">
+                <div className="text-3xl font-bold text-purple-600">{percentage}%</div>
+                <div className="text-xs text-gray-500 font-bold uppercase mt-1">Precisão</div>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mb-6">
+              <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <span>Progresso</span>
+                <span>{correctCount}/{questions.length} questões corretas</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-500"
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+            </div>
+
+            {/* XP Earned */}
+            <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-xl border-2 border-yellow-200">
+              <span className="text-gray-700 font-medium">XP Ganho</span>
+              <span className="font-bold text-yellow-600 text-xl">+50 XP</span>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button 
+                onClick={() => navigate(`/disciplines/${exam.disciplineId}/exams`)}
+                className="flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary-hover transition-colors"
+              >
+                📚 Continuar Estudando
+              </button>
+              <button 
+                onClick={() => navigate('/profile')}
+                className="flex items-center justify-center gap-2 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+              >
+                👤 Ver Perfil
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

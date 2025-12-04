@@ -32,6 +32,9 @@ export interface UserProfile {
   recentActivity?: UserActivity[];
   disciplineScores?: Record<string, number>;
   studyPlan?: StudyPlan;
+  
+  // Settings
+  dataSaverMode?: boolean;
 }
 
 export interface UserActivity {

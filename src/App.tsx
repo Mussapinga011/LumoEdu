@@ -26,6 +26,7 @@ import VideoLessonsPage from './pages/VideoLessonsPage';
 import SimulationConfigPage from './pages/SimulationConfigPage';
 import SimulationPage from './pages/SimulationPage';
 import SimulationResultPage from './pages/SimulationResultPage';
+import SimulationHistoryPage from './pages/SimulationHistoryPage';
 import GroupsPage from './pages/GroupsPage';
 import GroupChatPage from './pages/GroupChatPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -132,6 +133,11 @@ function App() {
               <SimulationResultPage />
             </ProtectedRoute>
           } />
+          <Route path="/simulation/history" element={
+            <ProtectedRoute>
+              <SimulationHistoryPage />
+            </ProtectedRoute>
+          } />
 
           <Route path="/groups" element={
             <ProtectedRoute>
@@ -209,6 +215,7 @@ function App() {
               <AdminGroupsPage />
             </AdminRoute>
           } />
+       
         </Route>
       </Routes>
     </Router>

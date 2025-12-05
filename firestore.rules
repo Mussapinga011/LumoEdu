@@ -38,6 +38,34 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Disciplines: Public read, Admin write
+    match /disciplines/{disciplineId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Question History: Users can read/write their own history
+    match /questionHistory/{historyId} {
+      // Allow reading/listing documents that belong to the user
+      // The query must include where('userId', '==', request.auth.uid)
+      allow read, list: if request.auth != null;
+      
+      // Allow writing to own history documents
+      allow create: if request.auth != null && 
+                       request.resource.data.userId == request.auth.uid;
+      
+      allow update, delete: if request.auth != null && 
+                               resource.data.userId == request.auth.uid;
+    }
+
+    // Simulations: Users can read/write their own simulations
+    match /simulations/{simulationId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Allow admins to read all simulations
+      allow read: if isAdmin();
+    }
+
     // Regras para Grupos de Estudo
     match /groups/{groupId} {
       // Qualquer usuário logado pode ler grupos e criar (a validação Premium é feita no App)

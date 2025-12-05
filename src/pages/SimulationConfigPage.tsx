@@ -16,6 +16,7 @@ const SimulationConfigPage = () => {
   const [questionCount, setQuestionCount] = useState<10 | 20 | 30 | 50>(20);
   const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
   const [includeAllDisciplines, setIncludeAllDisciplines] = useState(false);
+  const [selectedUniversity, setSelectedUniversity] = useState<'UEM' | 'UP' | 'both'>('both');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<{ title: string; message: string; type: 'error' | 'warning' } | null>(null);
 
@@ -128,6 +129,18 @@ const SimulationConfigPage = () => {
 
   const questionCounts = [10, 20, 30, 50];
 
+  // Filtrar disciplinas por universidade selecionada
+  const filteredDisciplines = selectedUniversity === 'both'
+    ? disciplines
+    : disciplines.filter(d => d.university === selectedUniversity);
+
+  // Limpar disciplinas selecionadas ao trocar de universidade
+  const handleUniversityChange = (university: 'UEM' | 'UP' | 'both') => {
+    setSelectedUniversity(university);
+    setSelectedDisciplines([]); // Limpar seleção ao trocar
+    setIncludeAllDisciplines(false);
+  };
+
   const handleDisciplineToggle = (disciplineId: string) => {
     if (selectedDisciplines.includes(disciplineId)) {
       setSelectedDisciplines(selectedDisciplines.filter(id => id !== disciplineId));
@@ -157,7 +170,8 @@ const SimulationConfigPage = () => {
         mode,
         questionCount,
         disciplineIds: selectedDisciplines,
-        includeAllDisciplines
+        includeAllDisciplines,
+        university: selectedUniversity
       };
 
       const questions = await generateSimulation(user.uid, config);
@@ -291,30 +305,86 @@ const SimulationConfigPage = () => {
         </p>
       </div>
 
-      {/* Seleção de Disciplinas (apenas para modo custom) */}
-      {mode === 'custom' && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-800">Disciplinas</h2>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={includeAllDisciplines}
-                onChange={(e) => {
-                  setIncludeAllDisciplines(e.target.checked);
-                  if (e.target.checked) {
-                    setSelectedDisciplines([]);
-                  }
-                }}
-                className="w-4 h-4 text-primary rounded"
-              />
-              <span className="text-sm font-medium text-gray-700">Todas as disciplinas</span>
-            </label>
-          </div>
+      {/* Seleção de Universidade */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">🎓 Faculdade</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Escolha de qual faculdade deseja as questões
+        </p>
+        <div className="grid grid-cols-3 gap-4">
+          <button
+            onClick={() => handleUniversityChange('UEM')}
+            className={clsx(
+              'p-4 rounded-xl border-2 font-bold transition-all text-center',
+              selectedUniversity === 'UEM'
+                ? 'bg-blue-100 text-blue-700 border-blue-500 shadow-lg'
+                : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300'
+            )}
+          >
+            <div className="text-2xl mb-1">🎓</div>
+            <div className="text-sm">UEM</div>
+          </button>
+          <button
+            onClick={() => handleUniversityChange('UP')}
+            className={clsx(
+              'p-4 rounded-xl border-2 font-bold transition-all text-center',
+              selectedUniversity === 'UP'
+                ? 'bg-green-100 text-green-700 border-green-500 shadow-lg'
+                : 'bg-white border-gray-200 text-gray-700 hover:border-green-300'
+            )}
+          >
+            <div className="text-2xl mb-1">🎓</div>
+            <div className="text-sm">UP</div>
+          </button>
+          <button
+            onClick={() => handleUniversityChange('both')}
+            className={clsx(
+              'p-4 rounded-xl border-2 font-bold transition-all text-center',
+              selectedUniversity === 'both'
+                ? 'bg-purple-100 text-purple-700 border-purple-500 shadow-lg'
+                : 'bg-white border-gray-200 text-gray-700 hover:border-purple-300'
+            )}
+          >
+            <div className="text-2xl mb-1">🎓</div>
+            <div className="text-sm">Ambas</div>
+          </button>
+        </div>
+        <p className="text-xs text-gray-400 mt-3">
+          {selectedUniversity === 'both' 
+            ? `Mostrando disciplinas de UEM e UP (${filteredDisciplines.length} disponíveis)`
+            : `Mostrando apenas disciplinas da ${selectedUniversity} (${filteredDisciplines.length} disponíveis)`}
+        </p>
+      </div>
 
-          {!includeAllDisciplines && (
+      {/* Seleção de Disciplinas (TODOS OS MODOS) */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-gray-800">📚 Disciplinas</h2>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={includeAllDisciplines}
+              onChange={(e) => {
+                setIncludeAllDisciplines(e.target.checked);
+                if (e.target.checked) {
+                  setSelectedDisciplines([]);
+                }
+              }}
+              className="w-4 h-4 text-primary rounded"
+            />
+            <span className="text-sm font-medium text-gray-700">Todas as disciplinas</span>
+          </label>
+        </div>
+
+        {!includeAllDisciplines && (
+          <>
+            <p className="text-sm text-gray-500 mb-4">
+              {mode === 'custom' 
+                ? 'Selecione pelo menos uma disciplina'
+                : 'Selecione as disciplinas que deseja estudar (deixe vazio para todas da faculdade selecionada)'}
+            </p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {disciplines.map((discipline) => (
+              {filteredDisciplines.map((discipline) => (
                 <button
                   key={discipline.id}
                   onClick={() => handleDisciplineToggle(discipline.id)}
@@ -327,18 +397,19 @@ const SimulationConfigPage = () => {
                 >
                   <div className="text-2xl mb-1">{discipline.icon}</div>
                   <div className="text-sm font-bold text-gray-800">{discipline.title}</div>
+                  <div className="text-xs text-gray-500">{discipline.university}</div>
                 </button>
               ))}
             </div>
-          )}
+          </>
+        )}
 
-          {selectedDisciplines.length > 0 && (
-            <p className="text-sm text-gray-500 mt-3">
-              {selectedDisciplines.length} disciplina(s) selecionada(s)
-            </p>
-          )}
-        </div>
-      )}
+        {selectedDisciplines.length > 0 && (
+          <p className="text-sm text-gray-500 mt-3">
+            ✅ {selectedDisciplines.length} disciplina(s) selecionada(s)
+          </p>
+        )}
+      </div>
 
       {/* Botão Iniciar */}
       <div className="flex justify-end">

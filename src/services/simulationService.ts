@@ -216,24 +216,75 @@ const getDifficultQuestions = async (
 const getRandomQuestions = async (
   config: SimulationConfig
 ): Promise<Question[]> => {
-  const disciplineIds = config.includeAllDisciplines 
-    ? await getAllDisciplineIds() 
+  console.log('🔍 getRandomQuestions - Config:', {
+    includeAllDisciplines: config.includeAllDisciplines,
+    disciplineIds: config.disciplineIds,
+    questionCount: config.questionCount,
+    university: config.university
+  });
+
+  let disciplineIds = config.includeAllDisciplines 
+    ? await getAllDisciplineIds(config.university) 
     : config.disciplineIds;
 
+  console.log('📚 Discipline IDs to query:', disciplineIds);
+
+  // Se não houver disciplinas selecionadas, buscar todas as questões disponíveis (filtradas por universidade)
+  if (!disciplineIds || disciplineIds.length === 0) {
+    console.warn('⚠️ No discipline IDs specified! Fetching all questions...');
+    
+    // Se houver filtro de universidade, buscar disciplinas dessa universidade
+    if (config.university && config.university !== 'both') {
+      disciplineIds = await getAllDisciplineIds(config.university);
+      console.log(`📚 Fetched ${disciplineIds.length} disciplines for ${config.university}`);
+    } else {
+      // Buscar todas as questões sem filtro de disciplina
+      const q = query(
+        collection(db, 'questions'),
+        limit(config.questionCount * 3) // Buscar mais para ter variedade
+      );
+      const snapshot = await getDocs(q);
+      const allQuestions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Question));
+      console.log(`🎯 Found ${allQuestions.length} total questions (no discipline filter)`);
+      return allQuestions;
+    }
+  }
+
   const questionsPerDiscipline = Math.ceil(config.questionCount / disciplineIds.length);
+  console.log(`📊 Questions per discipline: ${questionsPerDiscipline}`);
 
   const questionsPromises = disciplineIds.map(async (disciplineId) => {
+    console.log(`🔎 Querying questions for discipline: ${disciplineId}`);
     const q = query(
       collection(db, 'questions'),
       where('disciplineId', '==', disciplineId),
       limit(questionsPerDiscipline * 2) // Buscar mais para ter variedade
     );
     const snapshot = await getDocs(q);
+    console.log(`✅ Found ${snapshot.docs.length} questions for discipline ${disciplineId}`);
+    
+    // Log da estrutura das questões para debug
+    if (snapshot.docs.length > 0) {
+      console.log('📋 Sample question structure:', snapshot.docs[0].data());
+    } else {
+      // Se não encontrou, buscar TODAS as questões para ver a estrutura
+      console.warn('⚠️ No questions found! Fetching ALL questions to check structure...');
+      const allQuestionsQuery = query(collection(db, 'questions'), limit(5));
+      const allSnapshot = await getDocs(allQuestionsQuery);
+      console.log(`📊 Total questions in database: ${allSnapshot.docs.length}`);
+      if (allSnapshot.docs.length > 0) {
+        console.log('📋 Sample question from database:', allSnapshot.docs[0].data());
+        console.log('📋 Question ID:', allSnapshot.docs[0].id);
+      }
+    }
+    
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Question));
   });
 
   const questionsArrays = await Promise.all(questionsPromises);
-  return questionsArrays.flat();
+  const allQuestions = questionsArrays.flat();
+  console.log(`🎯 Total questions found: ${allQuestions.length}`);
+  return allQuestions;
 };
 
 /**
@@ -324,34 +375,62 @@ const getUserQuestionHistory = async (
 };
 
 /**
- * Buscar histórico de simulados do usuário
+ * Buscar histórico de simulados do usuário (otimizado para reduzir custos)
  */
 export const getUserSimulations = async (userId: string): Promise<SimulationResult[]> => {
   try {
+    console.log('📊 Fetching simulations for user:', userId);
+    
     const q = query(
       collection(db, SIMULATIONS_COLLECTION),
       where('userId', '==', userId),
       orderBy('createdAt', 'desc'),
-      limit(20)
+      limit(10) // Reduzido de 20 para 10 para economizar leituras
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as SimulationResult[];
+    console.log(`✅ Found ${snapshot.docs.length} simulations`);
+    
+    const simulations = snapshot.docs.map(doc => {
+      const data = doc.data();
+      
+      // Remover o array de questions para reduzir o tamanho dos dados
+      // (economiza bandwidth e memória)
+      const { questions, ...simulationData } = data;
+      
+      return {
+        id: doc.id,
+        ...simulationData,
+        // Manter apenas o count de questões, não o array completo
+        totalQuestions: data.totalQuestions || (questions?.length || 0)
+      } as SimulationResult;
+    });
+    
+    console.log('📋 Simulations loaded:', simulations.length);
+    return simulations;
   } catch (error) {
-    console.error('Error fetching user simulations:', error);
+    console.error('❌ Error fetching user simulations:', error);
     return [];
   }
 };
 
 /**
- * Buscar todos os IDs de disciplinas
+ * Buscar todos os IDs de disciplinas, opcionalmente filtrados por universidade
  */
-const getAllDisciplineIds = async (): Promise<string[]> => {
+const getAllDisciplineIds = async (university?: 'UEM' | 'UP' | 'both'): Promise<string[]> => {
   const snapshot = await getDocs(collection(db, 'disciplines'));
-  return snapshot.docs.map(doc => doc.id);
+  const allDisciplines = snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+
+  // Filtrar por universidade se especificado
+  if (university && university !== 'both') {
+    const filtered = allDisciplines.filter((d: any) => d.university === university);
+    return filtered.map((d: any) => d.id);
+  }
+
+  return allDisciplines.map((d: any) => d.id);
 };
 
 /**

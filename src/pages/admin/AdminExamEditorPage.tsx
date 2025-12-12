@@ -11,7 +11,7 @@ import {
 } from '../../services/dbService';
 import { Exam, Question } from '../../types/exam';
 import { useContentStore } from '../../stores/useContentStore';
-import { ArrowLeft, Plus, Save, Trash2, Check, X, Edit, Eye, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Trash2, Check, X, Edit, Eye, HelpCircle, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
 import clsx from 'clsx';
 import RichTextRenderer from '../../components/RichTextRenderer';
 import { useModal, useToast } from '../../hooks/useNotifications';
@@ -47,7 +47,7 @@ const AdminExamEditorPage = () => {
   const [showExplanationHelp, setShowExplanationHelp] = useState(false);
   const [questionForm, setQuestionForm] = useState<Partial<Question>>({
     statement: '',
-    options: ['', '', '', ''],
+    options: ['', '', '', '', ''],
     correctOption: '',
     explanation: ''
   });
@@ -65,7 +65,13 @@ const AdminExamEditorPage = () => {
       if (exam) {
         setExamData(exam);
         const q = await getQuestionsByExam(id);
-        setQuestions(q);
+        // Sort questions by order field, or by index if order is not set
+        const sortedQuestions = q.sort((a, b) => {
+          const orderA = a.order ?? q.indexOf(a);
+          const orderB = b.order ?? q.indexOf(b);
+          return orderA - orderB;
+        });
+        setQuestions(sortedQuestions);
       }
     } catch (error) {
       console.error("Error fetching exam:", error);
@@ -102,21 +108,33 @@ const AdminExamEditorPage = () => {
   };
 
   const handleSaveQuestion = async () => {
-    if (!questionForm.statement || !questionForm.correctOption || questionForm.options?.some(o => !o)) {
-      showWarning('Por favor, preencha todos os campos da questão');
+    // Validate that at least the first 4 options (A-D) are filled
+    const options = questionForm.options || [];
+    const firstFourOptionsFilled = options.slice(0, 4).every(o => o && o.trim() !== '');
+    
+    if (!questionForm.statement || !questionForm.correctOption || !firstFourOptionsFilled) {
+      showWarning('Por favor, preencha o enunciado, a resposta correta e pelo menos as 4 primeiras alternativas (A-D)');
       return;
     }
 
     if (!examId) return;
 
+    // Filter out empty options for saving
+    const cleanOptions = options.filter(o => o && o.trim() !== '');
+    const questionPayload = {
+      ...questionForm,
+      options: cleanOptions
+    };
+
     try {
       if (editingQuestionId) {
-        await updateQuestion(editingQuestionId, questionForm);
-        setQuestions(questions.map(q => q.id === editingQuestionId ? { ...q, ...questionForm } as Question : q));
+        await updateQuestion(editingQuestionId, questionPayload);
+        setQuestions(questions.map(q => q.id === editingQuestionId ? { ...q, ...questionPayload } as Question : q));
         setEditingQuestionId(null);
         showSuccess('Questão atualizada com sucesso!');
       } else {
-        const newQ = { ...questionForm, examId } as Omit<Question, 'id'>;
+        // Add order field for new questions (add to the end)
+        const newQ = { ...questionPayload, examId, order: questions.length } as Omit<Question, 'id'>;
         const id = await createQuestion(newQ);
         setQuestions([...questions, { ...newQ, id }]);
         showSuccess('Questão adicionada com sucesso!');
@@ -125,7 +143,7 @@ const AdminExamEditorPage = () => {
       // Reset form
       setQuestionForm({
         statement: '',
-        options: ['', '', '', ''],
+        options: ['', '', '', '', ''],
         correctOption: '',
         explanation: ''
       });
@@ -141,7 +159,12 @@ const AdminExamEditorPage = () => {
 
   const handleEditQuestion = (question: Question) => {
     setEditingQuestionId(question.id);
-    setQuestionForm(question);
+    // Pad options to ensure 5 inputs are available, even if only 4 are saved
+    const paddedOptions = [...question.options];
+    while (paddedOptions.length < 5) {
+      paddedOptions.push('');
+    }
+    setQuestionForm({ ...question, options: paddedOptions });
   };
 
   const handleDeleteQuestion = async (id: string) => {
@@ -170,6 +193,46 @@ const AdminExamEditorPage = () => {
     const newOptions = [...(questionForm.options || [])];
     newOptions[index] = value;
     setQuestionForm({ ...questionForm, options: newOptions });
+  };
+
+  const updateQuestionsOrder = async (updatedQuestions: Question[]) => {
+    try {
+      // Update order for all questions
+      const updatePromises = updatedQuestions.map((q, index) => 
+        updateQuestion(q.id, { order: index })
+      );
+      await Promise.all(updatePromises);
+      setQuestions(updatedQuestions);
+      showSuccess('Ordem das questões atualizada!');
+    } catch (error) {
+      console.error("Error updating questions order:", error);
+      showError('Erro ao atualizar ordem das questões');
+    }
+  };
+
+  const moveQuestion = async (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= questions.length) return;
+    
+    const newQuestions = [...questions];
+    const [movedQuestion] = newQuestions.splice(fromIndex, 1);
+    newQuestions.splice(toIndex, 0, movedQuestion);
+    
+    await updateQuestionsOrder(newQuestions);
+  };
+
+  const moveQuestionToPosition = async (questionId: string, newPosition: number) => {
+    const currentIndex = questions.findIndex(q => q.id === questionId);
+    if (currentIndex === -1) return;
+    
+    // Convert to 0-based index (user inputs 1-based)
+    const targetIndex = newPosition - 1;
+    
+    if (targetIndex < 0 || targetIndex >= questions.length) {
+      showWarning(`Posição inválida. Escolha entre 1 e ${questions.length}`);
+      return;
+    }
+    
+    await moveQuestion(currentIndex, targetIndex);
   };
 
   return (
@@ -329,7 +392,9 @@ const AdminExamEditorPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {questionForm.options?.map((opt, idx) => (
                   <div key={idx}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Opção {String.fromCharCode(65 + idx)}</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Opção {String.fromCharCode(65 + idx)} {idx === 4 && <span className="text-gray-400 font-normal text-xs">(Opcional)</span>}
+                    </label>
                     <div className="flex gap-2 items-start">
                       <textarea
                         value={opt}
@@ -429,7 +494,7 @@ const AdminExamEditorPage = () => {
                   <button
                     onClick={() => {
                       setEditingQuestionId(null);
-                      setQuestionForm({ statement: '', options: ['', '', '', ''], correctOption: '', explanation: '' });
+                      setQuestionForm({ statement: '', options: ['', '', '', '', ''], correctOption: '', explanation: '' });
                     }}
                     className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg"
                   >
@@ -449,41 +514,107 @@ const AdminExamEditorPage = () => {
           {/* Questions List */}
           <div className="space-y-4">
             {questions.map((q, idx) => (
-              <div key={q.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-start gap-3">
-                    <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold mt-1">
-                      #{idx + 1}
-                    </span>
-                    <div>
-                      <p className="font-medium text-gray-800 break-words">
-                        <RichTextRenderer content={q.statement} />
-                      </p>
-                      <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm text-gray-600">
-                        {q.options.map((opt, i) => (
-                          <div key={i} className={clsx("flex items-center gap-2", opt === q.correctOption && "text-green-600 font-bold")}>
-                            <span className="w-4">{String.fromCharCode(65 + i)}.</span>
-                            {opt}
-                            {opt === q.correctOption && <Check size={14} />}
-                          </div>
-                        ))}
+              <div key={q.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                <div className="flex justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-start gap-3">
+                      <div className="flex items-center gap-2">
+                        <GripVertical size={16} className="text-gray-400" />
+                        <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">
+                          #{idx + 1}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-800 break-words">
+                          <RichTextRenderer content={q.statement} />
+                        </p>
+                        <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 text-sm text-gray-600">
+                          {q.options.map((opt, i) => (
+                            <div key={i} className={clsx("flex items-center gap-2", opt === q.correctOption && "text-green-600 font-bold")}>
+                              <span className="w-4">{String.fromCharCode(65 + i)}.</span>
+                              {opt}
+                              {opt === q.correctOption && <Check size={14} />}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => handleEditQuestion(q)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                      title="Editar questão"
+                    >
+                      <Edit size={18} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteQuestion(q.id)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                      title="Excluir questão"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => handleEditQuestion(q)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
-                  >
-                    <Edit size={18} />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteQuestion(q.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+                
+                {/* Reorder Controls */}
+                <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 font-medium">Ordenar:</span>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => moveQuestion(idx, idx - 1)}
+                        disabled={idx === 0}
+                        className={clsx(
+                          "p-1.5 rounded border",
+                          idx === 0 
+                            ? "bg-gray-100 text-gray-300 cursor-not-allowed" 
+                            : "bg-white text-gray-600 hover:bg-gray-50 border-gray-300"
+                        )}
+                        title="Mover para cima"
+                      >
+                        <ArrowUp size={16} />
+                      </button>
+                      <button
+                        onClick={() => moveQuestion(idx, idx + 1)}
+                        disabled={idx === questions.length - 1}
+                        className={clsx(
+                          "p-1.5 rounded border",
+                          idx === questions.length - 1
+                            ? "bg-gray-100 text-gray-300 cursor-not-allowed" 
+                            : "bg-white text-gray-600 hover:bg-gray-50 border-gray-300"
+                        )}
+                        title="Mover para baixo"
+                      >
+                        <ArrowDown size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-gray-500 font-medium">Ir para posição:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max={questions.length}
+                      defaultValue={idx + 1}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const value = parseInt((e.target as HTMLInputElement).value);
+                          moveQuestionToPosition(q.id, value);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const value = parseInt(e.target.value);
+                        if (value !== idx + 1) {
+                          moveQuestionToPosition(q.id, value);
+                        }
+                      }}
+                      className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <span className="text-xs text-gray-400">de {questions.length}</span>
+                  </div>
                 </div>
               </div>
             ))}

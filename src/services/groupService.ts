@@ -16,7 +16,8 @@ import {
   arrayRemove,
   serverTimestamp,
   onSnapshot,
-  deleteDoc
+  deleteDoc,
+  runTransaction
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { StudyGroup, GroupMessage, GroupMember } from '../types/group';
@@ -73,33 +74,50 @@ export const createGroup = async (
  */
 export const joinGroup = async (groupId: string, user: UserProfile): Promise<void> => {
   try {
-    // Free pode entrar em quantos grupos quiser (removida a restrição)
-    
     const groupRef = doc(db, GROUPS_COLLECTION, groupId);
-    const groupDoc = await getDoc(groupRef);
 
-    if (!groupDoc.exists()) throw new Error('Grupo não encontrado');
-    
-    const groupData = groupDoc.data() as StudyGroup;
-    if (groupData.membersCount >= groupData.maxMembers) {
-      throw new Error('Este grupo está cheio.');
-    }
+    await runTransaction(db, async (transaction) => {
+      const groupDoc = await transaction.get(groupRef);
+      if (!groupDoc.exists()) throw new Error('Grupo não encontrado');
 
-    if (groupData.members?.includes(user.uid)) {
-      throw new Error('Você já está neste grupo.');
-    }
+      const groupData = groupDoc.data() as StudyGroup;
 
-    // Adicionar membro
-    await addMemberToGroup(groupId, user, 'member');
+      if (groupData.membersCount >= groupData.maxMembers) {
+        throw new Error('Este grupo está cheio.');
+      }
 
-    // Atualizar contagem e array de membros no grupo
-    await updateDoc(groupRef, {
-      membersCount: increment(1),
-      members: arrayUnion(user.uid)
+      if (groupData.members?.includes(user.uid)) {
+        throw new Error('Você já está neste grupo.');
+      }
+
+      // 1. Adicionar membro na subcoleção
+      const memberRef = doc(db, GROUPS_COLLECTION, groupId, MEMBERS_COLLECTION, user.uid);
+      const memberData: GroupMember = {
+        userId: user.uid,
+        displayName: user.displayName,
+        photoURL: user.photoURL || null,
+        role: 'member',
+        joinedAt: Timestamp.now()
+      };
+      transaction.set(memberRef, memberData);
+
+      // 2. Atualizar grupo (add member ID to array and increment count)
+      transaction.update(groupRef, {
+        membersCount: increment(1),
+        members: arrayUnion(user.uid)
+      });
+
+      // 3. Adicionar mensagem do sistema
+      const messageRef = doc(collection(db, GROUPS_COLLECTION, groupId, MESSAGES_COLLECTION));
+      transaction.set(messageRef, {
+        groupId,
+        userId: 'system',
+        userName: 'Sistema',
+        text: `${user.displayName} entrou no grupo.`,
+        createdAt: Timestamp.now(),
+        isSystemMessage: true
+      });
     });
-
-    // Mensagem de sistema
-    await sendSystemMessage(groupId, `${user.displayName} entrou no grupo.`);
 
   } catch (error) {
     console.error('Error joining group:', error);

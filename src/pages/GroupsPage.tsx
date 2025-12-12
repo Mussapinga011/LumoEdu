@@ -25,6 +25,7 @@ const GroupsPage = () => {
   const [newGroupDesc, setNewGroupDesc] = useState('');
   const [newGroupDiscipline, setNewGroupDiscipline] = useState('');
   const [creating, setCreating] = useState(false);
+  const [joiningGroupId, setJoiningGroupId] = useState<string | null>(null);
 
   useEffect(() => {
     loadGroups();
@@ -127,6 +128,9 @@ const GroupsPage = () => {
 
   const handleJoinGroup = async (groupId: string) => {
     if (!user) return;
+    if (joiningGroupId === groupId) return; // Prevent double clicks logic
+
+    setJoiningGroupId(groupId);
     try {
       await joinGroup(groupId, user);
       setToast({ message: 'Você entrou no grupo!', type: 'success' });
@@ -134,6 +138,7 @@ const GroupsPage = () => {
       navigate(`/groups/${groupId}`);
     } catch (error: any) {
       setToast({ message: error.message || 'Erro ao entrar no grupo', type: 'error' });
+      setJoiningGroupId(null); // Clear only on error (on success we navigate away)
     }
   };
 
@@ -280,10 +285,24 @@ const GroupsPage = () => {
                   <span className="text-xs font-bold uppercase text-gray-400">{group.disciplineName}</span>
                   <button 
                     onClick={() => handleJoinGroup(group.id)}
-                    className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors"
+                    disabled={joiningGroupId === group.id}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
+                      joiningGroupId === group.id 
+                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                        : 'bg-gray-900 text-white hover:bg-gray-800'
+                    }`}
                   >
-                    <LogIn size={16} />
-                    Entrar
+                    {joiningGroupId === group.id ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Entrando...
+                      </>
+                    ) : (
+                      <>
+                        <LogIn size={16} />
+                        Entrar
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

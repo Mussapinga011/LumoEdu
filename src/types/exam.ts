@@ -2,11 +2,12 @@ export interface Question {
   id: string;
   examId: string;
   statement: string;
-  options: string[]; // [A, B, C, D]
+  options: string[]; // [A, B, C, D, E]
   correctOption: string; // The value of the correct option
   explanation?: string;
   disciplineId?: string;
   difficulty?: number;
+  order?: number; // Order of the question in the exam
 }
 
 export interface Exam {

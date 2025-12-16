@@ -1,6 +1,6 @@
 import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { UserProfile } from '../types/user';
+
 
 /**
  * Script de migração para adicionar username a usuários existentes
@@ -77,7 +77,7 @@ export const migrateUsersToUsername = async (): Promise<{
     
     // Primeiro, coletar todos os usernames existentes
     querySnapshot.docs.forEach(doc => {
-      const user = doc.data() as UserProfile;
+      const user = doc.data() as any;
       if (user.username) {
         existingUsernames.add(user.username);
       }
@@ -87,7 +87,7 @@ export const migrateUsersToUsername = async (): Promise<{
     
     // Processar usuários sem username
     for (const docSnapshot of querySnapshot.docs) {
-      const user = docSnapshot.data() as UserProfile;
+      const user = docSnapshot.data() as any;
       
       // Pular se já tem username
       if (user.username) {
@@ -165,7 +165,7 @@ export const checkMigrationStatus = async (): Promise<{
   let withoutUsername = 0;
   
   querySnapshot.docs.forEach(doc => {
-    const user = doc.data() as UserProfile;
+    const user = doc.data() as any;
     if (user.username) {
       withUsername++;
     } else {

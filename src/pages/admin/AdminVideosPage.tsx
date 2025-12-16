@@ -14,7 +14,7 @@ const AdminVideosPage = () => {
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const { modalState, showConfirm, closeModal } = useModal();
-  const { toastState, showSuccess, showError, showWarning, closeToast } = useToast();
+  const { toastState, showSuccess, showError, closeToast } = useToast();
   
   // Form State
   const [title, setTitle] = useState('');

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getAllUsers, updateUserProfile, createUserProfile, deleteUserProfile } from '../../services/dbService';
+import { getAllUsers, updateUserProfile, createUserProfile } from '../../services/dbService';
+import { deleteUserCompletely } from '../../services/cloudFunctions';
 import { UserProfile } from '../../types/user';
 import { Search, Edit, X, Save, Trash2, Shield, User, Plus } from 'lucide-react';
 import { useModal, useToast } from '../../hooks/useNotifications';
@@ -134,23 +135,22 @@ const AdminUsersPage = () => {
   const handleDeleteUser = async (uid: string) => {
     showConfirm(
       'Excluir Usuário',
-      'Tem certeza que deseja excluir este usuário? Isso removerá o acesso dele ao painel. Nota: Para remover o login completamente, apague o usuário também no Firebase Console.',
+      'Tem certeza que deseja excluir este usuário? Isso removerá COMPLETAMENTE a conta (Firestore + Authentication). Esta ação não pode ser desfeita.',
       async () => {
         try {
-           // We'll simulates "soft delete" or just allow delete from list logic if you have deleteUserProfile
-           // For now let's just remove admin role if it's admin page
            if (activeTab === 'admins') {
+             // Demote admin to user instead of deleting
              await updateUserProfile(uid, { role: 'user' });
              setUsers(users.map(u => u.uid === uid ? { ...u, role: 'user' } : u));
              showSuccess('Administrador removido (rebaixado a usuário).');
            } else {
-             // Removing normal user
-             await deleteUserProfile(uid);
+             // Delete user completely using Cloud Function
+             await deleteUserCompletely(uid);
              setUsers(users.filter(u => u.uid !== uid));
-             showSuccess('Usuário excluído com sucesso.');
+             showSuccess('Usuário excluído completamente (Firestore + Authentication).');
            }
         } catch (error) {
-           showError('Erro ao excluir usuário' + getErrorMessage(error));
+           showError('Erro ao excluir usuário: ' + getErrorMessage(error));
         }
       },
       'Excluir',

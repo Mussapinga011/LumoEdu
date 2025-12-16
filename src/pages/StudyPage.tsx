@@ -56,7 +56,7 @@ const StudyPage = () => {
   };
 
   const currentQuestion = questions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex) / questions.length) * 100;
+
 
   const handleCheck = () => {
     if (!selectedOption || !currentQuestion) return;

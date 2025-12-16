@@ -11,7 +11,7 @@ import {
 } from '../../services/dbService';
 import { Exam, Question } from '../../types/exam';
 import { useContentStore } from '../../stores/useContentStore';
-import { ArrowLeft, Plus, Save, Trash2, Check, X, Edit, Eye, HelpCircle, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Check, X, Edit, Eye, HelpCircle, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
 import clsx from 'clsx';
 import RichTextRenderer from '../../components/RichTextRenderer';
 import { useModal, useToast } from '../../hooks/useNotifications';

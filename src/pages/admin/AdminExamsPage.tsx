@@ -18,7 +18,7 @@ const AdminExamsPage = () => {
   const { disciplines } = useContentStore();
   const { modalState, showConfirm, closeModal } = useModal();
   const { toastState, showSuccess, showError, closeToast } = useToast();
-  const [examToDelete, setExamToDelete] = useState<string | null>(null);
+
 
   useEffect(() => {
     fetchExams();
@@ -38,7 +38,7 @@ const AdminExamsPage = () => {
   };
 
   const handleDeleteClick = (id: string) => {
-    setExamToDelete(id);
+
     showConfirm(
       'Excluir Exame',
       'Tem certeza que deseja excluir este exame? Esta ação não pode ser desfeita.',

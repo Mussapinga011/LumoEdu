@@ -71,10 +71,10 @@ export async function downloadExam(exam: Exam, questions: Question[]): Promise<v
   
   const offlineExam = {
     id: exam.id,
-    title: exam.id, // Using id as title fallback
+    title: exam.name || exam.id, // Use exam name if available
     disciplineId: exam.disciplineId,
-    university: 'UEM', // Default value
-    year: new Date().getFullYear(),
+    university: exam.university || 'UEM', // Use exam's university or fallback to UEM
+    year: exam.year || new Date().getFullYear(),
     downloadedAt: Date.now(),
     questions,
   };

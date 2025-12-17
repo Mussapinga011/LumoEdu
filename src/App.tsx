@@ -22,6 +22,7 @@ import AdminVideosPage from './pages/admin/AdminVideosPage';
 import AdminABTestsPage from './pages/admin/AdminABTestsPage';
 import AdminABTestEditorPage from './pages/admin/AdminABTestEditorPage';
 import AdminGroupsPage from './pages/admin/AdminGroupsPage';
+import AdminBulkImportPage from './pages/admin/AdminBulkImportPage';
 import VideoLessonsPage from './pages/VideoLessonsPage';
 import SimulationConfigPage from './pages/SimulationConfigPage';
 import SimulationPage from './pages/SimulationPage';
@@ -183,6 +184,11 @@ function App() {
           <Route path="/admin/exams/:examId/edit" element={
             <AdminRoute>
               <AdminExamEditorPage />
+            </AdminRoute>
+          } />
+          <Route path="/admin/exams/bulk-import" element={
+            <AdminRoute>
+              <AdminBulkImportPage />
             </AdminRoute>
           } />
           <Route path="/admin/users" element={

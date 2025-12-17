@@ -22,7 +22,11 @@ import { getErrorMessage } from '../../utils/errorMessages';
 const AdminExamEditorPage = () => {
   const { examId } = useParams();
   const navigate = useNavigate();
-  const { disciplines } = useContentStore();
+  const { disciplines, fetchDisciplines } = useContentStore();
+
+  useEffect(() => {
+    fetchDisciplines();
+  }, [fetchDisciplines]);
   const isEditing = !!examId;
   const { modalState, showConfirm, closeModal } = useModal();
   const { toastState, showSuccess, showError, showWarning, closeToast } = useToast();
@@ -86,16 +90,29 @@ const AdminExamEditorPage = () => {
       return;
     }
 
+    // Obter a disciplina selecionada para derivar a universidade
+    const selectedDisciplineObj = disciplines.find(d => d.id === examData.disciplineId);
+    
+    if (!selectedDisciplineObj) {
+      showError('Disciplina não encontrada');
+      return;
+    }
+
     setLoading(true);
     try {
       if (isEditing && examId) {
         await updateExam(examId, { 
           ...examData, 
-          questionsCount: questions.length 
+          questionsCount: questions.length,
+          university: selectedDisciplineObj.university // Derivado da disciplina
         });
         showSuccess('Exame atualizado com sucesso!');
       } else {
-        const newId = await createExam(examData as Omit<Exam, 'id'>);
+        const newExamData = {
+          ...examData,
+          university: selectedDisciplineObj.university // Derivado da disciplina
+        };
+        const newId = await createExam(newExamData as Omit<Exam, 'id'>);
         showSuccess('Exame criado com sucesso!');
         navigate(`/admin/exams/${newId}/edit`);
       }

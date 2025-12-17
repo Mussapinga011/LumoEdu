@@ -174,6 +174,44 @@ export const deleteQuestion = async (questionId: string) => {
   await deleteDoc(questionRef);
 };
 
+/**
+ * Importação em massa de questões
+ * Cria múltiplas questões de uma vez usando batch writes
+ */
+export const bulkImportQuestions = async (
+  examId: string,
+  questions: Omit<Question, 'id'>[]
+): Promise<string[]> => {
+  const { writeBatch } = await import('firebase/firestore');
+  const batch = writeBatch(db);
+  const questionIds: string[] = [];
+  
+  // Criar todas as questões em batch
+  for (const questionData of questions) {
+    const questionsRef = collection(db, 'questions');
+    const newDocRef = doc(questionsRef); // Gera ID automaticamente
+    
+    batch.set(newDocRef, {
+      ...questionData,
+      id: newDocRef.id,
+      examId
+    });
+    
+    questionIds.push(newDocRef.id);
+  }
+  
+  // Atualizar contador de questões do exame
+  const examRef = doc(db, 'exams', examId);
+  batch.update(examRef, {
+    questionsCount: questions.length
+  });
+  
+  // Executar batch
+  await batch.commit();
+  
+  return questionIds;
+};
+
 export const addUserActivity = async (uid: string, activity: Omit<UserActivity, 'id'>) => {
   const userRef = doc(db, 'users', uid);
   const newActivity: UserActivity = {

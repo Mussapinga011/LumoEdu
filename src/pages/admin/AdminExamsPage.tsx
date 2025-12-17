@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllExams, deleteExam } from '../../services/dbService';
 import { Exam } from '../../types/exam';
-import { Plus, Edit, Trash2, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Upload } from 'lucide-react';
 import { useContentStore } from '../../stores/useContentStore';
 import { useModal, useToast } from '../../hooks/useNotifications';
 import Modal from '../../components/Modal';
@@ -15,14 +15,15 @@ const AdminExamsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDiscipline, setSelectedDiscipline] = useState<string>('all');
   const navigate = useNavigate();
-  const { disciplines } = useContentStore();
+  const { disciplines, fetchDisciplines } = useContentStore();
   const { modalState, showConfirm, closeModal } = useModal();
   const { toastState, showSuccess, showError, closeToast } = useToast();
 
 
   useEffect(() => {
     fetchExams();
-  }, []);
+    fetchDisciplines();
+  }, [fetchDisciplines]);
 
   const fetchExams = async () => {
     setLoading(true);
@@ -73,13 +74,22 @@ const AdminExamsPage = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl font-bold text-gray-800">Gerenciar Exames</h1>
-        <button
-          onClick={() => navigate('/admin/exams/create')}
-          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-hover transition-colors"
-        >
-          <Plus size={20} />
-          Criar Novo Exame
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => navigate('/admin/exams/bulk-import')}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Upload size={20} />
+            Importação em Massa
+          </button>
+          <button
+            onClick={() => navigate('/admin/exams/create')}
+            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-hover transition-colors"
+          >
+            <Plus size={20} />
+            Criar Novo Exame
+          </button>
+        </div>
       </div>
 
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-4">
@@ -111,6 +121,7 @@ const AdminExamsPage = () => {
             <tr>
               <th className="p-4 font-semibold text-gray-600">Nome</th>
               <th className="p-4 font-semibold text-gray-600">Disciplina</th>
+              <th className="p-4 font-semibold text-gray-600">Universidade</th>
               <th className="p-4 font-semibold text-gray-600">Ano/Época</th>
               <th className="p-4 font-semibold text-gray-600">Questões</th>
               <th className="p-4 font-semibold text-gray-600 text-right">Ações</th>
@@ -119,7 +130,7 @@ const AdminExamsPage = () => {
           <tbody>
             {filteredExams.length === 0 ? (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-gray-500">
+                <td colSpan={6} className="p-8 text-center text-gray-500">
                   Nenhum exame encontrado. Crie um para começar.
                 </td>
               </tr>
@@ -132,6 +143,13 @@ const AdminExamsPage = () => {
                     <td className="p-4 text-gray-600">
                       <span className={`px-2 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600`}>
                         {discipline?.title || exam.disciplineId}
+                      </span>
+                    </td>
+                    <td className="p-4 text-gray-600">
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                        exam.university === 'UEM' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                      }`}>
+                        {exam.university || discipline?.university || 'N/A'}
                       </span>
                     </td>
                     <td className="p-4 text-gray-600">{exam.year} - {exam.season}</td>

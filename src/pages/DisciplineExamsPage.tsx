@@ -14,7 +14,7 @@ interface DisciplineExamsPageProps {
 const DisciplineExamsPage = ({ mode = 'study' }: DisciplineExamsPageProps) => {
   const { disciplineId } = useParams();
   const navigate = useNavigate();
-  const { disciplines } = useContentStore();
+  const { disciplines, fetchDisciplines } = useContentStore();
   
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,10 +22,11 @@ const DisciplineExamsPage = ({ mode = 'study' }: DisciplineExamsPageProps) => {
   const discipline = disciplines.find(d => d.id === disciplineId);
 
   useEffect(() => {
+    fetchDisciplines();
     if (disciplineId) {
       fetchExams(disciplineId);
     }
-  }, [disciplineId]);
+  }, [disciplineId, fetchDisciplines]);
 
 
 

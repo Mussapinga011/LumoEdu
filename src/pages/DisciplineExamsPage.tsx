@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getExamsByDiscipline } from '../services/dbService';
 import { Exam } from '../types/exam';
 import { useContentStore } from '../stores/useContentStore';
-import { ArrowLeft, FileText, Calendar, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, HelpCircle } from 'lucide-react';
 import clsx from 'clsx';
 
 interface DisciplineExamsPageProps {
@@ -83,9 +83,11 @@ const DisciplineExamsPage = ({ mode = 'study' }: DisciplineExamsPageProps) => {
         </div>
       ) : exams.length === 0 ? (
         <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center">
-          <FileText size={48} className="mx-auto mb-4 text-gray-300" />
-          <h3 className="text-xl font-bold text-gray-700 mb-2">No Exams Available</h3>
-          <p className="text-gray-500">There are no exams available for this discipline yet.</p>
+          <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center overflow-hidden mx-auto mb-4 border-2 border-blue-100">
+             <img src="/lumo_mascot.png" alt="Mascote LumoEdu" className="w-4/5 h-4/5 object-contain" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-700 mb-2">Ops! Nenhum exame encontrado</h3>
+          <p className="text-gray-500">O Lumo ainda está organizando as questões desta disciplina. Volte em breve!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

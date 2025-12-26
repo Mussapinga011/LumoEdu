@@ -22,6 +22,7 @@ import AdminVideosPage from './pages/admin/AdminVideosPage';
 import AdminABTestsPage from './pages/admin/AdminABTestsPage';
 import AdminABTestEditorPage from './pages/admin/AdminABTestEditorPage';
 import AdminGroupsPage from './pages/admin/AdminGroupsPage';
+import AdminDownloadsPage from './pages/admin/AdminDownloadsPage';
 import AdminBulkImportPage from './pages/admin/AdminBulkImportPage';
 import VideoLessonsPage from './pages/VideoLessonsPage';
 import SimulationConfigPage from './pages/SimulationConfigPage';
@@ -219,6 +220,11 @@ function App() {
           <Route path="/admin/groups" element={
             <AdminRoute>
               <AdminGroupsPage />
+            </AdminRoute>
+          } />
+          <Route path="/admin/downloads" element={
+            <AdminRoute>
+              <AdminDownloadsPage />
             </AdminRoute>
           } />
        

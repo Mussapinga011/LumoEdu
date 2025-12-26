@@ -9,7 +9,8 @@ const AdminDashboard = () => {
     totalUsers: 0,
     premiumUsers: 0,
     totalExams: 0,
-    newUsers: 0
+    newUsers: 0,
+    onlineUsers: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -33,11 +34,20 @@ const AdminDashboard = () => {
         return u.createdAt.toDate() > thirtyDaysAgo;
       }).length;
       
+      // Calculate online users (active in last 5 minutes)
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      const onlineUsersCount = users.filter(u => {
+        if (!u.lastActive) return false;
+        const lastActiveDate = u.lastActive.toDate();
+        return lastActiveDate > fiveMinutesAgo && u.isOnline;
+      }).length;
+      
       setStats({
         totalUsers: users.length,
         premiumUsers: users.filter(u => u.isPremium).length,
         totalExams: exams.length,
-        newUsers: newUsersCount
+        newUsers: newUsersCount,
+        onlineUsers: onlineUsersCount
       });
 
     } catch (error) {
@@ -52,7 +62,25 @@ const AdminDashboard = () => {
       <h1 className="text-3xl font-bold text-gray-800">Painel Administrativo</h1>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6">
+        {/* Online Users */}
+        <div className="bg-emerald-500 rounded-lg shadow-lg p-4 text-white relative overflow-hidden group">
+          <div className="relative z-10">
+            <h3 className="text-4xl font-bold mb-2">{loading ? '...' : stats.onlineUsers}</h3>
+            <p className="text-emerald-100 font-medium uppercase tracking-wide text-sm">Usuários Online</p>
+          </div>
+          <div className="absolute -right-4 -bottom-4 text-emerald-600 opacity-30 group-hover:scale-110 transition-transform">
+            <div className="relative">
+              <Users size={100} />
+              <div className="absolute top-2 right-2 w-6 h-6 bg-green-400 rounded-full border-4 border-emerald-500 animate-pulse"></div>
+            </div>
+          </div>
+          <div className="mt-4 pt-2 border-t border-emerald-400/30 flex items-center justify-between text-sm text-emerald-100 cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/admin/users')}>
+            <span>Ativos nos últimos 5min</span>
+            <span>→</span>
+          </div>
+        </div>
+        
         {/* Total Users */}
         <div className="bg-blue-500 rounded-lg shadow-lg p-4 text-white relative overflow-hidden group">
           <div className="relative z-10">

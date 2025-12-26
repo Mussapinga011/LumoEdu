@@ -11,11 +11,14 @@ import {
   deleteDoc,
   orderBy,
   Timestamp,
-  arrayUnion
+  arrayUnion,
+  serverTimestamp,
+  increment
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { UserProfile, UserActivity, StudyPlan } from '../types/user';
 import { Exam, Question } from '../types/exam';
+import { DownloadMaterial } from '../types/download';
 import { checkNewBadges } from './badgeService';
 
 // --- User Operations ---
@@ -110,17 +113,37 @@ export const createExam = async (exam: Omit<Exam, 'id'>) => {
   return docRef.id;
 };
 
-export const getExamsByDiscipline = async (disciplineId: string): Promise<Exam[]> => {
+export const getExamsByDiscipline = async (disciplineId: string, activeOnly: boolean = true): Promise<Exam[]> => {
   const examsRef = collection(db, 'exams');
   const q = query(examsRef, where('disciplineId', '==', disciplineId));
+  
   const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => doc.data() as Exam);
+  const allExams = querySnapshot.docs.map(doc => doc.data() as Exam);
+  
+  // Filter by active status in JavaScript (for backward compatibility)
+  // Exams without isActive field are considered active by default
+  if (activeOnly) {
+    return allExams.filter(exam => exam.isActive !== false);
+  }
+  
+  return allExams;
 };
 
+// Get all exams (for admin use)
 export const getAllExams = async (): Promise<Exam[]> => {
   const examsRef = collection(db, 'exams');
   const querySnapshot = await getDocs(examsRef);
   return querySnapshot.docs.map(doc => doc.data() as Exam);
+};
+
+// Get only active exams (for regular users)
+export const getActiveExams = async (): Promise<Exam[]> => {
+  const examsRef = collection(db, 'exams');
+  const querySnapshot = await getDocs(examsRef);
+  const allExams = querySnapshot.docs.map(doc => doc.data() as Exam);
+  
+  // Filter in JavaScript - exams without isActive are considered active
+  return allExams.filter(exam => exam.isActive !== false);
 };
 
 export const getExam = async (examId: string): Promise<Exam | null> => {
@@ -359,4 +382,40 @@ export const getVideoLessons = async (
 export const deleteVideoLesson = async (videoId: string) => {
   const videoRef = doc(db, 'videos', videoId);
   await deleteDoc(videoRef);
+};
+
+// --- DOWNLOAD MATERIALS FUNCTIONS ---
+
+const DOWNLOADS_COLLECTION = 'downloads';
+
+export const createDownloadMaterial = async (data: Omit<DownloadMaterial, 'id' | 'downloadCount' | 'createdAt'>): Promise<string> => {
+  const docRef = await addDoc(collection(db, DOWNLOADS_COLLECTION), {
+    ...data,
+    downloadCount: 0,
+    createdAt: serverTimestamp()
+  });
+  return docRef.id;
+};
+
+export const updateDownloadMaterial = async (id: string, data: Partial<DownloadMaterial>): Promise<void> => {
+  const docRef = doc(db, DOWNLOADS_COLLECTION, id);
+  await updateDoc(docRef, data);
+};
+
+export const deleteDownloadMaterial = async (id: string): Promise<void> => {
+  const docRef = doc(db, DOWNLOADS_COLLECTION, id);
+  await deleteDoc(docRef);
+};
+
+export const getAllDownloads = async (): Promise<DownloadMaterial[]> => {
+  const q = query(collection(db, DOWNLOADS_COLLECTION), orderBy('createdAt', 'desc'));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DownloadMaterial));
+};
+
+export const incrementDownloadCount = async (id: string): Promise<void> => {
+  const docRef = doc(db, DOWNLOADS_COLLECTION, id);
+  await updateDoc(docRef, {
+    downloadCount: increment(1)
+  });
 };

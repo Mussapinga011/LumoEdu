@@ -63,9 +63,15 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Criar Conta</h2>
+        <div className="flex flex-col items-center mb-6">
+          <div className="w-24 h-24 rounded-full bg-blue-50 flex items-center justify-center overflow-hidden mb-4 border-2 border-blue-100">
+             <img src="/lumo_mascot.png" alt="Mascote LumoEdu" className="w-4/5 h-4/5 object-contain" />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-800 text-center">Junte-se ao LumoEdu</h2>
+          <p className="text-gray-500 text-center">Comece sua jornada rumo à vaga dos sonhos</p>
+        </div>
         {error && <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

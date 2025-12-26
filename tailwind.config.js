@@ -8,20 +8,21 @@ export default {
     extend: {
       colors: {
         // Cores sincronizadas com o ícone da aplicação
+        // LumoEdu Brand Colors
         primary: {
-          DEFAULT: '#6366F1', // Indigo/Purple do ícone
-          hover: '#4F46E5',
-          shade: '#4338CA', // Darker shade para efeito 3D
+          DEFAULT: '#3B82F6', // Blue "Lumo"
+          hover: '#2563EB',
+          shade: '#1D4ED8',
         },
         secondary: {
-          DEFAULT: '#8B5CF6', // Purple/Violet do ícone
-          hover: '#7C3AED',
-          shade: '#6D28D9',
+          DEFAULT: '#22C55E', // Green "Edu"
+          hover: '#16A34A',
+          shade: '#15803D',
         },
         accent: {
-          DEFAULT: '#EC4899', // Pink/Magenta do ícone
-          hover: '#DB2777',
-          shade: '#BE185D',
+          DEFAULT: '#FFB800', // Yellow Mascot
+          hover: '#E5A600',
+          shade: '#CC9400',
         },
         danger: {
           DEFAULT: '#EF4444', // Red

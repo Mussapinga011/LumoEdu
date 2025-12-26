@@ -305,13 +305,23 @@ const AdminUsersPage = () => {
                   <tr key={user.uid} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold ${
-                          user.role === 'admin' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
-                        }`}>
-                          {user.photoURL ? (
-                            <img src={user.photoURL} alt="" className="w-full h-full rounded-full object-cover" />
-                          ) : (
-                            user.displayName?.charAt(0).toUpperCase() || <User size={20} />
+                        <div className="relative">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold ${
+                            user.role === 'admin' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
+                          }`}>
+                            {user.photoURL ? (
+                              <img src={user.photoURL} alt="" className="w-full h-full rounded-full object-cover" />
+                            ) : (
+                              user.displayName?.charAt(0).toUpperCase() || <User size={20} />
+                            )}
+                          </div>
+                          {/* Online Indicator */}
+                          {user.isOnline && user.lastActive && (() => {
+                            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+                            const lastActiveDate = user.lastActive.toDate();
+                            return lastActiveDate > fiveMinutesAgo;
+                          })() && (
+                            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white"></div>
                           )}
                         </div>
                         <div>

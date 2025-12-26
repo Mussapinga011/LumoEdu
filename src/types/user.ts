@@ -35,6 +35,10 @@ export interface UserProfile {
   
   // Settings
   dataSaverMode?: boolean;
+  
+  // Online Presence
+  lastActive?: Timestamp;
+  isOnline?: boolean;
 }
 
 export interface UserActivity {

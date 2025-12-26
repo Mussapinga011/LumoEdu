@@ -38,7 +38,8 @@ const AdminExamEditorPage = () => {
     year: new Date().getFullYear(),
     season: '1ª época',
     questionsCount: 0,
-    description: ''
+    description: '',
+    isActive: true // Exames são ativos por padrão
   });
 
   const [selectedUniversity, setSelectedUniversity] = useState<'UEM' | 'UP'>('UEM');
@@ -327,6 +328,36 @@ const AdminExamEditorPage = () => {
               <option value="2ª época">2ª época</option>
               <option value="Extraordinário">Extraordinário</option>
             </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status do Exame</label>
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <button
+                type="button"
+                onClick={() => setExamData({ ...examData, isActive: !examData.isActive })}
+                className={clsx(
+                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+                  examData.isActive ? "bg-green-500" : "bg-gray-300"
+                )}
+              >
+                <span
+                  className={clsx(
+                    "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                    examData.isActive ? "translate-x-6" : "translate-x-1"
+                  )}
+                />
+              </button>
+              <div>
+                <p className={clsx("text-sm font-bold", examData.isActive ? "text-green-700" : "text-gray-600")}>
+                  {examData.isActive ? "✓ Ativo (Visível para usuários)" : "✗ Inativo (Oculto dos usuários)"}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {examData.isActive 
+                    ? "Os usuários podem ver e fazer este exame" 
+                    : "Apenas administradores podem ver este exame"}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
         <div className="flex justify-end">

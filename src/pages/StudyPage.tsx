@@ -45,6 +45,13 @@ const StudyPage = () => {
     setLoading(true);
     try {
       const examData = await getExam(id);
+      
+      // Check if exam is active (for non-admin users)
+      if (examData && examData.isActive === false && user?.role !== 'admin') {
+        navigate('/disciplines');
+        return;
+      }
+      
       const questionsData = await getQuestionsByExam(id);
       setExam(examData);
       setQuestions(questionsData);
@@ -285,27 +292,27 @@ const StudyPage = () => {
 
       <div className="flex-1 flex overflow-hidden">
         {/* Main Content */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24">
-          <div className="max-w-3xl mx-auto space-y-8">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-              <div className="flex justify-between items-start mb-4">
-                <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-sm font-bold">
+        <div className="flex-1 overflow-y-auto p-3 md:p-8 pb-24">
+          <div className="max-w-3xl mx-auto space-y-4 md:space-y-8">
+            <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
+              <div className="flex justify-between items-start mb-3 md:mb-4">
+                <span className="bg-gray-100 text-gray-600 px-2 md:px-3 py-1 rounded-lg text-xs md:text-sm font-bold">
                   Questão {currentQuestionIndex + 1}
                 </span>
               </div>
               
-              <div className="text-lg md:text-xl font-medium text-gray-800 mb-8">
+              <div className="text-base md:text-lg lg:text-xl font-medium text-gray-800 mb-6 md:mb-8">
                 <RichTextRenderer content={currentQuestion.statement} />
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2 md:space-y-3">
                 {currentQuestion.options.map((option) => (
                   <button
                     key={option}
                     onClick={() => status === 'idle' && setSelectedOption(option)}
                     disabled={status !== 'idle'}
                     className={clsx(
-                      "w-full text-left p-4 rounded-xl border-2 transition-all flex items-center gap-3",
+                      "w-full text-left p-3 md:p-4 rounded-xl border-2 transition-all flex items-center gap-2 md:gap-3",
                       selectedOption === option
                         ? "border-secondary bg-blue-50 text-secondary"
                         : "border-gray-100 hover:border-gray-300 text-gray-700",
@@ -314,7 +321,7 @@ const StudyPage = () => {
                     )}
                   >
                     <div className={clsx(
-                      "w-8 h-8 rounded-full flex items-center justify-center border-2 text-sm font-bold",
+                      "w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center border-2 text-sm font-bold shrink-0",
                       // Logic for circle color
                       status === 'correct' && option === currentQuestion.correctOption ? "border-primary bg-primary text-white" :
                       status === 'incorrect' && option === selectedOption ? "border-danger bg-danger text-white" :
@@ -323,11 +330,11 @@ const StudyPage = () => {
                     )}>
                       {/* Option Letter (A, B, C...) could be added here if we had index, but option is string. 
                           We can map index in the loop above if needed, but for now just showing check/x or empty */}
-                       {status === 'correct' && option === currentQuestion.correctOption ? <Check size={16} /> :
-                        status === 'incorrect' && option === selectedOption ? <X size={16} /> :
+                       {status === 'correct' && option === currentQuestion.correctOption ? <Check size={14} /> :
+                        status === 'incorrect' && option === selectedOption ? <X size={14} /> :
                         null}
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0 text-sm md:text-base">
                       <RichTextRenderer content={option} />
                     </div>
                   </button>
@@ -338,36 +345,53 @@ const StudyPage = () => {
              {/* Feedback Section (Only visible when answered) */}
              {status !== 'idle' && (
               <div className={clsx(
-                "p-6 rounded-2xl border-2 flex items-start gap-4",
+                "p-4 md:p-6 rounded-2xl border-2",
                 status === 'correct' ? "bg-green-50 border-green-100" : "bg-red-50 border-red-100"
               )}>
-                <div className={clsx(
-                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                  status === 'correct' ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
-                )}>
-                  {status === 'correct' ? <Check size={24} /> : <X size={24} />}
+                <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-0">
+                  <div className={clsx(
+                    "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shrink-0",
+                    status === 'correct' ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+                  )}>
+                    {status === 'correct' ? <Check size={20} /> : <X size={20} />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className={clsx("font-bold text-base md:text-lg mb-1", status === 'correct' ? "text-green-800" : "text-red-800")}>
+                      {status === 'correct' ? 'Excelente!' : 'Incorreto'}
+                    </h3>
+                    {status === 'incorrect' && (
+                      <div className="text-red-600 text-sm md:text-base mb-2">
+                        <span className="font-bold">Resposta correta: </span>
+                        <RichTextRenderer content={currentQuestion.correctOption} />
+                      </div>
+                    )}
+                    {currentQuestion.explanation && (
+                      <div className="bg-white/50 rounded-lg mt-2 border border-gray-200">
+                        <div className="p-2 md:p-3 max-h-[40vh] md:max-h-none overflow-y-auto">
+                          <span className="font-bold block mb-1 text-xs md:text-sm text-gray-700">Explicação:</span>
+                          <div className="text-gray-600 text-xs md:text-sm">
+                            <RichTextRenderer content={currentQuestion.explanation} />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {/* Desktop Continue Button */}
+                  <button
+                    onClick={handleNext}
+                    className={clsx(
+                      "hidden md:block ml-auto px-6 py-2 rounded-xl font-bold text-white uppercase tracking-wide transition-all shadow-sm active:translate-y-1",
+                      status === 'correct' ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
+                    )}
+                  >
+                    Continuar
+                  </button>
                 </div>
-                <div>
-                  <h3 className={clsx("font-bold text-lg mb-1", status === 'correct' ? "text-green-800" : "text-red-800")}>
-                    {status === 'correct' ? 'Excelente!' : 'Incorreto'}
-                  </h3>
-                  {status === 'incorrect' && (
-                    <div className="text-red-600 mb-2">
-                      <span className="font-bold">Resposta correta: </span>
-                      <RichTextRenderer content={currentQuestion.correctOption} />
-                    </div>
-                  )}
-                  {currentQuestion.explanation && (
-                    <div className="text-gray-600 text-sm bg-white/50 p-3 rounded-lg mt-2">
-                      <span className="font-bold block mb-1">Explicação:</span>
-                      <RichTextRenderer content={currentQuestion.explanation} />
-                    </div>
-                  )}
-                </div>
+                {/* Mobile Continue Button */}
                 <button
                   onClick={handleNext}
                   className={clsx(
-                    "ml-auto px-6 py-2 rounded-xl font-bold text-white uppercase tracking-wide transition-all shadow-sm active:translate-y-1",
+                    "md:hidden w-full mt-3 py-3 rounded-xl font-bold text-white uppercase tracking-wide transition-all shadow-sm active:translate-y-1",
                     status === 'correct' ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
                   )}
                 >

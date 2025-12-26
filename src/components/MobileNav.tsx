@@ -29,7 +29,11 @@ const MobileNav = ({ navItems, isAdmin = false }: MobileNavProps) => {
         isAdmin ? "bg-gray-900 border-gray-800 text-white" : "bg-white border-gray-200"
       )}>
         <div className="font-bold text-xl">
-          {isAdmin ? 'Painel Admin' : 'AdmissionPrep'}
+          {isAdmin ? (
+            'Painel Admin'
+          ) : (
+            <img src="/lumo_text.png" alt="LumoEdu" className="h-7 w-auto object-contain" />
+          )}
         </div>
         <button 
           onClick={toggleMenu}

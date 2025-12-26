@@ -71,6 +71,13 @@ const ChallengePage = () => {
     setLoading(true);
     try {
       const examData = await getExam(id);
+      
+      // Check if exam is active (for non-admin users)
+      if (examData && examData.isActive === false && user?.role !== 'admin') {
+        navigate('/challenge');
+        return;
+      }
+      
       const questionsData = await getQuestionsByExam(id);
       setExam(examData);
       setQuestions(questionsData);

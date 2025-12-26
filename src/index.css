@@ -4,15 +4,15 @@
 
 @layer base {
   :root {
-    /* Cores sincronizadas com o ícone */
-    --color-primary: 99 102 241; /* #6366F1 em RGB */
-    --color-primary-hover: 79 70 229; /* #4F46E5 em RGB */
-    --color-secondary: 139 92 246; /* #8B5CF6 em RGB */
-    --color-accent: 236 72 153; /* #EC4899 em RGB */
+    /* Cores sincronizadas com o novo logo LumoEdu */
+    --color-primary: 59 130 246; /* #3B82F6 - Blue "Lumo" */
+    --color-primary-hover: 37 99 235; /* #2563EB */
+    --color-secondary: 34 197 94; /* #22C55E - Green "Edu" */
+    --color-accent: 255 184 0; /* #FFB800 - Yellow Mascot */
     
-    /* Gradientes baseados no ícone */
-    --gradient-primary: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
-    --gradient-accent: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    /* Gradientes baseados no novo logo */
+    --gradient-primary: linear-gradient(135deg, #3B82F6 0%, #22C55E 100%);
+    --gradient-accent: linear-gradient(135deg, #22C55E 0%, #FFB800 100%);
   }
   
   body {

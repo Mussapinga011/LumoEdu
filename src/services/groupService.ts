@@ -39,11 +39,11 @@ export const createGroup = async (
     throw new Error('Apenas usuários Premium podem criar grupos. Faça upgrade agora!');
   }
 
-  // Regra 2: Premium pode criar no máximo 2 grupos (Admin ilimitado)
+  // Regra 2: Premium pode criar no máximo 1 grupo (Admin ilimitado)
   if (user.isPremium && user.role !== 'admin') {
     const userCreatedGroups = await getUserCreatedGroups(user.uid);
-    if (userCreatedGroups.length >= 2) {
-      throw new Error('Você já criou 2 grupos. Exclua um grupo existente para criar outro.');
+    if (userCreatedGroups.length >= 1) {
+      throw new Error('Você já criou 1 grupo. Exclua o grupo existente para criar outro.');
     }
   }
 

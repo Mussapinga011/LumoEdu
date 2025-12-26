@@ -13,9 +13,13 @@ import {
 import { signOut } from '../services/authService';
 import clsx from 'clsx';
 import MobileNav from './MobileNav';
+import { useOnlinePresence } from '../hooks/useOnlinePresence';
 
 const Layout = () => {
   const location = useLocation();
+  
+  // Track user online presence
+  useOnlinePresence();
 
   const navItems = [
     { name: 'Aprender', path: '/disciplines', icon: BookOpen },
@@ -36,7 +40,9 @@ const Layout = () => {
       {/* Sidebar (Desktop) */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 p-4 fixed h-full">
         <div className="mb-8 px-4">
-          <h1 className="text-2xl font-bold text-primary">AdmissionPrep</h1>
+          <Link to="/">
+            <img src="/lumo_text.png" alt="LumoEdu" className="h-8 w-auto object-contain" />
+          </Link>
         </div>
         <nav className="flex-1 space-y-2">
           {navItems.map((item) => {

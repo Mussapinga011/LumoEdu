@@ -20,4 +20,5 @@ export interface Exam {
   createdAt: any; // Timestamp
   description?: string;
   university?: 'UEM' | 'UP'; // Universidade do exame
+  isActive?: boolean; // Se o exame está ativo/visível para os usuários
 }

@@ -29,8 +29,11 @@ const ProfilePage = () => {
         <div className="flex-1 text-center md:text-left">
           <h2 className="text-2xl font-bold text-gray-800">{user.displayName}</h2>
           <p className="text-gray-500">Membro desde {new Date().toLocaleDateString('pt-PT')}</p>
-          <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-secondary font-bold text-sm">
-            {user.isPremium ? 'MEMBRO PREMIUM' : 'MEMBRO GRÁTIS'}
+          <div className={clsx(
+            "mt-2 inline-flex items-center px-3 py-1 rounded-full font-bold text-sm",
+            user.isPremium ? "bg-green-100 text-green-700" : "bg-blue-100 text-primary"
+          )}>
+            {user.isPremium ? '⭐ MEMBRO PREMIUM' : '👤 MEMBRO GRÁTIS'}
           </div>
         </div>
         <div className="flex gap-4 w-full md:w-auto justify-center md:justify-start">

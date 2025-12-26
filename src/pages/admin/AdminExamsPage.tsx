@@ -124,13 +124,14 @@ const AdminExamsPage = () => {
               <th className="p-4 font-semibold text-gray-600">Universidade</th>
               <th className="p-4 font-semibold text-gray-600">Ano/Época</th>
               <th className="p-4 font-semibold text-gray-600">Questões</th>
+              <th className="p-4 font-semibold text-gray-600">Status</th>
               <th className="p-4 font-semibold text-gray-600 text-right">Ações</th>
             </tr>
           </thead>
           <tbody>
             {filteredExams.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-gray-500">
+                <td colSpan={7} className="p-8 text-center text-gray-500">
                   Nenhum exame encontrado. Crie um para começar.
                 </td>
               </tr>
@@ -154,6 +155,13 @@ const AdminExamsPage = () => {
                     </td>
                     <td className="p-4 text-gray-600">{exam.year} - {exam.season}</td>
                     <td className="p-4 text-gray-600">{exam.questionsCount}</td>
+                    <td className="p-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                        exam.isActive !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {exam.isActive !== false ? '✓ Ativo' : '✗ Inativo'}
+                      </span>
+                    </td>
                     <td className="p-4 text-right space-x-2">
                       <button
                         onClick={() => navigate(`/admin/exams/${exam.id}/edit`)}

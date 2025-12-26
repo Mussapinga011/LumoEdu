@@ -6,7 +6,8 @@ import {
   LogOut,
   Video,
   TrendingUp,
-  MessageCircle
+  MessageCircle,
+  Download
 } from 'lucide-react';
 import { signOut } from '../services/authService';
 import clsx from 'clsx';
@@ -21,6 +22,7 @@ const AdminLayout = () => {
     { name: 'Gerenciar Exames', path: '/admin/exams', icon: FileText },
     { name: 'Gerenciar Aulas', path: '/admin/videos', icon: Video },
     { name: 'Gerenciar Grupos', path: '/admin/groups', icon: MessageCircle },
+    { name: 'Gerenciar Downloads', path: '/admin/downloads', icon: Download },
     { name: 'Testes A/B', path: '/admin/ab-tests', icon: TrendingUp },
   ];
 
@@ -30,8 +32,9 @@ const AdminLayout = () => {
       {/* Sidebar (Desktop) */}
       <aside className="hidden md:flex flex-col w-64 bg-gray-900 text-white border-r border-gray-800 p-4 fixed h-full">
         <div className="mb-8 px-4 flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white">A</div>
-          <h1 className="text-xl font-bold text-white">Painel Admin</h1>
+          <Link to="/admin">
+            <img src="/lumo_text.png" alt="LumoEdu Admin" className="h-7 w-auto object-contain" />
+          </Link>
         </div>
         
         <div className="px-4 mb-6">

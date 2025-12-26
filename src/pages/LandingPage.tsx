@@ -6,7 +6,7 @@ const LandingPage = () => {
     <div className="min-h-screen flex flex-col bg-white">
       {/* Header */}
       <header className="flex items-center justify-between px-4 md:px-6 py-4 max-w-5xl mx-auto w-full">
-        <h1 className="text-2xl md:text-3xl font-bold text-primary">AdmissionPrep</h1>
+        <img src="/lumo_text.png" alt="LumoEdu" className="h-8 md:h-10 w-auto object-contain" />
         <div className="space-x-4">
           <Link 
             to="/login" 
@@ -20,12 +20,22 @@ const LandingPage = () => {
       {/* Hero Section */}
       <main className="flex-1 flex flex-col md:flex-row items-center justify-center px-6 py-12 max-w-5xl mx-auto w-full gap-12">
         <div className="flex-1 flex justify-center">
-          <div className="w-80 h-80 bg-gray-100 rounded-full flex items-center justify-center relative">
-             {/* Placeholder for a hero image/illustration */}
-             <Globe size={160} className="text-primary" />
-             <div className="absolute -bottom-4 -right-4 bg-accent p-4 rounded-2xl shadow-lg rotate-12">
-                <Zap size={40} className="text-white" />
-             </div>
+          <div className="relative group">
+            {/* Mascot as main hero character */}
+            <div className="w-64 h-64 md:w-80 md:h-80 bg-gradient-to-br from-blue-50 to-green-50 rounded-full flex items-center justify-center relative shadow-2xl overflow-hidden animate-float">
+               <img 
+                 src="/lumo_mascot.png" 
+                 alt="Mascote LumoEdu" 
+                 className="w-4/5 h-4/5 object-contain"
+               />
+            </div>
+            {/* Success badges surrounding mascot */}
+            <div className="absolute -top-4 -right-4 bg-yellow-400 p-4 rounded-2xl shadow-lg -rotate-12 animate-bounce">
+               <Zap size={32} className="text-white" />
+            </div>
+            <div className="absolute -bottom-2 -left-4 bg-secondary p-3 rounded-xl shadow-lg rotate-12">
+               <Globe size={24} className="text-white" />
+            </div>
           </div>
         </div>
         

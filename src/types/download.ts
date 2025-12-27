@@ -9,7 +9,8 @@ export interface DownloadMaterial {
   type: 'exam' | 'guide' | 'summary' | 'other';
   disciplineId: string;
   disciplineName: string;
-  university: 'UEM' | 'UP' | 'all';
+  universityId: string; // ID da universidade ('all' se for geral)
+  universityName?: string; // Nome da universidade ('Geral' se for para todas)
   year?: number;
   isPremium: boolean;
   downloadCount: number;

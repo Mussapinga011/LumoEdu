@@ -22,11 +22,12 @@ import { getErrorMessage } from '../../utils/errorMessages';
 const AdminExamEditorPage = () => {
   const { examId } = useParams();
   const navigate = useNavigate();
-  const { disciplines, fetchDisciplines } = useContentStore();
+  const { disciplines, universities, fetchContent, loading: contentLoading } = useContentStore();
 
   useEffect(() => {
-    fetchDisciplines();
-  }, [fetchDisciplines]);
+    fetchContent();
+  }, [fetchContent]);
+  
   const isEditing = !!examId;
   const { modalState, showConfirm, closeModal } = useModal();
   const { toastState, showSuccess, showError, showWarning, closeToast } = useToast();
@@ -39,10 +40,10 @@ const AdminExamEditorPage = () => {
     season: '1ª época',
     questionsCount: 0,
     description: '',
-    isActive: true // Exames são ativos por padrão
+    isActive: true 
   });
 
-  const [selectedUniversity, setSelectedUniversity] = useState<'UEM' | 'UP'>('UEM');
+  const [selectedUniversityId, setSelectedUniversityId] = useState<string>('');
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
@@ -63,6 +64,16 @@ const AdminExamEditorPage = () => {
     }
   }, [examId]);
 
+  // Set selected university when exam data is loaded
+  useEffect(() => {
+    if (examData.disciplineId && disciplines.length > 0) {
+      const disc = disciplines.find(d => d.id === examData.disciplineId);
+      if (disc) {
+        setSelectedUniversityId(disc.universityId);
+      }
+    }
+  }, [examData.disciplineId, disciplines]);
+
   const fetchExamData = async (id: string) => {
     setLoading(true);
     try {
@@ -70,7 +81,6 @@ const AdminExamEditorPage = () => {
       if (exam) {
         setExamData(exam);
         const q = await getQuestionsByExam(id);
-        // Sort questions by order field, or by index if order is not set
         const sortedQuestions = q.sort((a, b) => {
           const orderA = a.order ?? q.indexOf(a);
           const orderB = b.order ?? q.indexOf(b);
@@ -91,7 +101,6 @@ const AdminExamEditorPage = () => {
       return;
     }
 
-    // Obter a disciplina selecionada para derivar a universidade
     const selectedDisciplineObj = disciplines.find(d => d.id === examData.disciplineId);
     
     if (!selectedDisciplineObj) {
@@ -105,13 +114,13 @@ const AdminExamEditorPage = () => {
         await updateExam(examId, { 
           ...examData, 
           questionsCount: questions.length,
-          university: selectedDisciplineObj.university // Derivado da disciplina
+          university: selectedDisciplineObj.universityName // Denormalized for reports/search
         });
         showSuccess('Exame atualizado com sucesso!');
       } else {
         const newExamData = {
           ...examData,
-          university: selectedDisciplineObj.university // Derivado da disciplina
+          university: selectedDisciplineObj.universityName 
         };
         const newId = await createExam(newExamData as Omit<Exam, 'id'>);
         showSuccess('Exame criado com sucesso!');
@@ -126,7 +135,6 @@ const AdminExamEditorPage = () => {
   };
 
   const handleSaveQuestion = async () => {
-    // Validate that at least the first 4 options (A-D) are filled
     const options = questionForm.options || [];
     const firstFourOptionsFilled = options.slice(0, 4).every(o => o && o.trim() !== '');
     
@@ -137,7 +145,6 @@ const AdminExamEditorPage = () => {
 
     if (!examId) return;
 
-    // Filter out empty options for saving
     const cleanOptions = options.filter(o => o && o.trim() !== '');
     const questionPayload = {
       ...questionForm,
@@ -151,14 +158,12 @@ const AdminExamEditorPage = () => {
         setEditingQuestionId(null);
         showSuccess('Questão atualizada com sucesso!');
       } else {
-        // Add order field for new questions (add to the end)
         const newQ = { ...questionPayload, examId, order: questions.length } as Omit<Question, 'id'>;
         const id = await createQuestion(newQ);
         setQuestions([...questions, { ...newQ, id }]);
         showSuccess('Questão adicionada com sucesso!');
       }
       
-      // Reset form
       setQuestionForm({
         statement: '',
         options: ['', '', '', '', ''],
@@ -166,7 +171,6 @@ const AdminExamEditorPage = () => {
         explanation: ''
       });
       
-      // Update exam question count
       await updateExam(examId, { questionsCount: questions.length + (editingQuestionId ? 0 : 1) });
       
     } catch (error) {
@@ -177,7 +181,6 @@ const AdminExamEditorPage = () => {
 
   const handleEditQuestion = (question: Question) => {
     setEditingQuestionId(question.id);
-    // Pad options to ensure 5 inputs are available, even if only 4 are saved
     const paddedOptions = [...question.options];
     while (paddedOptions.length < 5) {
       paddedOptions.push('');
@@ -215,7 +218,6 @@ const AdminExamEditorPage = () => {
 
   const updateQuestionsOrder = async (updatedQuestions: Question[]) => {
     try {
-      // Update order for all questions
       const updatePromises = updatedQuestions.map((q, index) => 
         updateQuestion(q.id, { order: index })
       );
@@ -242,7 +244,6 @@ const AdminExamEditorPage = () => {
     const currentIndex = questions.findIndex(q => q.id === questionId);
     if (currentIndex === -1) return;
     
-    // Convert to 0-based index (user inputs 1-based)
     const targetIndex = newPosition - 1;
     
     if (targetIndex < 0 || targetIndex >= questions.length) {
@@ -252,6 +253,8 @@ const AdminExamEditorPage = () => {
     
     await moveQuestion(currentIndex, targetIndex);
   };
+
+  const filteredDisciplines = disciplines.filter(d => d.universityId === selectedUniversityId);
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20">
@@ -282,15 +285,17 @@ const AdminExamEditorPage = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Universidade</label>
             <select
-              value={selectedUniversity}
+              value={selectedUniversityId}
               onChange={e => {
-                setSelectedUniversity(e.target.value as 'UEM' | 'UP');
-                setExamData({ ...examData, disciplineId: '' }); // Reset discipline when university changes
+                setSelectedUniversityId(e.target.value);
+                setExamData({ ...examData, disciplineId: '' }); 
               }}
               className="w-full p-2 border rounded-lg"
             >
-              <option value="UEM">UEM</option>
-              <option value="UP">UP</option>
+              <option value="">Selecionar Universidade</option>
+              {universities.map(u => (
+                <option key={u.id} value={u.id}>{u.shortName} - {u.name}</option>
+              ))}
             </select>
           </div>
           <div>
@@ -299,12 +304,11 @@ const AdminExamEditorPage = () => {
               value={examData.disciplineId}
               onChange={e => setExamData({ ...examData, disciplineId: e.target.value })}
               className="w-full p-2 border rounded-lg"
+              disabled={!selectedUniversityId}
             >
               <option value="">Selecionar Disciplina</option>
-              {disciplines
-                .filter(d => d.university === selectedUniversity)
-                .map(d => (
-                  <option key={d.id} value={d.id}>{d.title}</option>
+              {filteredDisciplines.map(d => (
+                <option key={d.id} value={d.id}>{d.title}</option>
               ))}
             </select>
           </div>

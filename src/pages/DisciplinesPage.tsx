@@ -6,16 +6,23 @@ import { ArrowRight } from 'lucide-react';
 import clsx from 'clsx';
 
 const DisciplinesPage = () => {
-  const { disciplines, fetchDisciplines, loading } = useContentStore();
+  const { disciplines, universities, fetchContent, loading } = useContentStore();
   const { user } = useAuthStore();
   const navigate = useNavigate();
-  const [selectedUniversity, setSelectedUniversity] = useState<'UEM' | 'UP'>('UEM');
+  const [selectedUniversityId, setSelectedUniversityId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchDisciplines();
-  }, [fetchDisciplines]);
+    fetchContent();
+  }, [fetchContent]);
 
-  if (loading) {
+  useEffect(() => {
+    // Set first university as default when loaded
+    if (universities.length > 0 && !selectedUniversityId) {
+      setSelectedUniversityId(universities[0].id);
+    }
+  }, [universities, selectedUniversityId]);
+
+  if (loading && disciplines.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -23,7 +30,8 @@ const DisciplinesPage = () => {
     );
   }
 
-  const filteredDisciplines = disciplines.filter(d => d.university === selectedUniversity);
+  const selectedUniversity = universities.find(u => u.id === selectedUniversityId);
+  const filteredDisciplines = disciplines.filter(d => d.universityId === selectedUniversityId);
 
   const DisciplineCard = ({ discipline }: { discipline: any }) => (
     <button 
@@ -50,31 +58,25 @@ const DisciplinesPage = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-3xl font-bold text-gray-800">Escolha uma Disciplina</h1>
         
-        {/* University Tabs */}
-        <div className="bg-gray-100 p-1 rounded-xl inline-flex">
-          <button
-            onClick={() => setSelectedUniversity('UEM')}
-            className={clsx(
-              "px-6 py-2 rounded-lg text-sm font-bold transition-all",
-              selectedUniversity === 'UEM' 
-                ? "bg-white text-primary shadow-sm" 
-                : "text-gray-500 hover:text-gray-700"
-            )}
-          >
-            UEM
-          </button>
-          <button
-            onClick={() => setSelectedUniversity('UP')}
-            className={clsx(
-              "px-6 py-2 rounded-lg text-sm font-bold transition-all",
-              selectedUniversity === 'UP' 
-                ? "bg-white text-primary shadow-sm" 
-                : "text-gray-500 hover:text-gray-700"
-            )}
-          >
-            UP
-          </button>
-        </div>
+        {/* Dynamic University Tabs */}
+        {universities.length > 0 && (
+          <div className="bg-gray-100 p-1 rounded-xl inline-flex flex-wrap gap-1">
+            {universities.map((uni) => (
+              <button
+                key={uni.id}
+                onClick={() => setSelectedUniversityId(uni.id)}
+                className={clsx(
+                  "px-6 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap",
+                  selectedUniversityId === uni.id 
+                    ? "bg-white text-primary shadow-sm" 
+                    : "text-gray-500 hover:text-gray-700"
+                )}
+              >
+                {uni.shortName}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Premium Feature Banner for Free Users */}
@@ -100,9 +102,11 @@ const DisciplinesPage = () => {
       )}
 
       <div>
-        <h2 className="text-xl font-bold text-gray-700 mb-6">
-          {selectedUniversity === 'UEM' ? 'Universidade Eduardo Mondlane' : 'Universidade Pedagógica'}
-        </h2>
+        {selectedUniversity && (
+          <h2 className="text-xl font-bold text-gray-700 mb-6">
+            {selectedUniversity.name}
+          </h2>
+        )}
         
         {filteredDisciplines.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -112,7 +116,11 @@ const DisciplinesPage = () => {
           </div>
         ) : (
           <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-            <p className="text-gray-500">Nenhuma disciplina encontrada para esta universidade.</p>
+            <p className="text-gray-500 text-sm">
+              {universities.length === 0 
+                ? "Nenhuma universidade cadastrada. Vá ao painel admin para configurar."
+                : "Nenhuma disciplina encontrada para esta universidade."}
+            </p>
           </div>
         )}
       </div>

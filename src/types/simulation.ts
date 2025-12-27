@@ -12,7 +12,7 @@ export interface SimulationConfig {
   questionCount: 10 | 20 | 30 | 50;
   disciplineIds: string[];
   includeAllDisciplines?: boolean;
-  university?: 'UEM' | 'UP' | 'both';
+  university?: string | 'both';
   yearRange?: {
     from: number;
     to: number;

@@ -15,15 +15,14 @@ const AdminExamsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDiscipline, setSelectedDiscipline] = useState<string>('all');
   const navigate = useNavigate();
-  const { disciplines, fetchDisciplines } = useContentStore();
+  const { disciplines, universities, fetchContent, loading: contentLoading } = useContentStore();
   const { modalState, showConfirm, closeModal } = useModal();
   const { toastState, showSuccess, showError, closeToast } = useToast();
 
-
   useEffect(() => {
     fetchExams();
-    fetchDisciplines();
-  }, [fetchDisciplines]);
+    fetchContent();
+  }, [fetchContent]);
 
   const fetchExams = async () => {
     setLoading(true);
@@ -39,7 +38,6 @@ const AdminExamsPage = () => {
   };
 
   const handleDeleteClick = (id: string) => {
-
     showConfirm(
       'Excluir Exame',
       'Tem certeza que deseja excluir este exame? Esta ação não pode ser desfeita.',
@@ -66,7 +64,7 @@ const AdminExamsPage = () => {
     return matchesSearch && matchesDiscipline;
   });
 
-  if (loading) {
+  if (loading || (contentLoading && universities.length === 0)) {
     return <div className="p-8 text-center">Carregando exames...</div>;
   }
 
@@ -110,7 +108,7 @@ const AdminExamsPage = () => {
         >
           <option value="all">Todas as Disciplinas</option>
           {disciplines.map(d => (
-            <option key={d.id} value={d.id}>{d.title}</option>
+            <option key={d.id} value={d.id}>{d.title} ({d.universityName})</option>
           ))}
         </select>
       </div>
@@ -142,15 +140,13 @@ const AdminExamsPage = () => {
                   <tr key={exam.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="p-4 font-medium text-gray-800">{exam.name}</td>
                     <td className="p-4 text-gray-600">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700`}>
                         {discipline?.title || exam.disciplineId}
                       </span>
                     </td>
                     <td className="p-4 text-gray-600">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                        exam.university === 'UEM' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-                      }`}>
-                        {exam.university || discipline?.university || 'N/A'}
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700`}>
+                        {exam.university || discipline?.universityName || 'N/A'}
                       </span>
                     </td>
                     <td className="p-4 text-gray-600">{exam.year} - {exam.season}</td>
@@ -186,7 +182,6 @@ const AdminExamsPage = () => {
         </table>
       </div>
 
-      {/* Modal */}
       <Modal
         isOpen={modalState.isOpen}
         onClose={closeModal}
@@ -199,7 +194,6 @@ const AdminExamsPage = () => {
         showCancel={modalState.showCancel}
       />
 
-      {/* Toast */}
       {toastState.isOpen && (
         <Toast
           message={toastState.message}

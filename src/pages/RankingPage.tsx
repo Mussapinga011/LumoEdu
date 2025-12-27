@@ -8,15 +8,15 @@ import { useContentStore } from '../stores/useContentStore';
 const RankingPage = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDiscipline, setSelectedDiscipline] = useState<string>('all');
-  const [selectedUniversity, setSelectedUniversity] = useState<'UEM' | 'UP' | 'all'>('all');
+  const [selectedDisciplineId, setSelectedDisciplineId] = useState<string>('all');
+  const [selectedUniversityId, setSelectedUniversityId] = useState<string | 'all'>('all');
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const { disciplines, fetchDisciplines } = useContentStore();
+  const { disciplines, universities, fetchContent } = useContentStore();
 
   useEffect(() => {
-    fetchDisciplines();
+    fetchContent();
     fetchRanking();
-  }, []);
+  }, [fetchContent]);
 
   const fetchRanking = async () => {
     setLoading(true);
@@ -31,18 +31,20 @@ const RankingPage = () => {
   };
 
   const getScore = (user: UserProfile) => {
-    if (selectedDiscipline === 'all') return user.score || 0;
-    return user.disciplineScores?.[selectedDiscipline] || 0;
+    if (selectedDisciplineId === 'all') return user.score || 0;
+    return user.disciplineScores?.[selectedDisciplineId] || 0;
   };
 
   // Filter disciplines by university
-  const filteredDisciplines = selectedUniversity === 'all' 
+  const filteredDisciplines = selectedUniversityId === 'all' 
     ? disciplines 
-    : disciplines.filter(d => d.university === selectedUniversity);
+    : disciplines.filter(d => d.universityId === selectedUniversityId);
 
   const sortedUsers = [...users]
     .sort((a, b) => getScore(b) - getScore(a))
     .slice(0, 50);
+
+  const currentUniversity = universities.find(u => u.id === selectedUniversityId);
 
   if (loading) {
     return (
@@ -61,46 +63,35 @@ const RankingPage = () => {
           <div className="space-y-2">
             <button
               onClick={() => {
-                setSelectedUniversity('all');
-                setSelectedDiscipline('all');
+                setSelectedUniversityId('all');
+                setSelectedDisciplineId('all');
               }}
               className={clsx(
-                "w-full text-left px-4 py-3 rounded-xl font-medium transition-all",
-                selectedUniversity === 'all'
+                "w-full text-left px-4 py-3 rounded-xl font-medium transition-all flex items-center gap-2",
+                selectedUniversityId === 'all'
                   ? "bg-primary text-white shadow-sm"
                   : "bg-gray-50 text-gray-700 hover:bg-gray-100"
               )}
             >
               🌍 Todas
             </button>
-            <button
-              onClick={() => {
-                setSelectedUniversity('UEM');
-                setSelectedDiscipline('all');
-              }}
-              className={clsx(
-                "w-full text-left px-4 py-3 rounded-xl font-medium transition-all",
-                selectedUniversity === 'UEM'
-                  ? "bg-primary text-white shadow-sm"
-                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-              )}
-            >
-              🎓 UEM
-            </button>
-            <button
-              onClick={() => {
-                setSelectedUniversity('UP');
-                setSelectedDiscipline('all');
-              }}
-              className={clsx(
-                "w-full text-left px-4 py-3 rounded-xl font-medium transition-all",
-                selectedUniversity === 'UP'
-                  ? "bg-primary text-white shadow-sm"
-                  : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-              )}
-            >
-              📚 UP
-            </button>
+            {universities.map((uni) => (
+              <button
+                key={uni.id}
+                onClick={() => {
+                  setSelectedUniversityId(uni.id);
+                  setSelectedDisciplineId('all');
+                }}
+                className={clsx(
+                  "w-full text-left px-4 py-3 rounded-xl font-medium transition-all flex items-center gap-2",
+                  selectedUniversityId === uni.id
+                    ? "bg-primary text-white shadow-sm"
+                    : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                )}
+              >
+                🎓 {uni.shortName}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -112,15 +103,13 @@ const RankingPage = () => {
           <div className="space-y-2">
             <h1 className="text-3xl font-bold text-gray-800">Ranking Nacional</h1>
             <p className="text-gray-500">
-              {selectedUniversity === 'UEM' ? 'Universidade Eduardo Mondlane' :
-               selectedUniversity === 'UP' ? 'Universidade Pedagógica' :
-               'Todas as Universidades'}
+              {currentUniversity ? currentUniversity.name : 'Todas as Universidades'}
             </p>
           </div>
           
           <select
-            value={selectedDiscipline}
-            onChange={(e) => setSelectedDiscipline(e.target.value)}
+            value={selectedDisciplineId}
+            onChange={(e) => setSelectedDisciplineId(e.target.value)}
             className="w-full md:w-auto p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary min-w-[200px] font-medium text-gray-700 bg-white"
           >
             <option value="all">Geral (Desafios)</option>
@@ -179,7 +168,7 @@ const RankingPage = () => {
                           {student.isPremium && <span className="text-yellow-600">⭐</span>}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {selectedDiscipline === 'all' 
+                          {selectedDisciplineId === 'all' 
                             ? `${student.challengesCompleted || 0} desafios`
                             : 'Pontuação da Disciplina'}
                         </div>

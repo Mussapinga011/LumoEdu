@@ -13,48 +13,48 @@ export interface Badge {
 export const BADGES: Badge[] = [
   {
     id: 'first_win',
-    name: 'First Victory',
-    description: 'Complete your first challenge',
+    name: 'Primeira Vitória',
+    description: 'Complete o seu primeiro desafio',
     icon: Trophy,
     color: 'text-yellow-500',
     condition: (user) => (user.challengesCompleted || 0) >= 1
   },
   {
     id: 'streak_master',
-    name: 'Streak Master',
-    description: 'Reach a 7-day study streak',
+    name: 'Mestre da Sequência',
+    description: 'Alcance uma sequência de 7 dias de estudo',
     icon: Flame,
     color: 'text-orange-500',
     condition: (user) => (user.streak || 0) >= 7
   },
   {
     id: 'dedicated_learner',
-    name: 'Dedicated Learner',
-    description: 'Reach Level 5',
+    name: 'Estudante Dedicado',
+    description: 'Alcance o Nível 5',
     icon: BookOpen,
     color: 'text-blue-500',
     condition: (user) => (user.level || 1) >= 5
   },
   {
     id: 'xp_hunter',
-    name: 'XP Hunter',
-    description: 'Earn 1000 total XP',
+    name: 'Caçador de XP',
+    description: 'Ganhe um total de 1000 XP',
     icon: Star,
     color: 'text-purple-500',
     condition: (user) => (user.xp || 0) >= 1000
   },
   {
     id: 'exam_ready',
-    name: 'Exam Ready',
-    description: 'Complete 5 full exams',
+    name: 'Pronto para o Exame',
+    description: 'Complete 5 exames completos',
     icon: Target,
     color: 'text-red-500',
     condition: (user) => (user.examsCompleted || 0) >= 5
   },
   {
     id: 'fast_learner',
-    name: 'Fast Learner',
-    description: 'Complete 50 daily exercises',
+    name: 'Aprendiz Rápido',
+    description: 'Complete 50 exercícios diários',
     icon: Zap,
     color: 'text-green-500',
     condition: (user) => (user.dailyExercisesCount || 0) >= 50

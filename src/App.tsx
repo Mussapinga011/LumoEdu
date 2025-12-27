@@ -23,6 +23,8 @@ import AdminABTestsPage from './pages/admin/AdminABTestsPage';
 import AdminABTestEditorPage from './pages/admin/AdminABTestEditorPage';
 import AdminGroupsPage from './pages/admin/AdminGroupsPage';
 import AdminDownloadsPage from './pages/admin/AdminDownloadsPage';
+import AdminUniversitiesPage from './pages/admin/AdminUniversitiesPage';
+import AdminDisciplinesPage from './pages/admin/AdminDisciplinesPage';
 import AdminBulkImportPage from './pages/admin/AdminBulkImportPage';
 import VideoLessonsPage from './pages/VideoLessonsPage';
 import SimulationConfigPage from './pages/SimulationConfigPage';
@@ -225,6 +227,16 @@ function App() {
           <Route path="/admin/downloads" element={
             <AdminRoute>
               <AdminDownloadsPage />
+            </AdminRoute>
+          } />
+          <Route path="/admin/universities" element={
+            <AdminRoute>
+              <AdminUniversitiesPage />
+            </AdminRoute>
+          } />
+          <Route path="/admin/disciplines" element={
+            <AdminRoute>
+              <AdminDisciplinesPage />
             </AdminRoute>
           } />
        

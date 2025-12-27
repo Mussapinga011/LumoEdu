@@ -7,7 +7,9 @@ import {
   Video,
   TrendingUp,
   MessageCircle,
-  Download
+  Download,
+  School,
+  BookMarked
 } from 'lucide-react';
 import { signOut } from '../services/authService';
 import clsx from 'clsx';
@@ -23,6 +25,8 @@ const AdminLayout = () => {
     { name: 'Gerenciar Aulas', path: '/admin/videos', icon: Video },
     { name: 'Gerenciar Grupos', path: '/admin/groups', icon: MessageCircle },
     { name: 'Gerenciar Downloads', path: '/admin/downloads', icon: Download },
+    { name: 'Gerenciar Universidades', path: '/admin/universities', icon: School },
+    { name: 'Gerenciar Disciplinas', path: '/admin/disciplines', icon: BookMarked },
     { name: 'Testes A/B', path: '/admin/ab-tests', icon: TrendingUp },
   ];
 

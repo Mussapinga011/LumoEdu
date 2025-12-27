@@ -426,16 +426,15 @@ export const getUserSimulations = async (userId: string): Promise<SimulationResu
 /**
  * Buscar todos os IDs de disciplinas, opcionalmente filtrados por universidade
  */
-const getAllDisciplineIds = async (university?: 'UEM' | 'UP' | 'both'): Promise<string[]> => {
+const getAllDisciplineIds = async (universityId?: string | 'both'): Promise<string[]> => {
   const snapshot = await getDocs(collection(db, 'disciplines'));
   const allDisciplines = snapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data()
   }));
 
-  // Filtrar por universidade se especificado
-  if (university && university !== 'both') {
-    const filtered = allDisciplines.filter((d: any) => d.university === university);
+  if (universityId && universityId !== 'both') {
+    const filtered = allDisciplines.filter((d: any) => d.universityId === universityId);
     return filtered.map((d: any) => d.id);
   }
 

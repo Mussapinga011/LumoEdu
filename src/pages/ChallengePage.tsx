@@ -9,7 +9,6 @@ import { Timestamp } from 'firebase/firestore';
 import clsx from 'clsx';
 import { useModal } from '../hooks/useNotifications';
 import Modal from '../components/Modal';
-import { useABTest } from '../hooks/useABTest';
 
 const ChallengePage = () => {
   const { examId } = useParams();
@@ -150,68 +149,12 @@ const ChallengePage = () => {
 
     updateUser(updates);
   };
-  const { content: abTestContent, trackClick: trackABClick } = useABTest('challenge_limit_screen');
-
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Carregando desafio...</div>;
   }
 
   if (limitReached) {
-    // Se houver teste A/B ativo, usar conteúdo do teste
-    if (abTestContent) {
-      const buttonColorClass = {
-        yellow: 'bg-yellow-500 hover:bg-yellow-600',
-        green: 'bg-green-500 hover:bg-green-600',
-        blue: 'bg-blue-500 hover:bg-blue-600',
-        red: 'bg-red-500 hover:bg-red-600'
-      }[abTestContent.buttonColor || 'yellow'];
-
-      return (
-        <div className="max-w-2xl mx-auto p-8">
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center space-y-6">
-            {abTestContent.emoji && (
-              <div className="text-6xl">{abTestContent.emoji}</div>
-            )}
-            <h2 className="text-2xl font-bold text-gray-800">{abTestContent.title}</h2>
-            <p className="text-gray-600">{abTestContent.message}</p>
-            
-            {abTestContent.extraInfo && (
-              <p className="text-xl font-bold text-yellow-600">{abTestContent.extraInfo}</p>
-            )}
-            
-            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
-              <h3 className="font-bold text-yellow-800 mb-2">Com Premium você tem:</h3>
-              <ul className="text-left text-sm text-yellow-700 space-y-1">
-                <li>✓ Desafios ilimitados por dia</li>
-                <li>✓ Acesso ao Modo Aprender</li>
-                <li>✓ Estatísticas detalhadas</li>
-                <li>✓ Sem anúncios</li>
-              </ul>
-            </div>
-            
-            <div className="flex gap-4 justify-center">
-              <button
-                onClick={() => navigate('/challenge')}
-                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-colors"
-              >
-                Voltar
-              </button>
-              <button
-                onClick={async () => {
-                  await trackABClick();
-                  navigate('/profile');
-                }}
-                className={`px-6 py-3 text-white rounded-xl font-bold transition-colors ${buttonColorClass}`}
-              >
-                {abTestContent.buttonText}
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // Fallback: Tela padrão se não houver teste ativo
+    // Tela padrão de limite diário
     return (
       <div className="max-w-2xl mx-auto p-8">
         <div className="bg-white rounded-2xl shadow-lg p-8 text-center space-y-6">

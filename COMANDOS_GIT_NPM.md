@@ -3,7 +3,15 @@
 ## 🔧 Comandos Git
 npx firebase deploy --only hosting
 
-npm run build
+
+
+
+
+
+
+
+
+7
 
 npx firebase login
 npx firebase deploy

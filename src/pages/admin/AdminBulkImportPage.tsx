@@ -27,6 +27,7 @@ const normalizeLaTeX = (text: string): string => {
   // This handles LaTeX commands like \\sin → \sin, \\frac → \frac, etc.
   return text.replace(/\\\\/g, '\\');
 };
+
 const PROMPT_TEXT = `Atue como um especialista em OCR e estruturação de dados.
 Analise as imagens fornecidas e extraia as questões deste exame de admissão.
 Retorne um JSON válido (array de objetos) seguindo EXATAMENTE este formato:
@@ -51,23 +52,31 @@ REGRAS CRÍTICAS:
 3. Para LaTeX, use duas barras invertidas (\\\\) para comandos. Ex: \\\\sin, \\\\pi, \\\\frac{a}{b}.
    NOTA: O sistema aceita ambos os formatos (\\\\sin ou \\sin) e converte automaticamente.
 4. Mantenha as opções em ordem (A, B, C, D) no array.`;
+
 const AdminBulkImportPage = () => {
   const navigate = useNavigate();
-  const { disciplines, fetchDisciplines } = useContentStore();
+  const { disciplines, universities, fetchContent, loading: contentLoading } = useContentStore();
   
   useEffect(() => {
-    fetchDisciplines();
-  }, [fetchDisciplines]);
+    fetchContent();
+  }, [fetchContent]);
 
   const { modalState, closeModal } = useModal();
   const { toastState, showSuccess, showError, closeToast } = useToast();
 
   // Seção 1: Dados do Exame
-  const [selectedUniversity, setSelectedUniversity] = useState<'UEM' | 'UP'>('UEM');
+  const [selectedUniversityId, setSelectedUniversityId] = useState<string>('');
   const [selectedDiscipline, setSelectedDiscipline] = useState('');
   const [examName, setExamName] = useState('');
   const [examYear, setExamYear] = useState(new Date().getFullYear());
   const [examSeason, setExamSeason] = useState('1ª época');
+
+  // Set initial university
+  useEffect(() => {
+    if (universities.length > 0 && !selectedUniversityId) {
+      setSelectedUniversityId(universities[0].id);
+    }
+  }, [universities, selectedUniversityId]);
 
   // Seção 2: JSON Input
   const [jsonInput, setJsonInput] = useState('');
@@ -226,7 +235,7 @@ const AdminBulkImportPage = () => {
         season: examSeason,
         questionsCount: processedQuestions.length,
         description: `Importado via JSON - ${processedQuestions.length} questões`,
-        university: selectedDisciplineObj.university // Derivado da disciplina
+        university: selectedDisciplineObj.universityName // Derivado da disciplina
       };
       
       const examId = await createExam(examData);
@@ -256,6 +265,14 @@ const AdminBulkImportPage = () => {
     }
   };
 
+  if (contentLoading && universities.length === 0) {
+    return (
+      <div className="flex items-center justify-center p-20">
+        <Loader className="animate-spin text-primary" size={40} />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-20">
       {/* Header */}
@@ -279,7 +296,7 @@ const AdminBulkImportPage = () => {
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <h2 className="text-lg font-semibold mb-4 text-gray-800">1. Dados do Exame</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Exame</label>
                 <input
                   type="text"
@@ -292,15 +309,16 @@ const AdminBulkImportPage = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Universidade</label>
                 <select
-                  value={selectedUniversity}
+                  value={selectedUniversityId}
                   onChange={(e) => {
-                    setSelectedUniversity(e.target.value as 'UEM' | 'UP');
+                    setSelectedUniversityId(e.target.value);
                     setSelectedDiscipline(''); // Reset discipline when university changes
                   }}
                   className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
                 >
-                  <option value="UEM">UEM</option>
-                  <option value="UP">UP</option>
+                  {universities.map(uni => (
+                    <option key={uni.id} value={uni.id}>{uni.shortName} - {uni.name}</option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -312,7 +330,7 @@ const AdminBulkImportPage = () => {
                 >
                   <option value="">Selecione...</option>
                   {disciplines
-                    .filter(d => d.university === selectedUniversity)
+                    .filter(d => d.universityId === selectedUniversityId)
                     .map(d => (
                       <option key={d.id} value={d.id}>{d.title}</option>
                     ))}

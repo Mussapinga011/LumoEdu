@@ -21,11 +21,10 @@ const AdminDownloadsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const { disciplines, fetchDisciplines } = useContentStore();
+  const { disciplines, universities, fetchContent, loading: contentLoading } = useContentStore();
   const { modalState, showConfirm, closeModal } = useModal();
   const { toastState, showSuccess, showError, closeToast } = useToast();
 
-  // Form State
   const [formData, setFormData] = useState<Omit<DownloadMaterial, 'id' | 'downloadCount' | 'createdAt'>>({
     title: '',
     description: '',
@@ -34,15 +33,16 @@ const AdminDownloadsPage = () => {
     type: 'exam',
     disciplineId: '',
     disciplineName: '',
-    university: 'all',
+    universityId: 'all',
+    universityName: 'Geral',
     year: new Date().getFullYear(),
     isPremium: false
   });
 
   useEffect(() => {
     fetchData();
-    fetchDisciplines();
-  }, [fetchDisciplines]);
+    fetchContent();
+  }, [fetchContent]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -66,7 +66,8 @@ const AdminDownloadsPage = () => {
       type: 'exam',
       disciplineId: '',
       disciplineName: '',
-      university: 'all',
+      universityId: 'all',
+      universityName: 'Geral',
       year: new Date().getFullYear(),
       isPremium: false
     });
@@ -83,7 +84,8 @@ const AdminDownloadsPage = () => {
       type: item.type,
       disciplineId: item.disciplineId,
       disciplineName: item.disciplineName,
-      university: item.university,
+      universityId: item.universityId,
+      universityName: item.universityName || 'Geral',
       year: item.year || new Date().getFullYear(),
       isPremium: item.isPremium
     });
@@ -99,9 +101,13 @@ const AdminDownloadsPage = () => {
       return;
     }
 
+    const uni = universities.find(u => u.id === formData.universityId);
+    const universityName = uni ? uni.shortName : 'Geral';
+
     const finalData = {
       ...formData,
-      disciplineName: discipline.title
+      disciplineName: discipline.title,
+      universityName
     };
 
     try {
@@ -140,7 +146,11 @@ const AdminDownloadsPage = () => {
     item.disciplineName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) return <div className="p-8 text-center">Carregando...</div>;
+  const filteredDisciplines = formData.universityId === 'all'
+    ? disciplines
+    : disciplines.filter(d => d.universityId === formData.universityId);
+
+  if (loading || (contentLoading && universities.length === 0)) return <div className="p-8 text-center">Carregando...</div>;
 
   return (
     <div className="space-y-6">
@@ -155,7 +165,6 @@ const AdminDownloadsPage = () => {
         </button>
       </div>
 
-      {/* Filters */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -169,7 +178,6 @@ const AdminDownloadsPage = () => {
         </div>
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <table className="w-full text-left">
           <thead className="bg-gray-50 border-b border-gray-200">
@@ -200,7 +208,7 @@ const AdminDownloadsPage = () => {
                 </td>
                 <td className="px-6 py-4">
                   <div className="text-sm font-medium text-gray-700">{item.disciplineName}</div>
-                  <div className="text-xs text-gray-500 uppercase font-bold">{item.university}</div>
+                  <div className="text-xs text-gray-500 uppercase font-bold">{item.universityName}</div>
                 </td>
                 <td className="px-6 py-4">
                   <span className={clsx(
@@ -246,7 +254,6 @@ const AdminDownloadsPage = () => {
         </table>
       </div>
 
-      {/* Modal Criar/Editar */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
@@ -283,6 +290,20 @@ const AdminDownloadsPage = () => {
               </div>
 
               <div>
+                <label className="block text-sm font-bold text-gray-700 mb-1">Universidade</label>
+                <select
+                  value={formData.universityId}
+                  onChange={e => setFormData({...formData, universityId: e.target.value, disciplineId: ''})}
+                  className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="all">Todas (Geral)</option>
+                  {universities.map(uni => (
+                    <option key={uni.id} value={uni.id}>{uni.shortName}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">Disciplina</label>
                 <select
                   required
@@ -291,22 +312,9 @@ const AdminDownloadsPage = () => {
                   className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-primary/20"
                 >
                   <option value="">Selecione...</option>
-                  {disciplines.map(d => (
-                    <option key={d.id} value={d.id}>{d.title}</option>
+                  {filteredDisciplines.map(d => (
+                    <option key={d.id} value={d.id}>{d.title} ({d.universityName})</option>
                   ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Universidade</label>
-                <select
-                  value={formData.university}
-                  onChange={e => setFormData({...formData, university: e.target.value as any})}
-                  className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="all">Todas</option>
-                  <option value="UEM">UEM</option>
-                  <option value="UP">UP</option>
                 </select>
               </div>
 

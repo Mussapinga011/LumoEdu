@@ -44,6 +44,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Universities: Public read, Admin write
+    match /universities/{universityId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Question History: Users can read/write their own history
     match /questionHistory/{historyId} {
       // Allow reading/listing documents that belong to the user

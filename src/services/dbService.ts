@@ -413,9 +413,169 @@ export const getAllDownloads = async (): Promise<DownloadMaterial[]> => {
   return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DownloadMaterial));
 };
 
+
 export const incrementDownloadCount = async (id: string): Promise<void> => {
   const docRef = doc(db, DOWNLOADS_COLLECTION, id);
   await updateDoc(docRef, {
     downloadCount: increment(1)
   });
 };
+
+// --- UNIVERSITY MANAGEMENT FUNCTIONS ---
+
+import { University } from '../types/university';
+import { Discipline } from '../types/discipline';
+
+const UNIVERSITIES_COLLECTION = 'universities';
+const DISCIPLINES_COLLECTION = 'disciplines';
+
+export const createUniversity = async (data: Omit<University, 'id' | 'createdAt'>): Promise<string> => {
+  const docRef = await addDoc(collection(db, UNIVERSITIES_COLLECTION), {
+    ...data,
+    createdAt: serverTimestamp()
+  });
+  await updateDoc(docRef, { id: docRef.id });
+  return docRef.id;
+};
+
+export const updateUniversity = async (id: string, data: Partial<University>): Promise<void> => {
+  const docRef = doc(db, UNIVERSITIES_COLLECTION, id);
+  await updateDoc(docRef, data);
+};
+
+export const deleteUniversity = async (id: string): Promise<void> => {
+  const docRef = doc(db, UNIVERSITIES_COLLECTION, id);
+  await deleteDoc(docRef);
+};
+
+export const getAllUniversities = async (): Promise<University[]> => {
+  const q = query(collection(db, UNIVERSITIES_COLLECTION), orderBy('name'));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as University));
+};
+
+export const getActiveUniversities = async (): Promise<University[]> => {
+  const q = query(
+    collection(db, UNIVERSITIES_COLLECTION), 
+    where('isActive', '==', true)
+  );
+  const querySnapshot = await getDocs(q);
+  // Sort in memory to avoid index requirements
+  return querySnapshot.docs
+    .map(doc => ({ id: doc.id, ...doc.data() } as University))
+    .sort((a, b) => a.name.localeCompare(b.name));
+};
+
+// --- DISCIPLINE MANAGEMENT FUNCTIONS ---
+
+export const createDiscipline = async (data: Omit<Discipline, 'id' | 'createdAt'>): Promise<string> => {
+  const docRef = await addDoc(collection(db, DISCIPLINES_COLLECTION), {
+    ...data,
+    createdAt: serverTimestamp()
+  });
+  await updateDoc(docRef, { id: docRef.id });
+  return docRef.id;
+};
+
+export const updateDiscipline = async (id: string, data: Partial<Discipline>): Promise<void> => {
+  const docRef = doc(db, DISCIPLINES_COLLECTION, id);
+  await updateDoc(docRef, data);
+};
+
+export const deleteDiscipline = async (id: string): Promise<void> => {
+  const docRef = doc(db, DISCIPLINES_COLLECTION, id);
+  await deleteDoc(docRef);
+};
+
+export const getAllDisciplines = async (): Promise<Discipline[]> => {
+  const q = query(collection(db, DISCIPLINES_COLLECTION), orderBy('title'));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Discipline));
+};
+
+export const getActiveDisciplines = async (): Promise<Discipline[]> => {
+  const q = query(
+    collection(db, DISCIPLINES_COLLECTION),
+    where('isActive', '==', true)
+  );
+  const querySnapshot = await getDocs(q);
+  // Sort in memory to avoid index requirements
+  return querySnapshot.docs
+    .map(doc => ({ id: doc.id, ...doc.data() } as Discipline))
+    .sort((a, b) => a.title.localeCompare(b.title));
+};
+
+export const getDisciplinesByUniversity = async (universityId: string): Promise<Discipline[]> => {
+  const q = query(
+    collection(db, DISCIPLINES_COLLECTION),
+    where('universityId', '==', universityId),
+    where('isActive', '==', true)
+  );
+  const querySnapshot = await getDocs(q);
+  // Sort in memory to avoid index requirements
+  return querySnapshot.docs
+    .map(doc => ({ id: doc.id, ...doc.data() } as Discipline))
+    .sort((a, b) => a.title.localeCompare(b.title));
+};
+
+export const initializeDefaultContent = async () => {
+  const universities = [
+    { name: 'Universidade Eduardo Mondlane', shortName: 'UEM', isActive: true },
+    { name: 'Universidade Pedagógica', shortName: 'UP', isActive: true }
+  ];
+
+  const disciplines = [
+    // UEM
+    { title: 'Biologia', universityShort: 'UEM', icon: '🧬', color: 'bg-green-100 text-green-600' },
+    { title: 'Filosofia', universityShort: 'UEM', icon: '🤔', color: 'bg-yellow-100 text-yellow-600' },
+    { title: 'Física', universityShort: 'UEM', icon: '⚡', color: 'bg-yellow-100 text-yellow-600' },
+    { title: 'Francês', universityShort: 'UEM', icon: '🇫🇷', color: 'bg-blue-100 text-blue-600' },
+    { title: 'Geografia', universityShort: 'UEM', icon: '🌍', color: 'bg-teal-100 text-teal-600' },
+    { title: 'História', universityShort: 'UEM', icon: '🏛️', color: 'bg-orange-100 text-orange-600' },
+    { title: 'Inglês', universityShort: 'UEM', icon: '🇬🇧', color: 'bg-purple-100 text-purple-600' },
+    { title: 'Matemática', universityShort: 'UEM', icon: '📐', color: 'bg-red-100 text-red-600' },
+    { title: 'Música', universityShort: 'UEM', icon: '🎵', color: 'bg-pink-100 text-pink-600' },
+    { title: 'Português 1', universityShort: 'UEM', icon: '📚', color: 'bg-blue-100 text-blue-600' },
+    { title: 'Português 2', universityShort: 'UEM', icon: '📖', color: 'bg-blue-100 text-blue-600' },
+    { title: 'Química', universityShort: 'UEM', icon: '🧪', color: 'bg-pink-100 text-pink-600' },
+    { title: 'Desenho 1', universityShort: 'UEM', icon: '✏️', color: 'bg-gray-100 text-gray-600' },
+    { title: 'Desenho 2', universityShort: 'UEM', icon: '🎨', color: 'bg-gray-100 text-gray-600' },
+    { title: 'Teatro', universityShort: 'UEM', icon: '🎭', color: 'bg-red-100 text-red-600' },
+    // UP
+    { title: 'Biologia', universityShort: 'UP', icon: '🧬', color: 'bg-green-100 text-green-600' },
+    { title: 'Biologia (Ed. Física)', universityShort: 'UP', icon: '🏃', color: 'bg-green-100 text-green-600' },
+    { title: 'Desenho', universityShort: 'UP', icon: '✏️', color: 'bg-gray-100 text-gray-600' },
+    { title: 'Filosofia', universityShort: 'UP', icon: '🤔', color: 'bg-yellow-100 text-yellow-600' },
+    { title: 'Física', universityShort: 'UP', icon: '⚡', color: 'bg-yellow-100 text-yellow-600' },
+    { title: 'Francês', universityShort: 'UP', icon: '🇫🇷', color: 'bg-blue-100 text-blue-600' },
+    { title: 'Geografia', universityShort: 'UP', icon: '🌍', color: 'bg-teal-100 text-teal-600' },
+    { title: 'História', universityShort: 'UP', icon: '🏛️', color: 'bg-orange-100 text-orange-600' },
+    { title: 'Inglês', universityShort: 'UP', icon: '🇬🇧', color: 'bg-purple-100 text-purple-600' },
+    { title: 'Matemática', universityShort: 'UP', icon: '📐', color: 'bg-red-100 text-red-600' },
+    { title: 'Português', universityShort: 'UP', icon: '📚', color: 'bg-blue-100 text-blue-600' },
+    { title: 'Química', universityShort: 'UP', icon: '🧪', color: 'bg-pink-100 text-pink-600' },
+  ];
+
+  // 1. Create Universities
+  const universityMap: Record<string, string> = {};
+  for (const uniData of universities) {
+    const id = await createUniversity(uniData);
+    universityMap[uniData.shortName] = id;
+  }
+
+  // 2. Create Disciplines
+  for (const discData of disciplines) {
+    const universityId = universityMap[discData.universityShort];
+    if (universityId) {
+      await createDiscipline({
+        title: discData.title,
+        icon: discData.icon,
+        color: discData.color,
+        universityId,
+        universityName: universities.find(u => u.shortName === discData.universityShort)?.name || '',
+        isActive: true
+      });
+    }
+  }
+};
+

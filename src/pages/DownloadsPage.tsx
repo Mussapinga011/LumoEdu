@@ -21,22 +21,21 @@ import Toast from '../components/Toast';
 
 const DownloadsPage = () => {
   const { user } = useAuthStore();
-  const { disciplines, fetchDisciplines } = useContentStore();
+  const { disciplines, universities, fetchContent, loading: contentLoading } = useContentStore();
   const { toastState, showWarning, closeToast } = useToast();
 
   const [materials, setMaterials] = useState<DownloadMaterial[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Filters
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUni, setSelectedUni] = useState<'all' | 'UEM' | 'UP'>('all');
+  const [selectedUniId, setSelectedUniId] = useState<string>('all');
   const [selectedDiscipline, setSelectedDiscipline] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
 
   useEffect(() => {
-    fetchDisciplines();
+    fetchContent();
     fetchData();
-  }, [fetchDisciplines]);
+  }, [fetchContent]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -56,22 +55,19 @@ const DownloadsPage = () => {
       return;
     }
 
-    // Registrar download no banco
     await incrementDownloadCount(item.id);
-    
-    // Abrir link em nova aba
     window.open(item.fileUrl, '_blank');
   };
 
   const filteredMaterials = materials.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesUni = selectedUni === 'all' || item.university === selectedUni;
+    const matchesUni = selectedUniId === 'all' || item.universityId === selectedUniId;
     const matchesDisc = selectedDiscipline === 'all' || item.disciplineId === selectedDiscipline;
     const matchesType = selectedType === 'all' || item.type === selectedType;
     return matchesSearch && matchesUni && matchesDisc && matchesType;
   });
 
-  if (loading) {
+  if (loading || (contentLoading && universities.length === 0)) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -97,7 +93,6 @@ const DownloadsPage = () => {
       {/* Filters Section */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-6">
         <div className="flex flex-col md:flex-row gap-4">
-          {/* Search */}
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
@@ -109,41 +104,32 @@ const DownloadsPage = () => {
             />
           </div>
 
-          {/* Quick Filter Buttons */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
             <button 
-              onClick={() => setSelectedUni('all')}
+              onClick={() => setSelectedUniId('all')}
               className={clsx(
-                "px-6 py-3 rounded-xl font-bold transition-all border-2",
-                selectedUni === 'all' 
+                "px-6 py-3 rounded-xl font-bold transition-all border-2 whitespace-nowrap",
+                selectedUniId === 'all' 
                   ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" 
                   : "bg-white border-gray-100 text-gray-500 hover:border-gray-200"
               )}
             >
-              Qualquer Uni
+              Geral
             </button>
-            <button 
-              onClick={() => setSelectedUni('UEM')}
-              className={clsx(
-                "px-6 py-3 rounded-xl font-bold transition-all border-2",
-                selectedUni === 'UEM' 
-                  ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" 
-                  : "bg-white border-gray-100 text-gray-500 hover:border-gray-200"
-              )}
-            >
-              UEM
-            </button>
-            <button 
-              onClick={() => setSelectedUni('UP')}
-              className={clsx(
-                "px-6 py-3 rounded-xl font-bold transition-all border-2",
-                selectedUni === 'UP' 
-                  ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" 
-                  : "bg-white border-gray-100 text-gray-500 hover:border-gray-200"
-              )}
-            >
-              UP
-            </button>
+            {universities.map(uni => (
+              <button 
+                key={uni.id}
+                onClick={() => setSelectedUniId(uni.id)}
+                className={clsx(
+                  "px-6 py-3 rounded-xl font-bold transition-all border-2 whitespace-nowrap",
+                  selectedUniId === uni.id 
+                    ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" 
+                    : "bg-white border-gray-100 text-gray-500 hover:border-gray-200"
+                )}
+              >
+                {uni.shortName}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -158,8 +144,10 @@ const DownloadsPage = () => {
               className="flex-1 bg-transparent border-none outline-none font-bold text-gray-700"
             >
               <option value="all">Todas Disciplinas</option>
-              {disciplines.map(d => (
-                <option key={d.id} value={d.id}>{d.title}</option>
+              {disciplines
+                .filter(d => selectedUniId === 'all' || d.universityId === selectedUniId)
+                .map(d => (
+                  <option key={d.id} value={d.id}>{d.title}</option>
               ))}
             </select>
           </div>
@@ -182,7 +170,6 @@ const DownloadsPage = () => {
         </div>
       </div>
 
-      {/* Results Grid */}
       {filteredMaterials.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
           <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center text-gray-300">
@@ -220,7 +207,7 @@ const DownloadsPage = () => {
                   <div className="flex flex-wrap gap-2 mt-3">
                     <span className="bg-gray-100 text-gray-500 text-[10px] font-bold uppercase px-2 py-1 rounded-md flex items-center gap-1">
                       <GraduationCap size={12} />
-                      {item.university === 'all' ? 'Geral' : item.university}
+                      {item.universityName || 'Geral'}
                     </span>
                     {item.year && (
                       <span className="bg-gray-100 text-gray-500 text-[10px] font-bold uppercase px-2 py-1 rounded-md flex items-center gap-1">
@@ -263,7 +250,6 @@ const DownloadsPage = () => {
         </div>
       )}
 
-      {/* Premium Banner (Show if not premium) */}
       {!user?.isPremium && (
         <div className="bg-gray-900 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden mt-12">
           <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">

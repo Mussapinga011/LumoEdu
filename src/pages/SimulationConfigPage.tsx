@@ -9,22 +9,21 @@ import clsx from 'clsx';
 
 const SimulationConfigPage = () => {
   const navigate = useNavigate();
-  const { disciplines, fetchDisciplines } = useContentStore();
+  const { disciplines, universities, fetchContent, loading: contentLoading } = useContentStore();
   const { user } = useAuthStore();
 
   const [mode, setMode] = useState<SimulationMode>('weaknesses');
   const [questionCount, setQuestionCount] = useState<10 | 20 | 30 | 50>(20);
   const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
   const [includeAllDisciplines, setIncludeAllDisciplines] = useState(false);
-  const [selectedUniversity, setSelectedUniversity] = useState<'UEM' | 'UP' | 'both'>('both');
+  const [selectedUniversityId, setSelectedUniversityId] = useState<string | 'both'>('both');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<{ title: string; message: string; type: 'error' | 'warning' } | null>(null);
 
   useEffect(() => {
-    fetchDisciplines();
-  }, [fetchDisciplines]);
+    fetchContent();
+  }, [fetchContent]);
 
-  // Limpar erro após 5 segundos
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(null), 5000);
@@ -32,7 +31,6 @@ const SimulationConfigPage = () => {
     }
   }, [error]);
 
-  // Bloqueio para usuários Free
   if (user && !user.isPremium) {
     return (
       <div className="max-w-4xl mx-auto py-12 px-4 text-center">
@@ -79,8 +77,6 @@ const SimulationConfigPage = () => {
           >
             Desbloquear Agora 🚀
           </button>
-          
-          
         </div>
       </div>
     );
@@ -127,15 +123,13 @@ const SimulationConfigPage = () => {
 
   const questionCounts = [10, 20, 30, 50];
 
-  // Filtrar disciplinas por universidade selecionada
-  const filteredDisciplines = selectedUniversity === 'both'
+  const filteredDisciplines = selectedUniversityId === 'both'
     ? disciplines
-    : disciplines.filter(d => d.university === selectedUniversity);
+    : disciplines.filter(d => d.universityId === selectedUniversityId);
 
-  // Limpar disciplinas selecionadas ao trocar de universidade
-  const handleUniversityChange = (university: 'UEM' | 'UP' | 'both') => {
-    setSelectedUniversity(university);
-    setSelectedDisciplines([]); // Limpar seleção ao trocar
+  const handleUniversityChange = (universityId: string | 'both') => {
+    setSelectedUniversityId(universityId);
+    setSelectedDisciplines([]); 
     setIncludeAllDisciplines(false);
   };
 
@@ -150,7 +144,6 @@ const SimulationConfigPage = () => {
   const handleStartSimulation = async () => {
     if (!user) return;
 
-    // Validação
     if (mode === 'custom' && selectedDisciplines.length === 0 && !includeAllDisciplines) {
       setError({
         title: 'Seleção Necessária',
@@ -169,7 +162,7 @@ const SimulationConfigPage = () => {
         questionCount,
         disciplineIds: selectedDisciplines,
         includeAllDisciplines,
-        university: selectedUniversity
+        university: selectedUniversityId
       };
 
       const questions = await generateSimulation(user.uid, config);
@@ -184,17 +177,9 @@ const SimulationConfigPage = () => {
         return;
       }
 
-      // Se encontrou menos questões do que o solicitado
-      if (questions.length < questionCount) {
-        // Opcional: Avisar o usuário, mas continuar
-        // Por enquanto vamos continuar silenciosamente ou poderíamos mostrar um aviso
-      }
-
-      // Salvar configuração e questões no sessionStorage
       sessionStorage.setItem('simulationConfig', JSON.stringify(config));
       sessionStorage.setItem('simulationQuestions', JSON.stringify(questions));
 
-      // Navegar para página de execução
       navigate('/simulation/start');
     } catch (error) {
       console.error('Error starting simulation:', error);
@@ -210,7 +195,6 @@ const SimulationConfigPage = () => {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-12 relative">
-      {/* Toast de Erro */}
       {error && (
         <div className={clsx(
           "fixed top-4 right-4 z-50 max-w-md w-full p-4 rounded-xl shadow-2xl border-l-4 animate-slide-in flex items-start gap-3",
@@ -235,13 +219,11 @@ const SimulationConfigPage = () => {
         </div>
       )}
 
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-800">Criar Simulado Personalizado</h1>
         <p className="text-gray-500 mt-2">Configure seu simulado de acordo com suas necessidades de estudo</p>
       </div>
 
-      {/* Modo de Simulado */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Escolha o Modo</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -278,7 +260,6 @@ const SimulationConfigPage = () => {
         </div>
       </div>
 
-      {/* Número de Questões */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Número de Questões</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -303,58 +284,42 @@ const SimulationConfigPage = () => {
         </p>
       </div>
 
-      {/* Seleção de Universidade */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         <h2 className="text-xl font-bold text-gray-800 mb-4">🎓 Faculdade</h2>
         <p className="text-sm text-gray-500 mb-4">
           Escolha de qual faculdade deseja as questões
         </p>
-        <div className="grid grid-cols-3 gap-4">
-          <button
-            onClick={() => handleUniversityChange('UEM')}
-            className={clsx(
-              'p-4 rounded-xl border-2 font-bold transition-all text-center',
-              selectedUniversity === 'UEM'
-                ? 'bg-blue-100 text-blue-700 border-blue-500 shadow-lg'
-                : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300'
-            )}
-          >
-            <div className="text-2xl mb-1">🎓</div>
-            <div className="text-sm">UEM</div>
-          </button>
-          <button
-            onClick={() => handleUniversityChange('UP')}
-            className={clsx(
-              'p-4 rounded-xl border-2 font-bold transition-all text-center',
-              selectedUniversity === 'UP'
-                ? 'bg-green-100 text-green-700 border-green-500 shadow-lg'
-                : 'bg-white border-gray-200 text-gray-700 hover:border-green-300'
-            )}
-          >
-            <div className="text-2xl mb-1">🎓</div>
-            <div className="text-sm">UP</div>
-          </button>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           <button
             onClick={() => handleUniversityChange('both')}
             className={clsx(
               'p-4 rounded-xl border-2 font-bold transition-all text-center',
-              selectedUniversity === 'both'
+              selectedUniversityId === 'both'
                 ? 'bg-purple-100 text-purple-700 border-purple-500 shadow-lg'
                 : 'bg-white border-gray-200 text-gray-700 hover:border-purple-300'
             )}
           >
-            <div className="text-2xl mb-1">🎓</div>
-            <div className="text-sm">Ambas</div>
+            <div className="text-2xl mb-1">🌍</div>
+            <div className="text-sm">Todas</div>
           </button>
+          {universities.map((uni) => (
+            <button
+              key={uni.id}
+              onClick={() => handleUniversityChange(uni.id)}
+              className={clsx(
+                'p-4 rounded-xl border-2 font-bold transition-all text-center',
+                selectedUniversityId === uni.id
+                  ? 'bg-blue-100 text-blue-700 border-blue-500 shadow-lg'
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300'
+              )}
+            >
+              <div className="text-2xl mb-1">🎓</div>
+              <div className="text-sm">{uni.shortName}</div>
+            </button>
+          ))}
         </div>
-        <p className="text-xs text-gray-400 mt-3">
-          {selectedUniversity === 'both' 
-            ? `Mostrando disciplinas de UEM e UP (${filteredDisciplines.length} disponíveis)`
-            : `Mostrando apenas disciplinas da ${selectedUniversity} (${filteredDisciplines.length} disponíveis)`}
-        </p>
       </div>
 
-      {/* Seleção de Disciplinas (TODOS OS MODOS) */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-gray-800">📚 Disciplinas</h2>
@@ -395,7 +360,7 @@ const SimulationConfigPage = () => {
                 >
                   <div className="text-2xl mb-1">{discipline.icon}</div>
                   <div className="text-sm font-bold text-gray-800">{discipline.title}</div>
-                  <div className="text-xs text-gray-500">{discipline.university}</div>
+                  <div className="text-xs text-gray-500">{discipline.universityName}</div>
                 </button>
               ))}
             </div>
@@ -409,14 +374,13 @@ const SimulationConfigPage = () => {
         )}
       </div>
 
-      {/* Botão Iniciar */}
       <div className="flex justify-end">
         <button
           onClick={handleStartSimulation}
-          disabled={loading}
+          disabled={loading || contentLoading}
           className={clsx(
             'flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-white transition-all shadow-lg',
-            loading
+            loading || contentLoading
               ? 'bg-gray-400 cursor-not-allowed'
               : 'bg-primary hover:bg-primary-hover active:scale-95'
           )}

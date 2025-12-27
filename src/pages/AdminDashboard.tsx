@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Book, Check, FileText } from 'lucide-react';
-import { getAllUsers, getAllExams } from '../services/dbService';
+import { getAllUsers, getAllExams, getAllUniversities, initializeDefaultContent } from '../services/dbService';
+import { useToast } from '../hooks/useNotifications';
+import Toast from '../components/Toast';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -13,6 +15,9 @@ const AdminDashboard = () => {
     onlineUsers: 0
   });
   const [loading, setLoading] = useState(true);
+  const [isDbEmpty, setIsDbEmpty] = useState(false);
+  const [migrating, setMigrating] = useState(false);
+  const { toastState, showSuccess, showError, closeToast } = useToast();
 
   useEffect(() => {
     fetchStats();
@@ -21,10 +26,13 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     setLoading(true);
     try {
-      const [users, exams] = await Promise.all([
+       const [users, exams, universities] = await Promise.all([
         getAllUsers(),
-        getAllExams()
+        getAllExams(),
+        getAllUniversities()
       ]);
+      
+      setIsDbEmpty(universities.length === 0);
       
       const now = new Date();
       const thirtyDaysAgo = new Date(now.setDate(now.getDate() - 30));
@@ -57,9 +65,45 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleMigrate = async () => {
+    setMigrating(true);
+    try {
+      await initializeDefaultContent();
+      showSuccess('Conteúdo inicial (UEM/UP) criado com sucesso!');
+      setIsDbEmpty(false);
+      fetchStats();
+    } catch (error: any) {
+      showError('Erro na migração: ' + error.message);
+    } finally {
+      setMigrating(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-gray-800">Painel Administrativo</h1>
+
+      {/* Migration Warning */}
+      {isDbEmpty && (
+        <div className="bg-amber-50 border-2 border-amber-200 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-amber-100 text-amber-600 rounded-xl">
+              <Book size={24} />
+            </div>
+            <div>
+              <h3 className="font-bold text-amber-900">Configuração Inicial Necessária</h3>
+              <p className="text-amber-700">O banco de dados de universidades e disciplinas está vazio.</p>
+            </div>
+          </div>
+          <button
+            onClick={handleMigrate}
+            disabled={migrating}
+            className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg active:scale-95 disabled:opacity-50"
+          >
+            {migrating ? 'Criando conteúdo...' : 'Povoar com UEM/UP e Disciplinas'}
+          </button>
+        </div>
+      )}
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6">
@@ -167,6 +211,15 @@ const AdminDashboard = () => {
           <p className="text-gray-500">Ver usuários, gerenciar papéis e permissões.</p>
         </button>
       </div>
+
+      {/* Toast notifications */}
+      {toastState.isOpen && (
+        <Toast
+          message={toastState.message}
+          type={toastState.type}
+          onClose={closeToast}
+        />
+      )}
     </div>
   );
 };

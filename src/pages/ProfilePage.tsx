@@ -144,13 +144,13 @@ const ProfilePage = () => {
       {/* Study Plan Section */}
       <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-800">Personalized Study Plan</h3>
+          <h3 className="text-xl font-bold text-gray-800">Plano de Estudo Personalizado</h3>
           {!user.studyPlan && (
             <button 
               onClick={() => navigate('/study-plan/setup')}
               className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-primary-hover transition-colors"
             >
-              Create Plan
+              Criar Plano
             </button>
           )}
         </div>
@@ -159,11 +159,11 @@ const ProfilePage = () => {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 bg-blue-50 rounded-xl">
-                <p className="text-sm text-gray-500 font-bold uppercase">Daily Goal</p>
-                <p className="text-2xl font-bold text-blue-600">{user.studyPlan.dailyGoal} exercises</p>
+                <p className="text-sm text-gray-500 font-bold uppercase">Meta Diária</p>
+                <p className="text-2xl font-bold text-blue-600">{user.studyPlan.dailyGoal} exercícios</p>
               </div>
               <div className="p-4 bg-purple-50 rounded-xl">
-                <p className="text-sm text-gray-500 font-bold uppercase">Focus Areas</p>
+                <p className="text-sm text-gray-500 font-bold uppercase">Áreas de Foco</p>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {user.studyPlan.weakTopics.map(topic => (
                     <span key={topic} className="text-xs bg-white px-2 py-1 rounded-lg font-bold text-purple-600 border border-purple-100">
@@ -173,7 +173,7 @@ const ProfilePage = () => {
                 </div>
               </div>
               <div className="p-4 bg-green-50 rounded-xl">
-                <p className="text-sm text-gray-500 font-bold uppercase">Schedule</p>
+                <p className="text-sm text-gray-500 font-bold uppercase">Horário</p>
                 <p className="text-sm font-medium text-green-700 mt-1">
                   {user.studyPlan.weeklySchedule.join(', ')}
                 </p>
@@ -182,15 +182,15 @@ const ProfilePage = () => {
           </div>
         ) : (
           <div className="text-center py-8 text-gray-500">
-            <p>You haven't created a study plan yet.</p>
-            <p className="text-sm">Answer a few questions to get a personalized schedule!</p>
+            <p>Você ainda não criou um plano de estudo.</p>
+            <p className="text-sm">Responda a algumas perguntas para obter um horário personalizado!</p>
           </div>
         )}
       </div>
 
       {/* Recent Activity */}
       <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">Recent Activity</h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Atividade Recente</h3>
         <div className="space-y-4">
           {user.recentActivity && user.recentActivity.length > 0 ? (
             [...user.recentActivity].reverse().slice(0, 5).map((activity) => (
@@ -201,14 +201,14 @@ const ProfilePage = () => {
                 <div className="flex-1">
                   <h4 className="font-bold text-gray-700">{activity.title}</h4>
                   <p className="text-sm text-gray-400">
-                    {activity.timestamp?.toDate().toLocaleDateString()} at {activity.timestamp?.toDate().toLocaleTimeString()}
+                    {activity.timestamp?.toDate().toLocaleDateString()} às {activity.timestamp?.toDate().toLocaleTimeString()}
                   </p>
                 </div>
               </div>
             ))
           ) : (
             <div className="text-center py-8 text-gray-500">
-              No recent activity found. Start learning!
+              Nenhuma atividade recente encontrada. Comece a aprender!
             </div>
           )}
         </div>

@@ -2,25 +2,30 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContentStore } from '../stores/useContentStore';
 import { useAuthStore } from '../stores/useAuthStore';
-import { Zap, ArrowRight } from 'lucide-react';
+import { Zap, ArrowRight, Book } from 'lucide-react';
 import clsx from 'clsx';
 
 const ChallengeSelectDisciplinePage = () => {
-  const { disciplines, fetchDisciplines, loading } = useContentStore();
+  const { disciplines, universities, fetchContent, loading: contentLoading } = useContentStore();
   const { user } = useAuthStore();
   const navigate = useNavigate();
-  const [selectedUniversity, setSelectedUniversity] = useState<'UEM' | 'UP'>('UEM');
+  const [selectedUniversityId, setSelectedUniversityId] = useState<string>('');
 
   useEffect(() => {
-    fetchDisciplines();
-  }, [fetchDisciplines]);
+    fetchContent();
+  }, [fetchContent]);
 
-  // Check if user has challenges left today
+  // Set initial university
+  useEffect(() => {
+    if (universities.length > 0 && !selectedUniversityId) {
+      setSelectedUniversityId(universities[0].id);
+    }
+  }, [universities, selectedUniversityId]);
+
   const getChallengesLeft = () => {
     if (!user) return 0;
-    if (user.isPremium) return -1; // -1 means unlimited
+    if (user.isPremium) return -1;
     
-    // Check if user already took a challenge today
     if (user.lastChallengeDate) {
       const lastChallengeDate = user.lastChallengeDate.toDate();
       const today = new Date();
@@ -30,15 +35,15 @@ const ChallengeSelectDisciplinePage = () => {
         lastChallengeDate.getMonth() === today.getMonth() &&
         lastChallengeDate.getFullYear() === today.getFullYear()
       ) {
-        return 0; // No challenges left today
+        return 0;
       }
     }
-    return 1; // 1 challenge available
+    return 1;
   };
 
   const challengesLeft = getChallengesLeft();
 
-  if (loading) {
+  if (contentLoading && universities.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -46,7 +51,8 @@ const ChallengeSelectDisciplinePage = () => {
     );
   }
 
-  const filteredDisciplines = disciplines.filter(d => d.university === selectedUniversity);
+  const selectedUniversity = universities.find(u => u.id === selectedUniversityId);
+  const filteredDisciplines = disciplines.filter(d => d.universityId === selectedUniversityId);
 
   return (
     <div className="space-y-8 pb-12">
@@ -62,33 +68,24 @@ const ChallengeSelectDisciplinePage = () => {
         </div>
         
         {/* University Tabs */}
-        <div className="bg-gray-100 p-1 rounded-xl inline-flex">
-          <button
-            onClick={() => setSelectedUniversity('UEM')}
-            className={clsx(
-              "px-6 py-2 rounded-lg text-sm font-bold transition-all",
-              selectedUniversity === 'UEM' 
-                ? "bg-white text-primary shadow-sm" 
-                : "text-gray-500 hover:text-gray-700"
-            )}
-          >
-            UEM
-          </button>
-          <button
-            onClick={() => setSelectedUniversity('UP')}
-            className={clsx(
-              "px-6 py-2 rounded-lg text-sm font-bold transition-all",
-              selectedUniversity === 'UP' 
-                ? "bg-white text-primary shadow-sm" 
-                : "text-gray-500 hover:text-gray-700"
-            )}
-          >
-            UP
-          </button>
+        <div className="bg-gray-100 p-1 rounded-xl flex flex-wrap gap-1">
+          {universities.map(uni => (
+            <button
+              key={uni.id}
+              onClick={() => setSelectedUniversityId(uni.id)}
+              className={clsx(
+                "px-6 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap",
+                selectedUniversityId === uni.id 
+                  ? "bg-white text-primary shadow-sm" 
+                  : "text-gray-500 hover:text-gray-700"
+              )}
+            >
+              {uni.shortName}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Challenges Status Banner */}
       {user && !user.isPremium && (
         <div className={clsx(
           "rounded-xl p-4 border-2",
@@ -128,8 +125,13 @@ const ChallengeSelectDisciplinePage = () => {
       )}
       
       <div>
-        <h2 className="text-xl font-bold text-gray-700 mb-6">
-          {selectedUniversity === 'UEM' ? 'Universidade Eduardo Mondlane' : 'Universidade Pedagógica'}
+        <h2 className="text-xl font-bold text-gray-700 mb-6 flex items-center gap-2">
+          {selectedUniversity ? (
+            <>
+              <Book className="text-primary" size={24} />
+              {selectedUniversity.name}
+            </>
+          ) : 'Selecione uma Universidade'}
         </h2>
 
         {filteredDisciplines.length > 0 ? (

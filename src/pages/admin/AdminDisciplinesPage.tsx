@@ -31,6 +31,8 @@ const AdminDisciplinesPage = () => {
   const [universities, setUniversities] = useState<University[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUniversityFilter, setSelectedUniversityFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -141,10 +143,15 @@ const AdminDisciplinesPage = () => {
     setEditingId(null);
   };
 
-  const filteredDisciplines = disciplines.filter(disc =>
-    disc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    disc.universityName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredDisciplines = disciplines.filter(disc => {
+    const matchesSearch = disc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         disc.universityName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesUniversity = selectedUniversityFilter === 'all' || disc.universityId === selectedUniversityFilter;
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'active' && disc.isActive) || 
+                         (statusFilter === 'inactive' && !disc.isActive);
+    return matchesSearch && matchesUniversity && matchesStatus;
+  });
 
   if (loading) {
     return <div className="p-8 text-center">Carregando...</div>;
@@ -169,15 +176,36 @@ const AdminDisciplinesPage = () => {
             <Plus size={20} />
             Nova Disciplina
           </button>
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Buscar disciplinas..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary w-full"
-            />
+          <div className="flex-1 flex gap-2 w-full">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Buscar disciplinas..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary w-full"
+              />
+            </div>
+            <select
+              value={selectedUniversityFilter}
+              onChange={(e) => setSelectedUniversityFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white min-w-[140px]"
+            >
+              <option value="all">Todas Universidades</option>
+              {universities.map(u => (
+                <option key={u.id} value={u.id}>{u.shortName}</option>
+              ))}
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white min-w-[140px]"
+            >
+              <option value="all">Todos Status</option>
+              <option value="active">Ativas</option>
+              <option value="inactive">Inativas</option>
+            </select>
           </div>
         </div>
       </div>

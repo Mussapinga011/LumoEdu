@@ -9,7 +9,7 @@ import { db } from '../../lib/firebase';
 
 const AdminGroupsPage = () => {
   const { user } = useAuthStore();
-  const { disciplines, fetchDisciplines } = useContentStore();
+  const { disciplines, fetchContent } = useContentStore();
   const [groups, setGroups] = useState<StudyGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -25,8 +25,8 @@ const AdminGroupsPage = () => {
 
   useEffect(() => {
     loadGroups();
-    fetchDisciplines();
-  }, [fetchDisciplines]);
+    fetchContent();
+  }, [fetchContent]);
 
   useEffect(() => {
     if (toast) {

@@ -16,6 +16,7 @@ const AdminUniversitiesPage = () => {
   const [universities, setUniversities] = useState<University[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -102,10 +103,14 @@ const AdminUniversitiesPage = () => {
     setEditingId(null);
   };
 
-  const filteredUniversities = universities.filter(uni =>
-    uni.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    uni.shortName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUniversities = universities.filter(uni => {
+    const matchesSearch = uni.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         uni.shortName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'active' && uni.isActive) || 
+                         (statusFilter === 'inactive' && !uni.isActive);
+    return matchesSearch && matchesStatus;
+  });
 
   if (loading) {
     return <div className="p-8 text-center">Carregando...</div>;
@@ -130,15 +135,26 @@ const AdminUniversitiesPage = () => {
             <Plus size={20} />
             Nova Universidade
           </button>
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Buscar universidades..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary w-full"
-            />
+          <div className="flex-1 flex gap-2 w-full">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Buscar universidades..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary w-full"
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white min-w-[140px]"
+            >
+              <option value="all">Todos Status</option>
+              <option value="active">Ativas</option>
+              <option value="inactive">Inativas</option>
+            </select>
           </div>
         </div>
       </div>

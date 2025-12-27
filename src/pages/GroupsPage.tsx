@@ -9,7 +9,7 @@ import { useContentStore } from '../stores/useContentStore';
 const GroupsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { disciplines } = useContentStore();
+  const { disciplines, fetchContent } = useContentStore();
 
   const [myGroups, setMyGroups] = useState<StudyGroup[]>([]);
   const [availableGroups, setAvailableGroups] = useState<StudyGroup[]>([]);
@@ -29,7 +29,8 @@ const GroupsPage = () => {
 
   useEffect(() => {
     loadGroups();
-  }, [user]);
+    fetchContent();
+  }, [user, fetchContent]);
 
   // Limpar toast após 4 segundos
   useEffect(() => {

@@ -28,7 +28,7 @@ const ProfilePage = () => {
         </div>
         <div className="flex-1 text-center md:text-left">
           <h2 className="text-2xl font-bold text-gray-800">{user.displayName}</h2>
-          <p className="text-gray-500">Membro desde {new Date().toLocaleDateString('pt-PT')}</p>
+          <p className="text-gray-500">Membro desde {new Date().toLocaleDateString('pt-MZ')}</p>
           <div className={clsx(
             "mt-2 inline-flex items-center px-3 py-1 rounded-full font-bold text-sm",
             user.isPremium ? "bg-green-100 text-green-700" : "bg-blue-100 text-primary"
@@ -201,7 +201,7 @@ const ProfilePage = () => {
                 <div className="flex-1">
                   <h4 className="font-bold text-gray-700">{activity.title}</h4>
                   <p className="text-sm text-gray-400">
-                    {activity.timestamp?.toDate().toLocaleDateString()} às {activity.timestamp?.toDate().toLocaleTimeString()}
+                    {activity.timestamp?.toDate().toLocaleDateString('pt-MZ')} às {activity.timestamp?.toDate().toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
               </div>

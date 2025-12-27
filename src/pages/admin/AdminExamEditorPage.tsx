@@ -22,7 +22,7 @@ import { getErrorMessage } from '../../utils/errorMessages';
 const AdminExamEditorPage = () => {
   const { examId } = useParams();
   const navigate = useNavigate();
-  const { disciplines, universities, fetchContent, loading: contentLoading } = useContentStore();
+  const { disciplines, universities, fetchContent } = useContentStore();
 
   useEffect(() => {
     fetchContent();

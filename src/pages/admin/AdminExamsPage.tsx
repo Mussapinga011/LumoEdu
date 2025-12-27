@@ -14,6 +14,8 @@ const AdminExamsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDiscipline, setSelectedDiscipline] = useState<string>('all');
+  const [selectedUniversity, setSelectedUniversity] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const navigate = useNavigate();
   const { disciplines, universities, fetchContent, loading: contentLoading } = useContentStore();
   const { modalState, showConfirm, closeModal } = useModal();
@@ -60,8 +62,17 @@ const AdminExamsPage = () => {
 
   const filteredExams = exams.filter(exam => {
     const matchesSearch = exam.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const discipline = disciplines.find(d => d.id === exam.disciplineId);
     const matchesDiscipline = selectedDiscipline === 'all' || exam.disciplineId === selectedDiscipline;
-    return matchesSearch && matchesDiscipline;
+    const matchesUniversity = selectedUniversity === 'all' || 
+                             discipline?.universityId === selectedUniversity || 
+                             exam.university === selectedUniversity;
+    
+    const isActive = exam.isActive !== false;
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'active' && isActive) || 
+                         (statusFilter === 'inactive' && !isActive);
+    return matchesSearch && matchesDiscipline && matchesUniversity && matchesStatus;
   });
 
   if (loading || (contentLoading && universities.length === 0)) {
@@ -102,14 +113,38 @@ const AdminExamsPage = () => {
           />
         </div>
         <select
+          value={selectedUniversity}
+          onChange={(e) => {
+            setSelectedUniversity(e.target.value);
+            setSelectedDiscipline('all'); // Reset discipline when university changes
+          }}
+          className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="all">Todas as Universidades</option>
+          {universities.map(u => (
+            <option key={u.id} value={u.id}>{u.name} ({u.shortName})</option>
+          ))}
+        </select>
+        <select
           value={selectedDiscipline}
           onChange={(e) => setSelectedDiscipline(e.target.value)}
           className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="all">Todas as Disciplinas</option>
-          {disciplines.map(d => (
-            <option key={d.id} value={d.id}>{d.title} ({d.universityName})</option>
-          ))}
+          {disciplines
+            .filter(d => selectedUniversity === 'all' || d.universityId === selectedUniversity)
+            .map(d => (
+              <option key={d.id} value={d.id}>{d.title}</option>
+            ))}
+        </select>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as any)}
+          className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="all">Todos os Status</option>
+          <option value="active">Ativos</option>
+          <option value="inactive">Inativos</option>
         </select>
       </div>
 

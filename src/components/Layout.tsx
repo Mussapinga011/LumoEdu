@@ -6,9 +6,9 @@ import {
   LogOut, 
   Download,
   Zap,
-  Video,
   Target,
-  Users
+  Users,
+  GraduationCap
 } from 'lucide-react';
 import { signOut } from '../services/authService';
 import clsx from 'clsx';
@@ -22,8 +22,8 @@ const Layout = () => {
   useOnlinePresence();
 
   const navItems = [
-    { name: 'Aprender', path: '/disciplines', icon: BookOpen },
-    { name: 'Aulas', path: '/lessons', icon: Video },
+    { name: 'Aprender', path: '/learning', icon: GraduationCap },
+    { name: 'Modo Prática', path: '/disciplines', icon: BookOpen },
     { name: 'Desafio', path: '/challenge', icon: Zap },
     { name: 'Simulados', path: '/simulation/config', icon: Target },
     { name: 'Grupos', path: '/groups', icon: Users },
@@ -40,7 +40,7 @@ const Layout = () => {
       {/* Sidebar (Desktop) */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 p-4 fixed h-full">
         <div className="mb-8 px-4">
-          <Link to="/">
+          <Link to="/learning">
             <img src="/lumo_text.png" alt="LumoEdu" className="h-8 w-auto object-contain" />
           </Link>
         </div>

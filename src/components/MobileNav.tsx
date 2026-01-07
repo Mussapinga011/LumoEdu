@@ -32,7 +32,9 @@ const MobileNav = ({ navItems, isAdmin = false }: MobileNavProps) => {
           {isAdmin ? (
             'Painel Admin'
           ) : (
-            <img src="/lumo_text.png" alt="LumoEdu" className="h-7 w-auto object-contain" />
+            <Link to="/learning">
+              <img src="/lumo_text.png" alt="LumoEdu" className="h-7 w-auto object-contain" />
+            </Link>
           )}
         </div>
         <button 

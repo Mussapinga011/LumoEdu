@@ -4,7 +4,6 @@ import {
   Users, 
   FileText, 
   LogOut,
-  Video,
   TrendingUp,
   MessageCircle,
   Download,
@@ -21,12 +20,12 @@ const AdminLayout = () => {
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
     { name: 'Gerenciar Usuários', path: '/admin/users', icon: Users },
+    { name: 'Gerenciar Disciplinas', path: '/admin/disciplines', icon: BookMarked },
+    { name: 'Conteúdo Aprender', path: '/admin/learning', icon: School },
     { name: 'Gerenciar Exames', path: '/admin/exams', icon: FileText },
-    { name: 'Gerenciar Aulas', path: '/admin/videos', icon: Video },
     { name: 'Gerenciar Grupos', path: '/admin/groups', icon: MessageCircle },
     { name: 'Gerenciar Downloads', path: '/admin/downloads', icon: Download },
     { name: 'Gerenciar Universidades', path: '/admin/universities', icon: School },
-    { name: 'Gerenciar Disciplinas', path: '/admin/disciplines', icon: BookMarked },
     { name: 'Testes A/B', path: '/admin/ab-tests', icon: TrendingUp },
   ];
 

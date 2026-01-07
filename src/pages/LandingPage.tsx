@@ -1,7 +1,12 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { Globe, CheckCircle, Zap, Shield } from 'lucide-react';
+import { useAuthStore } from '../stores/useAuthStore';
 
 const LandingPage = () => {
+  const { user, loading } = useAuthStore();
+
+  if (loading) return null;
+  if (user) return <Navigate to="/learning" replace />;
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* Header */}

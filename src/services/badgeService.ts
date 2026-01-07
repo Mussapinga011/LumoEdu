@@ -1,79 +1,143 @@
-import { UserProfile } from '../types/user';
-import { Trophy, Flame, Star, BookOpen, Target, Zap } from 'lucide-react';
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { Badge } from '../types/badge';
+import { Trophy, Flame, Star, Award, Zap, Book, Crown } from 'lucide-react';
 
-export interface Badge {
-  id: string;
-  name: string;
-  description: string;
-  icon: any; // Lucide icon component
-  color: string;
-  condition: (user: UserProfile) => boolean;
-}
+export const BADGES_COLLECTION = 'badges';
+export const USER_BADGES_COLLECTION = 'userBadges';
 
-export const BADGES: Badge[] = [
+// Predefined badges - Universal MZ slang (Gender Neutral)
+export const DEFAULT_BADGES: Badge[] = [
   {
     id: 'first_win',
-    name: 'Primeira Vitória',
-    description: 'Complete o seu primeiro desafio',
-    icon: Trophy,
-    color: 'text-yellow-500',
-    condition: (user) => (user.challengesCompleted || 0) >= 1
+    name: 'Primeira Txilada',
+    description: 'Já mambaste a tua primeira sessão! Estás a txilar bem.',
+    icon: Award,
+    color: 'text-blue-500',
+    requirement: { type: 'sessions_completed', value: 1 },
+    rarity: 'common'
   },
   {
-    id: 'streak_master',
-    name: 'Mestre da Sequência',
-    description: 'Alcance uma sequência de 7 dias de estudo',
+    id: 'streak_3',
+    name: 'Estás On Fire!',
+    description: '3 sessões seguidas? Aqueceste as turbinas!',
     icon: Flame,
     color: 'text-orange-500',
-    condition: (user) => (user.streak || 0) >= 7
+    requirement: { type: 'streak', value: 3 },
+    rarity: 'rare'
   },
   {
-    id: 'dedicated_learner',
-    name: 'Estudante Dedicado',
-    description: 'Alcance o Nível 5',
-    icon: BookOpen,
-    color: 'text-blue-500',
-    condition: (user) => (user.level || 1) >= 5
-  },
-  {
-    id: 'xp_hunter',
-    name: 'Caçador de XP',
-    description: 'Ganhe um total de 1000 XP',
+    id: 'perfect_score',
+    name: 'Nível Pro no Mambo',
+    description: '100% de acertos? Nem na sala de aula se vê isso!',
     icon: Star,
     color: 'text-purple-500',
-    condition: (user) => (user.xp || 0) >= 1000
+    requirement: { type: 'perfect_score', value: 100 },
+    rarity: 'epic'
   },
   {
-    id: 'exam_ready',
-    name: 'Pronto para o Exame',
-    description: 'Complete 5 exames completos',
-    icon: Target,
-    color: 'text-red-500',
-    condition: (user) => (user.examsCompleted || 0) >= 5
-  },
-  {
-    id: 'fast_learner',
-    name: 'Aprendiz Rápido',
-    description: 'Complete 50 exercícios diários',
+    id: 'speed_demon',
+    name: 'Papa-Léguas',
+    description: 'Menos de 5 minutos? Voaste baixo nesta sessão!',
     icon: Zap,
+    color: 'text-yellow-500',
+    requirement: { type: 'speed', value: 300 },
+    rarity: 'rare'
+  },
+  {
+    id: 'discipline_master',
+    name: 'Boss da Disciplina',
+    description: 'Mambaste tudo nesta disciplina. Ninguém te segura!',
+    icon: Crown,
+    color: 'text-yellow-600',
+    requirement: { type: 'discipline_master', value: 1 },
+    rarity: 'legendary'
+  },
+  {
+    id: 'dedicated_student',
+    name: 'Foco Total',
+    description: '10 sessões djobadas com sucesso. Que dedicação!',
+    icon: Book,
     color: 'text-green-500',
-    condition: (user) => (user.dailyExercisesCount || 0) >= 50
+    requirement: { type: 'sessions_completed', value: 10 },
+    rarity: 'rare'
+  },
+  {
+    id: 'knowledge_legend',
+    name: 'Lenda de Moçambique',
+    description: '50 sessões? Já podes dar aulas na UEM!',
+    icon: Trophy,
+    color: 'text-purple-600',
+    requirement: { type: 'sessions_completed', value: 50 },
+    rarity: 'legendary'
   }
 ];
 
-export const checkNewBadges = (user: UserProfile): string[] => {
-  const currentBadges = user.badges || [];
-  const newBadges: string[] = [];
+export const BADGES = DEFAULT_BADGES;
 
-  BADGES.forEach(badge => {
-    if (!currentBadges.includes(badge.id) && badge.condition(user)) {
-      newBadges.push(badge.id);
+/**
+ * Migration/utility for old code compatibility
+ */
+export const checkNewBadges = (_user: any) => {
+  return [];
+};
+
+/**
+ * Check and award badges based on user progress
+ * OPTIMIZED: Uses local constants and user object to minimize Firebase Reads.
+ */
+export const checkAndAwardBadges = async (
+  userId: string,
+  currentUserBadges: string[] = [],
+  progressData: {
+    sessionsCompleted: number;
+    perfectScores: number;
+    currentStreak: number;
+    completionTime?: number;
+    disciplineId?: string;
+    allDisciplineSessionsCompleted?: boolean;
+  }
+): Promise<Badge[]> => {
+  const newlyEarnedBadges: Badge[] = [];
+  const earnedBadgeIds = new Set(currentUserBadges);
+
+  for (const badge of DEFAULT_BADGES) {
+    if (earnedBadgeIds.has(badge.id)) continue;
+
+    let shouldAward = false;
+
+    switch (badge.requirement.type) {
+      case 'sessions_completed':
+        shouldAward = Math.max(0, progressData.sessionsCompleted) >= badge.requirement.value;
+        break;
+      case 'perfect_score':
+        shouldAward = progressData.perfectScores > 0;
+        break;
+      case 'streak':
+        shouldAward = progressData.currentStreak >= badge.requirement.value;
+        break;
+      case 'speed':
+        shouldAward = (progressData.completionTime || Infinity) <= badge.requirement.value;
+        break;
+      case 'discipline_master':
+        shouldAward = progressData.allDisciplineSessionsCompleted === true;
+        break;
     }
-  });
 
-  return newBadges;
+    if (shouldAward) {
+      newlyEarnedBadges.push(badge);
+    }
+  }
+
+  if (newlyEarnedBadges.length > 0) {
+    const userRef = doc(db, 'users', userId);
+    const newBadgeIds = newlyEarnedBadges.map(b => b.id);
+    
+    await updateDoc(userRef, {
+      badges: arrayUnion(...newBadgeIds)
+    });
+  }
+
+  return newlyEarnedBadges;
 };
 
-export const getBadgeById = (id: string): Badge | undefined => {
-  return BADGES.find(b => b.id === id);
-};

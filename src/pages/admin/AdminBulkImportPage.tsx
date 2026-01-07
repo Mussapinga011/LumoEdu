@@ -90,12 +90,12 @@ const AdminBulkImportPage = () => {
 
   const handleCopyPrompt = () => {
     navigator.clipboard.writeText(PROMPT_TEXT);
-    showSuccess('Prompt copiado! Cole no Gemini junto com as imagens do Exame e do Guia.');
+    showSuccess('Prompt copiado! Cole em um LLM (como Gemini ou ChatGPT) junto com as imagens do Exame.');
   };
 
   const handleParseJson = () => {
     if (!jsonInput.trim()) {
-      showError('Cole o JSON gerado pelo Gemini primeiro.');
+      showError('Cole o JSON gerado primeiro.');
       return;
     }
 
@@ -284,8 +284,8 @@ const AdminBulkImportPage = () => {
           <ArrowLeft size={24} />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Importação via JSON (Gemini)</h1>
-          <p className="text-gray-600">Copie o prompt, gere o JSON no Gemini e cole aqui.</p>
+          <h1 className="text-2xl font-bold text-gray-800">Importação via JSON</h1>
+          <p className="text-gray-600">Copie o prompt, gere o JSON em um LLM e cole aqui.</p>
         </div>
       </div>
 
@@ -361,10 +361,10 @@ const AdminBulkImportPage = () => {
           <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
             <h2 className="text-lg font-semibold mb-2 text-blue-900 flex items-center gap-2">
               <FileJson size={20} />
-              2. Gere as Questões no Gemini
+              2. Gere as Questões via LLM
             </h2>
             <p className="text-blue-700 mb-4 text-sm">
-              Use este prompt no chat oficial do Gemini junto com as imagens do exame para gerar o código correto.
+              Use este prompt em um modelo de linguagem (Gemini, ChatGPT, Claude) junto com as imagens do exame para gerar o código correto.
             </p>
             <div className="relative bg-white p-4 rounded-lg border border-blue-200 font-mono text-xs text-gray-600 overflow-x-auto">
               <pre>{PROMPT_TEXT}</pre>
@@ -383,7 +383,7 @@ const AdminBulkImportPage = () => {
             <textarea
               value={jsonInput}
               onChange={(e) => setJsonInput(e.target.value)}
-              placeholder='Cole aqui o resultado do Gemini (começando com [ e terminando com ])'
+              placeholder='Cole aqui o resultado (começando com [ e terminando com ])'
               className="w-full h-64 p-4 font-mono text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none resize-y"
             />
             

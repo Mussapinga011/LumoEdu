@@ -11,7 +11,6 @@ import {
   deleteDoc,
   orderBy,
   Timestamp,
-  arrayUnion,
   serverTimestamp,
   increment
 } from 'firebase/firestore';
@@ -237,12 +236,58 @@ export const bulkImportQuestions = async (
 
 export const addUserActivity = async (uid: string, activity: Omit<UserActivity, 'id'>) => {
   const userRef = doc(db, 'users', uid);
+  
+  // 1. Fetch current user data to check history
+  const userSnap = await getDoc(userRef);
+  if (!userSnap.exists()) return;
+  
+  const userData = userSnap.data() as UserProfile;
+  const currentActivities = userData.recentActivity || [];
+  
   const newActivity: UserActivity = {
     ...activity,
     id: crypto.randomUUID()
   };
+
+  const updatedActivities = [...currentActivities, newActivity].slice(-50);
+  let xpToAdd = 0;
+
+  // 2. Check Consistency Bonus (3 different days in current week)
+  const now = new Date();
+  const day = now.getDay();
+  const diff = day === 0 ? 6 : day - 1; 
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - diff);
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const thisWeekActivities = updatedActivities.filter(a => {
+    const date = a.timestamp.toDate();
+    return date >= startOfWeek;
+  });
+
+  const uniqueDays = new Set(thisWeekActivities.map(a => 
+    a.timestamp.toDate().toDateString()
+  ));
+
+  const hasBonusThisWeek = thisWeekActivities.some(a => a.type === 'consistency_bonus');
+
+  if (uniqueDays.size >= 3 && !hasBonusThisWeek) {
+    const bonusActivity: UserActivity = {
+      id: crypto.randomUUID(),
+      type: 'consistency_bonus' as any, // Cast as any if type not in strict enum yet, or update types
+      title: 'Bônus de Consistência Semanal',
+      timestamp: Timestamp.now(),
+      score: 0,
+      xpEarned: 50
+    };
+    updatedActivities.push(bonusActivity);
+    xpToAdd += 50;
+  }
+
+  // 3. Update User
   await updateDoc(userRef, {
-    recentActivity: arrayUnion(newActivity)
+    recentActivity: updatedActivities,
+    xp: increment(xpToAdd)
   });
 };
 
@@ -290,100 +335,6 @@ export const checkAndAwardBadges = async (uid: string) => {
   }
   return [];
 };
-
-// --- Video Lesson Operations ---
-
-import { VideoLesson } from '../types/video';
-import { startAfter, limit } from 'firebase/firestore';
-import { extractYoutubeId, getYoutubeThumbnail } from '../lib/youtubeUtils';
-
-export const createVideoLesson = async (video: Omit<VideoLesson, 'id' | 'createdAt' | 'youtubeId' | 'thumbnailUrl'>) => {
-  const youtubeId = extractYoutubeId(video.youtubeUrl);
-  if (!youtubeId) {
-    throw new Error("Invalid YouTube URL");
-  }
-
-  const thumbnailUrl = getYoutubeThumbnail(youtubeId, 'hq');
-
-  const videosRef = collection(db, 'videos');
-  const docRef = await addDoc(videosRef, {
-    ...video,
-    youtubeId,
-    thumbnailUrl,
-    createdAt: Timestamp.now()
-  });
-  await updateDoc(docRef, { id: docRef.id });
-  return docRef.id;
-};
-
-export const updateVideoLesson = async (videoId: string, data: Partial<VideoLesson>) => {
-  const videoRef = doc(db, 'videos', videoId);
-  
-  // If URL is updated, we must update ID and thumbnail too
-  if (data.youtubeUrl) {
-    const youtubeId = extractYoutubeId(data.youtubeUrl);
-    if (youtubeId) {
-      data.youtubeId = youtubeId;
-      data.thumbnailUrl = getYoutubeThumbnail(youtubeId, 'hq');
-    }
-  }
-  
-  await updateDoc(videoRef, data);
-};
-
-export const getVideoLessons = async (
-  lastDoc: any = null, 
-  pageSize: number = 20,
-  filters?: { subject?: string }
-): Promise<{ videos: VideoLesson[]; lastDoc: any }> => {
-  const videosRef = collection(db, 'videos');
-  
-  // Construct base query with filters
-  let qBase = query(videosRef);
-  if (filters && filters.subject) {
-    qBase = query(qBase, where('subject', '==', filters.subject));
-  }
-
-  // Try with ordering first
-  try {
-    let q = query(qBase, orderBy('order', 'asc'), limit(pageSize));
-    if (lastDoc) {
-      q = query(q, startAfter(lastDoc));
-    }
-    
-    const querySnapshot = await getDocs(q);
-    const videos = querySnapshot.docs.map(doc => doc.data() as VideoLesson);
-    const newLastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
-    return { videos, lastDoc: newLastDoc };
-
-  } catch (error: any) {
-    // If error is due to missing index (failed-precondition), try without ordering
-    if (error.code === 'failed-precondition' || error.message.includes('index')) {
-      console.warn("Firestore Index missing. Falling back to unordered query. Please create the index using the link in console.");
-      
-      let q = query(qBase, limit(pageSize));
-      if (lastDoc) {
-        q = query(q, startAfter(lastDoc));
-      }
-      
-      const querySnapshot = await getDocs(q);
-      const videos = querySnapshot.docs.map(doc => doc.data() as VideoLesson);
-      
-      // Sort in memory (best effort for current page)
-      videos.sort((a, b) => a.order - b.order);
-      
-      const newLastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
-      return { videos, lastDoc: newLastDoc };
-    }
-    throw error;
-  }
-};
-
-export const deleteVideoLesson = async (videoId: string) => {
-  const videoRef = doc(db, 'videos', videoId);
-  await deleteDoc(videoRef);
-};
-
 // --- DOWNLOAD MATERIALS FUNCTIONS ---
 
 const DOWNLOADS_COLLECTION = 'downloads';
@@ -480,6 +431,15 @@ export const createDiscipline = async (data: Omit<Discipline, 'id' | 'createdAt'
 export const updateDiscipline = async (id: string, data: Partial<Discipline>): Promise<void> => {
   const docRef = doc(db, DISCIPLINES_COLLECTION, id);
   await updateDoc(docRef, data);
+};
+
+export const getDiscipline = async (id: string): Promise<Discipline | null> => {
+  const docRef = doc(db, DISCIPLINES_COLLECTION, id);
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    return { id: docSnap.id, ...docSnap.data() } as Discipline;
+  }
+  return null;
 };
 
 export const deleteDiscipline = async (id: string): Promise<void> => {

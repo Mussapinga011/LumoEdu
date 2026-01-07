@@ -13,7 +13,7 @@ import Modal from '../components/Modal';
 const ChallengePage = () => {
   const { examId } = useParams();
   const navigate = useNavigate();
-  const { user, updateUser } = useAuthStore();
+  const { user } = useAuthStore();
   const { modalState, showConfirm, closeModal } = useModal();
   
   const [exam, setExam] = useState<Exam | null>(null);
@@ -22,7 +22,7 @@ const ChallengePage = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [flaggedQuestions, setFlaggedQuestions] = useState<string[]>([]);
-  const [timeLeft, setTimeLeft] = useState(90 * 30); // 90 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(90 * 60); // 90 minutes in seconds
   const [isFinished, setIsFinished] = useState(false);
   const [score, setScore] = useState(0);
   const [limitReached, setLimitReached] = useState(false);
@@ -120,26 +120,36 @@ const ChallengePage = () => {
         correctCount++;
       }
     });
+
+    // Calculate Score and XP
+    // Rules: 
+    // - Completion: +100 XP
+    // - Performance Bonus: Up to +50 XP based on accuracy
+    const baseXP = 100;
+    const accuracy = correctCount / questions.length;
+    const performanceBonus = Math.round(accuracy * 50);
+    const xpEarned = baseXP + performanceBonus;
     
-    const finalScore = Math.round((correctCount / questions.length) * 20); // 0-20 scale
+    const finalScore = Math.round(accuracy * 20); // 0-20 scale for grade
     setScore(finalScore);
 
-    // Save activity & Update Stats
-    const updates = {
-      xp: (user.xp || 0) + (finalScore * 10),
+    // Update User Profile
+    await updateUserProfile(user.uid, {
+      xp: (user.xp || 0) + xpEarned,
       lastChallengeDate: Timestamp.now(),
       challengesCompleted: (user.challengesCompleted || 0) + 1
-    };
+    });
 
-    await updateUserProfile(user.uid, updates);
+    // Update User Score (Global logic, separate from XP)
     await updateUserScore(user.uid);
-    
+
+    // Record Activity
     await addUserActivity(user.uid, {
       type: 'challenge',
       title: `Challenge: ${exam.name}`,
       timestamp: Timestamp.now(),
       score: finalScore,
-      xpEarned: finalScore * 10
+      xpEarned: xpEarned
     });
 
     if (exam.disciplineId) {
@@ -147,7 +157,7 @@ const ChallengePage = () => {
        await updateUserDisciplineScore(user.uid, exam.disciplineId, correctCount * 10);
     }
 
-    updateUser(updates);
+
   };
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Carregando desafio...</div>;
@@ -199,7 +209,7 @@ const ChallengePage = () => {
     const correctAnswers = Object.keys(answers).filter(id => answers[id] === questions.find(q => q.id === id)?.correctOption).length;
     const incorrectAnswers = questions.length - correctAnswers;
     const percentage = Math.round((correctAnswers / questions.length) * 100);
-    const timeTaken = (90 * 30) - timeLeft;
+    const timeTaken = (90 * 60) - timeLeft;
     const minutesTaken = Math.floor(timeTaken / 60);
     const secondsTaken = timeTaken % 60;
 

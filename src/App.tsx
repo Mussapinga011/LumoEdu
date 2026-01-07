@@ -1,43 +1,58 @@
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import DisciplinesPage from './pages/DisciplinesPage';
-import DisciplineExamsPage from './pages/DisciplineExamsPage';
-import StudyPage from './pages/StudyPage';
-import ChallengeSelectDisciplinePage from './pages/ChallengeSelectDisciplinePage';
-import ChallengePage from './pages/ChallengePage';
-import ProfilePage from './pages/ProfilePage';
-import RankingPage from './pages/RankingPage';
-import DownloadsPage from './pages/DownloadsPage';
-import StudyPlanSetupPage from './pages/StudyPlanSetupPage';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminExamsPage from './pages/admin/AdminExamsPage';
-import AdminExamEditorPage from './pages/admin/AdminExamEditorPage';
-import AdminUsersPage from './pages/admin/AdminUsersPage';
-import AdminVideosPage from './pages/admin/AdminVideosPage';
-import AdminABTestsPage from './pages/admin/AdminABTestsPage';
-import AdminABTestEditorPage from './pages/admin/AdminABTestEditorPage';
-import AdminGroupsPage from './pages/admin/AdminGroupsPage';
-import AdminDownloadsPage from './pages/admin/AdminDownloadsPage';
-import AdminUniversitiesPage from './pages/admin/AdminUniversitiesPage';
-import AdminDisciplinesPage from './pages/admin/AdminDisciplinesPage';
-import AdminBulkImportPage from './pages/admin/AdminBulkImportPage';
-import VideoLessonsPage from './pages/VideoLessonsPage';
-import SimulationConfigPage from './pages/SimulationConfigPage';
-import SimulationPage from './pages/SimulationPage';
-import SimulationResultPage from './pages/SimulationResultPage';
-import SimulationHistoryPage from './pages/SimulationHistoryPage';
-import GroupsPage from './pages/GroupsPage';
-import GroupChatPage from './pages/GroupChatPage';
+import LearningPage from './pages/LearningPage';
+import PracticePathPage from './pages/PracticePathPage';
+import PracticeQuizPage from './pages/PracticeQuizPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import { useAuthStore } from './stores/useAuthStore';
-
 import OfflineIndicator from './components/OfflineIndicator';
+
+// Lazy load páginas secundárias para reduzir bundle inicial
+const DisciplinesPage = lazy(() => import('./pages/DisciplinesPage'));
+const DisciplineExamsPage = lazy(() => import('./pages/DisciplineExamsPage'));
+const StudyPage = lazy(() => import('./pages/StudyPage'));
+const ChallengeSelectDisciplinePage = lazy(() => import('./pages/ChallengeSelectDisciplinePage'));
+const ChallengePage = lazy(() => import('./pages/ChallengePage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const RankingPage = lazy(() => import('./pages/RankingPage'));
+const DownloadsPage = lazy(() => import('./pages/DownloadsPage'));
+const StudyPlanSetupPage = lazy(() => import('./pages/StudyPlanSetupPage'));
+const SimulationConfigPage = lazy(() => import('./pages/SimulationConfigPage'));
+const SimulationPage = lazy(() => import('./pages/SimulationPage'));
+const SimulationResultPage = lazy(() => import('./pages/SimulationResultPage'));
+const SimulationHistoryPage = lazy(() => import('./pages/SimulationHistoryPage'));
+const GroupsPage = lazy(() => import('./pages/GroupsPage'));
+const GroupChatPage = lazy(() => import('./pages/GroupChatPage'));
+
+// Lazy load TODAS as páginas admin (raramente acessadas)
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminExamsPage = lazy(() => import('./pages/admin/AdminExamsPage'));
+const AdminExamEditorPage = lazy(() => import('./pages/admin/AdminExamEditorPage'));
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'));
+const AdminABTestsPage = lazy(() => import('./pages/admin/AdminABTestsPage'));
+const AdminABTestEditorPage = lazy(() => import('./pages/admin/AdminABTestEditorPage'));
+const AdminGroupsPage = lazy(() => import('./pages/admin/AdminGroupsPage'));
+const AdminDownloadsPage = lazy(() => import('./pages/admin/AdminDownloadsPage'));
+const AdminUniversitiesPage = lazy(() => import('./pages/admin/AdminUniversitiesPage'));
+const AdminLearningPage = lazy(() => import('./pages/admin/AdminLearningPage'));
+const AdminLearningSessionsPage = lazy(() => import('./pages/admin/AdminLearningSessionsPage'));
+const AdminLearningQuestionsPage = lazy(() => import('./pages/admin/AdminLearningQuestionsPage'));
+const AdminDisciplinesPage = lazy(() => import('./pages/admin/AdminDisciplinesPage'));
+const AdminBulkImportPage = lazy(() => import('./pages/admin/AdminBulkImportPage'));
+
+// Loading component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+  </div>
+);
+
 
 function App() {
   const { initAuth } = useAuthStore();
@@ -60,22 +75,23 @@ function App() {
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <OfflineIndicator />
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        
-        <Route element={<Layout />}>
-          <Route path="/disciplines" element={
-            <ProtectedRoute>
-              <DisciplinesPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/lessons" element={
-            <ProtectedRoute>
-              <VideoLessonsPage />
-            </ProtectedRoute>
-          } />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          
+          <Route element={<Layout />}>
+            <Route path="/disciplines" element={
+              <ProtectedRoute>
+                <DisciplinesPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/learning" element={
+              <ProtectedRoute>
+                <LearningPage />
+              </ProtectedRoute>
+            } />
           <Route path="/disciplines/:disciplineId/exams" element={
             <ProtectedRoute>
               <DisciplineExamsPage mode="study" />
@@ -160,6 +176,17 @@ function App() {
             </ProtectedRoute>
           } />
           
+          <Route path="/practice/:disciplineId" element={
+            <ProtectedRoute>
+              <PracticePathPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/practice/:disciplineId/session/:sessionId" element={
+            <ProtectedRoute>
+              <PracticeQuizPage />
+            </ProtectedRoute>
+          } />
+          
           <Route path="/downloads" element={
             <ProtectedRoute>
               <DownloadsPage />
@@ -199,11 +226,6 @@ function App() {
               <AdminUsersPage />
             </AdminRoute>
           } />
-          <Route path="/admin/videos" element={
-            <AdminRoute>
-              <AdminVideosPage />
-            </AdminRoute>
-          } />
           <Route path="/admin/ab-tests" element={
             <AdminRoute>
               <AdminABTestsPage />
@@ -240,8 +262,25 @@ function App() {
             </AdminRoute>
           } />
        
+          <Route path="/admin/learning" element={
+            <AdminRoute>
+              <AdminLearningPage />
+            </AdminRoute>
+          } />
+          <Route path="/admin/learning/:disciplineId/sessions" element={
+            <AdminRoute>
+              <AdminLearningSessionsPage />
+            </AdminRoute>
+          } />
+          <Route path="/admin/learning/:disciplineId/sessions/:sessionId/questions" element={
+            <AdminRoute>
+              <AdminLearningQuestionsPage />
+            </AdminRoute>
+          } />
+          
         </Route>
       </Routes>
+      </Suspense>
     </Router>
   );
 }

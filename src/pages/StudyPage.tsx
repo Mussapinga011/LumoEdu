@@ -135,14 +135,14 @@ const StudyPage = () => {
       <div className="max-w-2xl mx-auto p-8">
         <div className="bg-white rounded-2xl shadow-lg p-8 text-center space-y-6">
           <div className="text-6xl">⭐</div>
-          <h2 className="text-2xl font-bold text-gray-800">Modo Aprender - Premium</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Modo Prática - Premium</h2>
           <p className="text-gray-600">
-            O modo Aprender é exclusivo para usuários Premium. Atualize sua conta para ter acesso ilimitado a todos os recursos de estudo!
+            O Modo Prática é exclusivo para usuários Premium. Atualize sua conta para ter acesso ilimitado a todos os recursos de estudo!
           </p>
           <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
             <h3 className="font-bold text-yellow-800 mb-2">Benefícios Premium:</h3>
             <ul className="text-left text-sm text-yellow-700 space-y-1">
-              <li>✓ Acesso ilimitado ao Modo Aprender</li>
+              <li>✓ Acesso ilimitado ao Modo Prática</li>
               <li>✓ Desafios ilimitados por dia</li>
               <li>✓ Explicações detalhadas de todas as questões</li>
               <li>✓ Estatísticas avançadas de desempenho</li>

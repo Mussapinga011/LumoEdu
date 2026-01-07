@@ -4,15 +4,6 @@
 npx firebase deploy --only hosting
 
 
-
-
-
-
-
-
-
-7
-
 npx firebase login
 npx firebase deploy
 

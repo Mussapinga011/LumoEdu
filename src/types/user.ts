@@ -43,7 +43,7 @@ export interface UserProfile {
 
 export interface UserActivity {
   id: string;
-  type: 'exam' | 'challenge' | 'module';
+  type: 'exam' | 'challenge' | 'module' | 'consistency_bonus';
   title: string;
   timestamp: Timestamp;
   score?: number;

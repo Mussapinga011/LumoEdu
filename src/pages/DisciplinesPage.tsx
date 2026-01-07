@@ -85,7 +85,7 @@ const DisciplinesPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-bold text-yellow-800 mb-1">
-                ⭐ Modo Aprender - Exclusivo Premium
+                ⭐ Modo Prática - Exclusivo Premium
               </h3>
               <p className="text-sm text-yellow-700">
                 Atualize para Premium para ter acesso ilimitado ao modo de estudo com explicações detalhadas!

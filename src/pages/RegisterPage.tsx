@@ -54,7 +54,7 @@ const RegisterPage = () => {
     setLoading(true);
     try {
       await signUpWithEmail(email, password, name);
-      navigate('/disciplines');
+      navigate('/learning');
     } catch (err: any) {
       setError(getErrorMessage(err));
     } finally {

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Discipline } from '../types/discipline';
 import { University } from '../types/university';
 import { getActiveDisciplines, getActiveUniversities } from '../services/dbService';
+import { logger } from '../utils/logger';
 
 interface ContentState {
   disciplines: Discipline[];
@@ -20,18 +21,18 @@ export const useContentStore = create<ContentState>((set, get) => ({
   fetchContent: async () => {
     set({ loading: true, error: null });
     try {
-      console.log('Fetching content (universities & disciplines)...');
+      logger.dev('Fetching content (universities & disciplines)...');
       const [disciplines, universities] = await Promise.all([
         getActiveDisciplines(),
         getActiveUniversities()
       ]);
-      console.log('Content fetched successfully:', { 
-        disciplinesCount: disciplines.length, 
-        universitiesCount: universities.length 
+      logger.dev('Content fetched successfully:', {
+        universities: universities.length,
+        disciplines: disciplines.length
       });
       set({ disciplines, universities, loading: false });
     } catch (error: any) {
-      console.error('Error fetching content:', error);
+      logger.error('Error fetching content:', error);
       set({ error: error.message, loading: false });
     }
   },

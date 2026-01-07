@@ -22,7 +22,7 @@ const LoginPage = () => {
       if (userProfile?.role === 'admin') {
         navigate('/admin');
       } else {
-        navigate('/disciplines');
+        navigate('/learning');
       }
     } catch (err: any) {
       setError(getErrorMessage(err));

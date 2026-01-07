@@ -7,6 +7,7 @@ import { Timer, ChevronLeft, ChevronRight } from 'lucide-react';
 import RichTextRenderer from '../components/RichTextRenderer';
 import { Timestamp } from 'firebase/firestore';
 import clsx from 'clsx';
+import { addUserActivity, updateUserProfile, updateUserScore } from '../services/dbService';
 
 const SimulationPage = () => {
   const navigate = useNavigate();
@@ -90,6 +91,32 @@ const SimulationPage = () => {
       }));
 
       navigate('/simulation/result');
+
+      // Record Activity and Update Stats
+      // Rules:
+      // - Completion: +30 XP
+      // - Correct Answer: +2 XP
+      const baseXp = 30;
+      const answerXp = correctCount * 2;
+      const xpEarned = baseXp + answerXp;
+      
+      // Update User Profile (XP)
+      await updateUserProfile(user.uid, {
+        xp: (user.xp || 0) + xpEarned
+      });
+
+      // Update User Score (for badges etc)
+      await updateUserScore(user.uid);
+
+      // Record Activity
+      await addUserActivity(user.uid, {
+        type: 'exam', // Keeping 'exam' as type for simulations as per history
+        title: `Simulado: ${getModeName(config.mode)}`,
+        timestamp: Timestamp.now(),
+        score: score,
+        xpEarned: xpEarned
+      });
+
     } catch (error) {
       console.error('Error saving simulation:', error);
     }
@@ -207,6 +234,17 @@ const SimulationPage = () => {
       </div>
     </div>
   );
+};
+
+const getModeName = (mode: string) => {
+  const modes: Record<string, string> = {
+    weaknesses: 'Foco em Fraquezas',
+    revision: 'Modo Revisão',
+    difficult: 'Questões Difíceis',
+    random: 'Aleatório',
+    custom: 'Personalizado'
+  };
+  return modes[mode] || 'Simulado';
 };
 
 export default SimulationPage;

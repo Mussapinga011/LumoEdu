@@ -1,6 +1,13 @@
-import React from 'react';
-import { InlineMath, BlockMath } from 'react-katex';
-import 'katex/dist/katex.min.css';
+import React, { useEffect, useRef } from 'react';
+
+// KaTeX agora é carregado via CDN no index.html
+// Declarar tipo global para TypeScript
+declare global {
+  interface Window {
+    katex: any;
+  }
+}
+
 
 interface RichTextRendererProps {
   content: string;
@@ -74,13 +81,13 @@ const RichTextRenderer: React.FC<RichTextRendererProps> = ({ content, className 
     switch (part.type) {
       case 'inline-math':
         return (
-          <InlineMath key={index} math={part.content} />
+          <MathRenderer key={index} math={part.content} displayMode={false} />
         );
       
       case 'block-math':
         return (
           <div key={index} className="my-4">
-            <BlockMath math={part.content} />
+            <MathRenderer math={part.content} displayMode={true} />
           </div>
         );
       
@@ -113,6 +120,30 @@ const RichTextRenderer: React.FC<RichTextRendererProps> = ({ content, className 
       {parts.map((part, index) => renderPart(part, index))}
     </div>
   );
+};
+
+// Componente auxiliar para renderizar matemática com KaTeX
+const MathRenderer: React.FC<{ math: string; displayMode: boolean }> = ({ math, displayMode }) => {
+  const containerRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (containerRef.current && window.katex) {
+      try {
+        window.katex.render(math, containerRef.current, {
+          displayMode,
+          throwOnError: false,
+          errorColor: '#cc0000',
+        });
+      } catch (error) {
+        console.error('KaTeX rendering error:', error);
+        if (containerRef.current) {
+          containerRef.current.textContent = math;
+        }
+      }
+    }
+  }, [math, displayMode]);
+
+  return <span ref={containerRef} />;
 };
 
 export default RichTextRenderer;

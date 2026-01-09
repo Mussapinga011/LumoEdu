@@ -9,4 +9,50 @@ export default defineConfig({
             "@": path.resolve(__dirname, "./src"),
         },
     },
+    build: {
+        // Configurar KaTeX como externo (carregado via CDN)
+        rollupOptions: {
+            external: ['katex'],
+            output: {
+                manualChunks: {
+                    // Separar Firebase em chunk próprio (grande biblioteca)
+                    'firebase': [
+                        'firebase/app',
+                        'firebase/auth',
+                        'firebase/firestore',
+                        'firebase/storage',
+                        'firebase/functions'
+                    ],
+                    // React e dependências principais
+                    'react-vendor': [
+                        'react',
+                        'react-dom',
+                        'react-router-dom'
+                    ],
+                    // Bibliotecas de UI
+                    'ui-vendor': [
+                        'lucide-react',
+                        'clsx',
+                        'zustand'
+                    ],
+                    // Outras bibliotecas
+                    'utils-vendor': [
+                        'react-rewards',
+                        'date-fns'
+                    ]
+                }
+            }
+        },
+        // Aumentar limite de warning para evitar avisos desnecessários
+        chunkSizeWarningLimit: 600,
+        // Otimizar minificação
+        minify: 'terser',
+        terserOptions: {
+            compress: {
+                drop_console: true, // Remover console.logs em produção
+                drop_debugger: true,
+                pure_funcs: ['console.log', 'console.debug', 'console.info']
+            }
+        }
+    }
 });

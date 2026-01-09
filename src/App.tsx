@@ -193,6 +193,11 @@ function App() {
               <PracticeQuizPage />
             </ProtectedRoute>
           } />
+          <Route path="/practice/:disciplineId/session/:sessionId" element={
+            <ProtectedRoute>
+              <PracticeQuizPage />
+            </ProtectedRoute>
+          } />
           
           <Route path="/downloads" element={
             <ProtectedRoute>

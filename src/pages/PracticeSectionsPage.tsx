@@ -13,7 +13,7 @@ const Mascot = ({ message }: { message: string }) => (
   <div className="flex items-start gap-4 animate-fade-in transition-all hover:scale-105">
     <div className="relative">
       <div className="w-24 h-24 bg-transparent flex items-center justify-center">
-        <img src="/lumo_mascot.png" alt="Lumo Mascote" className="w-full h-full object-contain filter drop-shadow-lg" />
+        <img src="/lumo_mascot_Insentivador.png" alt="Lumo Mascote" className="w-full h-full object-contain filter drop-shadow-lg" />
       </div>
     </div>
     <div className="bg-white border-2 border-gray-100 rounded-2xl p-4 relative max-w-[200px] shadow-sm transform -rotate-1">
@@ -53,7 +53,7 @@ const SectionCard = ({
           <div className="flex justify-between items-start mb-4">
             <div>
               <h3 className={clsx("text-xs font-black uppercase tracking-widest mb-1", isLocked ? "text-gray-400" : "text-primary")}>
-                Seção {index + 1}
+                Sessão {index + 1}
               </h3>
               <h2 className={clsx("text-xl font-black", isLocked ? "text-gray-400" : "text-gray-800")}>
                 {section.title}

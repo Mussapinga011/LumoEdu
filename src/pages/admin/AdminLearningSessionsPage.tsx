@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getSessionsByDiscipline, saveSession, deleteSession } from '../../services/practiceService';
+import { getSessionsByDiscipline, saveSession, deleteSession, getSessionsBySection } from '../../services/practiceService';
 import { PracticeSession } from '../../types/practice';
 import { Plus, Edit, Trash2, ArrowLeft, LayoutList, ChevronRight, Save, X, GripVertical, Eye, EyeOff } from 'lucide-react';
 import { useModal, useToast } from '../../hooks/useNotifications';
@@ -93,7 +93,7 @@ const SortableSession = ({ session, onEdit, onDelete, onNavigate }: SortableSess
 };
 
 const AdminLearningSessionsPage = () => {
-  const { disciplineId } = useParams<{ disciplineId: string }>();
+  const { disciplineId, sectionId } = useParams<{ disciplineId: string, sectionId?: string }>();
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<PracticeSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,10 +129,15 @@ const AdminLearningSessionsPage = () => {
   const fetchSessions = async () => {
     setLoading(true);
     try {
-      const data = await getSessionsByDiscipline(disciplineId!);
+      let data;
+      if (sectionId) {
+        data = await getSessionsBySection(disciplineId!, sectionId);
+      } else {
+        data = await getSessionsByDiscipline(disciplineId!);
+      }
       setSessions(data);
     } catch (error) {
-      showError('Erro ao carregar sessões');
+      showError('Erro ao carregar etapas');
     } finally {
       setLoading(false);
     }
@@ -159,7 +164,7 @@ const AdminLearningSessionsPage = () => {
       try {
         await Promise.all(
           updatedSessions.map(session => 
-            saveSession(disciplineId!, { ...session, order: session.order })
+            saveSession(disciplineId!, { ...session, sectionId, order: session.order })
           )
         );
         showSuccess('Ordem atualizada!');
@@ -178,10 +183,11 @@ const AdminLearningSessionsPage = () => {
       await saveSession(disciplineId, {
         ...editingSession,
         disciplineId,
+        sectionId,
         order: editingSession.order || sessions.length + 1,
         xpReward: editingSession.xpReward || 50
       });
-      showSuccess('Sessão salva com sucesso!');
+      showSuccess('Etapa salva com sucesso!');
       setIsModalOpen(false);
       fetchSessions();
     } catch (error) {
@@ -195,8 +201,8 @@ const AdminLearningSessionsPage = () => {
       'Tem certeza? Todas as questões desta sessão serão perdidas.',
       async () => {
         try {
-          await deleteSession(disciplineId!, sessionId);
-          showSuccess('Sessão excluída!');
+          await deleteSession(disciplineId!, sessionId, sectionId);
+          showSuccess('Etapa excluída!');
           fetchSessions();
         } catch (error) {
           showError('Erro ao excluir');
@@ -216,7 +222,7 @@ const AdminLearningSessionsPage = () => {
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black text-gray-800 uppercase tracking-tight">
-              {discipline?.title || 'Sessões de Aprendizado'}
+              {discipline?.title || 'Etapas de Aprendizado'}
             </h1>
             {discipline && (
               <span className={clsx(
@@ -227,7 +233,7 @@ const AdminLearningSessionsPage = () => {
               </span>
             )}
           </div>
-          <p className="text-gray-500 font-medium text-sm">Organize o currículo em módulos progressivos</p>
+          <p className="text-gray-500 font-medium text-sm">Organize o currículo em módulos progressivos (Etapas)</p>
         </div>
         
         {discipline && (
@@ -267,13 +273,13 @@ const AdminLearningSessionsPage = () => {
             className="bg-primary text-white px-4 py-2 rounded-xl font-bold hover:bg-primary-hover transition-all flex items-center gap-2 text-sm"
           >
             <Plus size={18} />
-            Nova Sessão
+            Nova Etapa
           </button>
         </div>
 
         <div className="divide-y divide-gray-50">
           {sessions.length === 0 ? (
-            <div className="p-12 text-center text-gray-400">Nenhuma sessão criada para esta disciplina.</div>
+            <div className="p-12 text-center text-gray-400">Nenhuma etapa criada para esta sessão.</div>
           ) : (
             <DndContext
               sensors={sensors}
@@ -290,7 +296,12 @@ const AdminLearningSessionsPage = () => {
                     session={session}
                     onEdit={() => { setEditingSession(session); setIsModalOpen(true); }}
                     onDelete={() => handleDelete(session.id)}
-                    onNavigate={() => navigate(`/admin/learning/${disciplineId}/sessions/${session.id}/questions`)}
+                    onNavigate={() => {
+                        const path = sectionId 
+                          ? `/admin/learning/${disciplineId}/sections/${sectionId}/sessions/${session.id}/questions`
+                          : `/admin/learning/${disciplineId}/sessions/${session.id}/questions`;
+                        navigate(path);
+                    }}
                   />
                 ))}
               </SortableContext>
@@ -304,7 +315,7 @@ const AdminLearningSessionsPage = () => {
           <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-black text-gray-800 uppercase tracking-tight">
-                {editingSession?.id ? 'Editar Sessão' : 'Nova Sessão'}
+                {editingSession?.id ? 'Editar Etapa' : 'Nova Etapa'}
               </h3>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                 <X size={24} />
@@ -313,7 +324,7 @@ const AdminLearningSessionsPage = () => {
             
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-wider">Título da Sessão</label>
+                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-wider">Título da Etapa</label>
                 <input
                   type="text"
                   required

@@ -174,9 +174,14 @@ const GroupsPage = () => {
 
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Grupos de Estudo</h1>
-          <p className="text-gray-500 mt-1">Estude em comunidade e tire suas dúvidas</p>
+        <div className="flex items-center gap-6">
+          <div className="w-24 h-24 shrink-0">
+            <img src="/lumo_mascot_modo_grupo.png" alt="Lumo Estudando" className="w-full h-full object-contain filter drop-shadow-lg" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">Grupos de Estudo</h1>
+            <p className="text-gray-500 mt-1">Estude em comunidade e tire suas dúvidas</p>
+          </div>
         </div>
         <button
           onClick={() => {

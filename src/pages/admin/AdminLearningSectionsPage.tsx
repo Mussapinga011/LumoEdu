@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getSectionsByDiscipline, saveSection, deleteSession } from '../../services/practiceService'; // Note: deleteSession is for sessions, need deleteSection if available or I create it
+import { getSectionsByDiscipline, saveSection, deleteSection } from '../../services/practiceService';
 import { PracticeSection } from '../../types/practice';
 import { Plus, Edit, Trash2, ArrowLeft, LayoutList, ChevronRight, Save, X, GripVertical, BookOpen } from 'lucide-react';
 import { useModal, useToast } from '../../hooks/useNotifications';
@@ -91,7 +91,9 @@ const SortableSection = ({ section, onEdit, onDelete, onNavigate }: SortableSect
         <button onClick={onEdit} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg">
           <Edit size={18} />
         </button>
-        {/* Delete button (disabled for now if not implemented safely) */}
+        <button onClick={onDelete} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+          <Trash2 size={18} />
+        </button>
       </div>
     </div>
   );
@@ -137,10 +139,26 @@ const AdminLearningSectionsPage = () => {
       const data = await getSectionsByDiscipline(disciplineId!);
       setSections(data);
     } catch (error) {
-      showError('Erro ao carregar seções');
+      showError('Erro ao carregar sessões');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDelete = (sectionId: string) => {
+    showConfirm(
+      'Excluir Sessão',
+      'Tem certeza? Todas as etapas e questões desta sessão serão perdidas (mas permanecerão no banco se não deletadas manualmente).',
+      async () => {
+        try {
+          await deleteSection(disciplineId!, sectionId);
+          showSuccess('Sessão excluída!');
+          fetchSections();
+        } catch (error) {
+          showError('Erro ao excluir');
+        }
+      }
+    );
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -201,9 +219,9 @@ const AdminLearningSectionsPage = () => {
         </button>
         <div className="flex-1">
           <h1 className="text-2xl font-black text-gray-800 uppercase tracking-tight">
-            {discipline?.title ? `${discipline.title} - Seções` : 'Seções de Aprendizado'}
+            {discipline?.title ? `${discipline.title} - Sessões` : 'Sessões de Aprendizado'}
           </h1>
-          <p className="text-gray-500 font-medium text-sm">Organize o curso em grandes blocos (ex: Fundamentos, Avançado)</p>
+          <p className="text-gray-500 font-medium text-sm">Organize o curso em grandes blocos (Sessões)</p>
         </div>
       </div>
 
@@ -211,7 +229,7 @@ const AdminLearningSectionsPage = () => {
         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
           <h3 className="font-bold text-gray-700 flex items-center gap-2">
             <LayoutList size={20} className="text-primary" />
-            Estrutura de Seções
+            Estrutura de Sessões
           </h3>
           <button
             onClick={() => {
@@ -221,7 +239,7 @@ const AdminLearningSectionsPage = () => {
             className="bg-primary text-white px-4 py-2 rounded-xl font-bold hover:bg-primary-hover transition-all flex items-center gap-2 text-sm"
           >
             <Plus size={18} />
-            Nova Seção
+            Nova Sessão
           </button>
         </div>
 
@@ -246,7 +264,7 @@ const AdminLearningSectionsPage = () => {
                     key={section.id}
                     section={section}
                     onEdit={() => { setEditingSection(section); setIsModalOpen(true); }}
-                    onDelete={() => {}} // Not implemented yet
+                    onDelete={() => handleDelete(section.id)}
                     onNavigate={() => navigate(`/admin/learning/${disciplineId}/sections/${section.id}/sessions`)}
                   />
                 ))}
@@ -261,7 +279,7 @@ const AdminLearningSectionsPage = () => {
           <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-black text-gray-800 uppercase tracking-tight">
-                {editingSection?.id ? 'Editar Seção' : 'Nova Seção'}
+                {editingSection?.id ? 'Editar Sessão' : 'Nova Sessão'}
               </h3>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
                 <X size={24} />
@@ -270,7 +288,7 @@ const AdminLearningSectionsPage = () => {
             
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-wider">Título da Seção</label>
+                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-wider">Título da Sessão</label>
                 <input
                   type="text"
                   required

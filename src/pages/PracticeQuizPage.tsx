@@ -12,7 +12,7 @@ import { useReward } from 'react-rewards';
 import RichTextRenderer from '../components/RichTextRenderer';
 
 const PracticeQuizPage = () => {
-  const { disciplineId, sessionId } = useParams<{ disciplineId: string, sessionId: string }>();
+  const { disciplineId, sectionId, sessionId } = useParams<{ disciplineId: string, sectionId?: string, sessionId: string }>();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { reward } = useReward('rewardId', 'confetti');
@@ -37,6 +37,7 @@ const PracticeQuizPage = () => {
   const [bestScore, setBestScore] = useState(0);
   const [earnedXP, setEarnedXP] = useState(0);
   const [isScoreImproved, setIsScoreImproved] = useState(false);
+  const [consecutiveErrors, setConsecutiveErrors] = useState(0);
 
   useEffect(() => {
     if (!sessionId || !disciplineId) return;
@@ -45,7 +46,7 @@ const PracticeQuizPage = () => {
       setLoading(true);
       try {
         const [qData, pData] = await Promise.all([
-          getQuestionsBySession(disciplineId, sessionId),
+          getQuestionsBySession(disciplineId, sessionId, sectionId),
           user ? getUserProgressByDiscipline(user.uid, disciplineId) : Promise.resolve({} as Record<string, any>)
         ]);
         
@@ -75,7 +76,10 @@ const PracticeQuizPage = () => {
     if (correct) {
       setScore(s => s + questions[currentIndex].xp);
       setCorrectAnswers(prev => prev + 1);
+      setConsecutiveErrors(0);
       reward();
+    } else {
+      setConsecutiveErrors(prev => prev + 1);
     }
     // No more lives reduction
   };
@@ -101,7 +105,8 @@ const PracticeQuizPage = () => {
     // Save process handles Replay logic internally now
     const result = await saveSessionProgress(user.uid, {
       sessionId,
-      disciplineId: disciplineId,
+      disciplineId,
+      sectionId,
       completed: true,
       score: Math.round((score / (questions.length * 10)) * 100),
       xpEarned: score,
@@ -126,14 +131,38 @@ const PracticeQuizPage = () => {
   };
 
   if (loading) return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div></div>;
-  if (questions.length === 0) return <div className="p-8 text-center">Nenhuma questão encontrada.</div>;
+  
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
+        <div className="w-32 h-32 mb-6 mx-auto">
+          <img src="/lumo_mascot_Em_Duvida.png" alt="Lumo em Dúvida" className="w-full h-full object-contain" />
+        </div>
+        <h1 className="text-2xl font-black text-gray-800 mb-2">Nenhuma Questão Encontrada</h1>
+        <p className="text-gray-500 font-medium mb-8">
+          Esta etapa ainda não possui questões cadastradas. Por favor, volte e tente outra etapa.
+        </p>
+        <button 
+          onClick={() => {
+            const path = sectionId 
+              ? `/practice/${disciplineId}/section/${sectionId}` 
+              : `/practice/${disciplineId}`;
+            navigate(path);
+          }}
+          className="w-full bg-primary text-white py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_0_#1a4b2e] active:shadow-none active:translate-y-1 transition-all"
+        >
+          Voltar para Sessão
+        </button>
+      </div>
+    );
+  }
 
   // Replay Intro Screen
   if (showReplayIntro) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
-        <div className="w-24 h-24 bg-blue-100 rounded-3xl flex items-center justify-center text-blue-600 mb-6 animate-pulse">
-           <AlertCircle size={48} />
+        <div className="w-32 h-32 mb-6 mx-auto">
+           <img src="/lumo_mascot_Estudando_em_duvida.png" alt="Lumo Pensando" className="w-full h-full object-contain" />
         </div>
         <h1 className="text-2xl font-black text-gray-800 mb-2">Rever Sessão</h1>
         <p className="text-gray-500 font-medium mb-8">
@@ -157,7 +186,12 @@ const PracticeQuizPage = () => {
           REVER CONTEÚDO
         </button>
         <button 
-          onClick={() => navigate(`/practice/${disciplineId}`)}
+          onClick={() => {
+            const path = sectionId 
+              ? `/practice/${disciplineId}/section/${sectionId}` 
+              : `/practice/${disciplineId}`;
+            navigate(path);
+          }}
           className="mt-4 text-gray-400 font-bold text-sm uppercase hover:text-gray-600"
         >
           Voltar
@@ -170,8 +204,8 @@ const PracticeQuizPage = () => {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
         <div id="rewardId" />
-        <div className="text-8xl mb-6">
-          {isScoreImproved ? '🚀' : '🏆'}
+        <div className="w-32 h-32 mb-6 mx-auto">
+          <img src="/lumo_mascot_Conquista.png" alt="Lumo Celebrando" className="w-full h-full object-contain animate-bounce" />
         </div>
         <h1 className="text-3xl font-extrabold text-gray-800 mb-2">
           {isReplayMode ? 'Sessão Revisada!' : 'Sessão Concluída!'}
@@ -226,7 +260,12 @@ const PracticeQuizPage = () => {
         )}
 
         <button 
-          onClick={() => navigate(`/practice/${disciplineId}`)}
+          onClick={() => {
+            const path = sectionId 
+              ? `/practice/${disciplineId}/section/${sectionId}` 
+              : `/practice/${disciplineId}`;
+            navigate(path);
+          }}
           className="w-full max-w-sm bg-primary text-white py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_0_#1a4b2e] active:shadow-none active:translate-y-1 transition-all"
         >
           CONTINUAR
@@ -293,12 +332,16 @@ const PracticeQuizPage = () => {
             <div className="flex items-center gap-3">
               {isCorrect ? (
                 <CheckCircle2 size={32} className="text-green-600" />
+              ) : consecutiveErrors >= 3 ? (
+                <div className="w-16 h-16 shrink-0">
+                  <img src="/lumo_mascot_Exausto.png" alt="Lumo Exausto" className="w-full h-full object-contain" />
+                </div>
               ) : (
                 <AlertCircle size={32} className="text-red-600" />
               )}
               <div>
                 <h3 className={clsx("font-black text-xl", isCorrect ? "text-green-700" : "text-red-700")}>
-                  {isCorrect ? 'Muito bem!' : 'Solução correta:'}
+                  {isCorrect ? 'Muito bem!' : consecutiveErrors >= 3 ? 'Calma! Vamos com mais atenção...' : 'Solução correta:'}
                 </h3>
                 {!isCorrect && (
                   <div className="text-red-600 font-bold">

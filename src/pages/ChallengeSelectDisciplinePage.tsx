@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContentStore } from '../stores/useContentStore';
 import { useAuthStore } from '../stores/useAuthStore';
-import { Zap, ArrowRight, Book } from 'lucide-react';
+import { ArrowRight, Book } from 'lucide-react';
 import clsx from 'clsx';
 
 const ChallengeSelectDisciplinePage = () => {
@@ -57,9 +57,9 @@ const ChallengeSelectDisciplinePage = () => {
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-red-100 text-danger rounded-xl">
-            <Zap size={32} />
+        <div className="flex items-center gap-6">
+          <div className="w-24 h-24 shrink-0">
+            <img src="/lumo_mascot_modo_Exames.png" alt="Lumo Estudando" className="w-full h-full object-contain filter drop-shadow-lg" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-800">Modo Desafio</h1>

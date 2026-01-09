@@ -160,7 +160,7 @@ const AdminLearningQuestionsPage = () => {
         <div className="p-6 border-b border-gray-100 flex justify-between items-center flex-wrap gap-4">
           <h3 className="font-bold text-gray-700 flex items-center gap-2">
             <HelpCircle size={20} className="text-primary" />
-            Conteúdo da Sessão ({questions.length} questões)
+            Conteúdo da Etapa ({questions.length} questões)
           </h3>
           <div className="flex gap-2">
             <button

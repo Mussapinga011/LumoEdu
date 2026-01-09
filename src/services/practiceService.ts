@@ -200,6 +200,21 @@ export const saveSection = async (disciplineId: string, section: Partial<Practic
 };
 
 /**
+ * ADMIN: Delete a section
+ * WARNING: This doesn't recursively delete steps/questions. 
+ * In a real app we might want a cloud function for that, but here we just delete the section doc.
+ */
+export const deleteSection = async (disciplineId: string, sectionId: string): Promise<void> => {
+  try {
+    const sectionRef = doc(db, DISCIPLINES_COLLECTION, disciplineId, 'sections', sectionId);
+    await deleteDoc(sectionRef);
+  } catch (error) {
+    console.error('Error in deleteSection:', error);
+    throw error;
+  }
+};
+
+/**
  * ADMIN: Create or update a session
  * Supports both legacy (direct child of discipline) and new (child of section) paths.
  */

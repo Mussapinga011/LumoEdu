@@ -219,9 +219,14 @@ const SimulationConfigPage = () => {
         </div>
       )}
 
-      <div>
-        <h1 className="text-3xl font-bold text-gray-800">Criar Simulado Personalizado</h1>
-        <p className="text-gray-500 mt-2">Configure seu simulado de acordo com suas necessidades de estudo</p>
+      <div className="flex items-center gap-6 mb-8">
+        <div className="w-24 h-24 shrink-0">
+          <img src="/lumo_mascot_Estudando_Pra_Exames.png" alt="Lumo Estudando" className="w-full h-full object-contain filter drop-shadow-lg" />
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">Criar Simulado Personalizado</h1>
+          <p className="text-gray-500 mt-2">Configure seu simulado de acordo com suas necessidades de estudo</p>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">

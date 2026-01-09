@@ -3,9 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { getSessionsByDiscipline, getUserProgressByDiscipline, getSectionsByDiscipline, getSessionsBySection } from '../services/practiceService';
 import { PracticeSession, UserSessionProgress, PracticeSection } from '../types/practice';
-import { Star, Trophy, Gift, ArrowLeft, BookOpen, Lock, CheckCircle, MapPin } from 'lucide-react';
+import { Star, Trophy, ArrowLeft, BookOpen, Lock } from 'lucide-react';
 import clsx from 'clsx';
-import { useContentStore } from '../stores/useContentStore';
 
 const PracticePathPage = () => {
   const { disciplineId, sectionId } = useParams<{ disciplineId: string; sectionId?: string }>();
@@ -75,7 +74,7 @@ const PracticePathPage = () => {
   // Determine global completion status to unlock next items
   // Logic simplified: index 0 is always unlocked.
   // Index N is unlocked if N-1 is COMPLETED.
-  const getUnlockStatus = (sessionId: string, index: number) => {
+  const getUnlockStatus = (index: number) => {
       if (index === 0) return true;
       const prevSession = sessions[index - 1];
       // Check if previous session is completed in user progress
@@ -119,7 +118,7 @@ const PracticePathPage = () => {
         <div className="flex flex-col items-center gap-6">
           {sessions.map((session, index) => {
             const isCompleted = progress[session.id]?.completed;
-            const isUnlocked = getUnlockStatus(session.id, index);
+            const isUnlocked = getUnlockStatus(index);
             const isCurrent = isUnlocked && !isCompleted;
             
             // Snake offset
@@ -177,10 +176,10 @@ const PracticePathPage = () => {
                   </button>
                 </div>
                 
-                {/* Mascot (Owl) next to current element - matching image 1 */}
+                {/* Mascot (Lumo Guia) next to current element */}
                 {isCurrent && (
                    <div className="absolute top-1/2 -translate-y-1/2 left-24 w-24 h-24 animate-fade-in z-0 pointer-events-none">
-                      <div className="text-6xl absolute -top-4 left-4 animate-bounce delay-75">🦉</div>
+                      <img src="/lumo_mascot_Guia.png" alt="Lumo Guia" className="w-full h-full object-contain animate-bounce" />
                    </div>
                 )}
               </div>

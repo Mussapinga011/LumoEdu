@@ -108,14 +108,19 @@ const RankingPage = () => {
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-16 blur-2xl pointer-events-none" />
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Flame className="text-yellow-400 animate-pulse" size={32} />
-                <h1 className="text-3xl md:text-4xl font-bold">Ranking Semanal</h1>
+            <div className="flex items-center gap-6">
+              <div className="w-24 h-24 shrink-0">
+                <img src="/lumo_mascot_Ranking.png" alt="Lumo Diploma" className="w-full h-full object-contain filter drop-shadow-lg" />
               </div>
-              <p className="text-blue-100 text-lg max-w-lg">
-                Acumule XP completando simulados, desafios e aulas. O ranking reinicia toda segunda-feira!
-              </p>
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <Flame className="text-yellow-400 animate-pulse" size={32} />
+                  <h1 className="text-3xl md:text-4xl font-bold">Ranking Semanal</h1>
+                </div>
+                <p className="text-blue-100 text-lg max-w-lg">
+                  Acumule XP completando simulados, desafios e aulas. O ranking reinicia toda segunda-feira!
+                </p>
+              </div>
             </div>
             
             <div className="bg-white/20 backdrop-blur-md px-6 py-4 rounded-xl border border-white/30 text-center">

@@ -15,14 +15,6 @@ export default defineConfig({
             external: ['katex'],
             output: {
                 manualChunks: {
-                    // Separar Firebase em chunk próprio (grande biblioteca)
-                    'firebase': [
-                        'firebase/app',
-                        'firebase/auth',
-                        'firebase/firestore',
-                        'firebase/storage',
-                        'firebase/functions'
-                    ],
                     // React e dependências principais
                     'react-vendor': [
                         'react',

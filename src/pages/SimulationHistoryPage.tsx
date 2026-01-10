@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
-import { getUserSimulations } from '../services/simulationService';
+import { getUserSimulations } from '../services/simulationService.supabase';
 import { SimulationResult } from '../types/simulation';
 import { Trophy, Target, Clock, Calendar, ArrowLeft, BookOpen } from 'lucide-react';
 import clsx from 'clsx';
@@ -151,8 +151,8 @@ const SimulationHistoryPage = () => {
                   {/* Left: Mode and Date */}
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className={clsx('px-3 py-1 rounded-full text-xs font-bold', getModeColor(simulation.config.mode))}>
-                        {getModeLabel(simulation.config.mode)}
+                      <span className={clsx('px-3 py-1 rounded-full text-xs font-bold', getModeColor(simulation.config.mode || 'random'))}>
+                        {getModeLabel(simulation.config.mode || 'random')}
                       </span>
                       <span className="text-sm text-gray-500 flex items-center gap-1">
                         <Calendar size={14} />

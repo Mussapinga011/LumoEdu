@@ -44,7 +44,7 @@ async function getDB(): Promise<IDBPDatabase<OfflineDB>> {
   if (dbInstance) return dbInstance;
 
   dbInstance = await openDB<OfflineDB>(DB_NAME, DB_VERSION, {
-    upgrade(db) {
+    upgrade(db: IDBPDatabase<OfflineDB>) {
       // Create exams store
       if (!db.objectStoreNames.contains('exams')) {
         db.createObjectStore('exams', { keyPath: 'id' });
@@ -150,7 +150,7 @@ export async function getOfflineProgress(examId: string): Promise<any | null> {
 export async function getUnsyncedProgress(): Promise<any[]> {
   const db = await getDB();
   const allProgress = await db.getAll('progress');
-  return allProgress.filter(p => !p.synced);
+  return allProgress.filter((p: any) => !p.synced);
 }
 
 // Mark progress as synced

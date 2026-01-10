@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getSectionsByDiscipline, getUserProgressByDiscipline, getSessionsBySection } from '../services/practiceService';
-import { getDiscipline } from '../services/dbService';
+import { getSectionsByDiscipline, getUserProgressByDiscipline, getSessionsBySection } from '../services/practiceService.supabase';
+import { getAllDisciplines } from '../services/contentService.supabase';
 import { PracticeSection } from '../types/practice';
 import { Discipline } from '../types/discipline';
 import { ArrowLeft, Lock, Star, ChevronRight } from 'lucide-react';
@@ -135,9 +135,19 @@ const PracticeSectionsPage = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch Discipline Info
-      const disc = await getDiscipline(disciplineId!);
-      setDiscipline(disc);
+      // 1. Get Discipline Info from Store (already fetched or fetch if needed)
+      // Since useContentStore is already standard, we can use it, but for simplicity here:
+      const discs = await getAllDisciplines();
+      const disc = discs.find(d => d.id === disciplineId);
+      if (disc) {
+        setDiscipline({
+          id: disc.id,
+          title: disc.title,
+          icon: disc.icon,
+          color: disc.color,
+          isActive: disc.is_active
+        } as any);
+      }
 
       // 2. Fetch All Sections
       const fetchedSections = await getSectionsByDiscipline(disciplineId!);

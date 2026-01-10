@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signUpWithEmail } from '../services/authService';
-import { checkDisplayNameExists } from '../services/dbService';
+import { signUp } from '../services/authService.supabase';
+import { checkDisplayNameExists } from '../services/dbService.supabase';
 import { useAuthStore } from '../stores/useAuthStore';
 import { getErrorMessage } from '../utils/errorMessages';
 
@@ -53,9 +53,10 @@ const RegisterPage = () => {
 
     setLoading(true);
     try {
-      await signUpWithEmail(email, password, name);
+      await signUp({ email, password, displayName: name });
       navigate('/learning');
     } catch (err: any) {
+      console.error('Registration error:', err);
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);

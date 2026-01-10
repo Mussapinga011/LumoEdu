@@ -13,6 +13,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import { useAuthStore } from './stores/useAuthStore';
 import OfflineIndicator from './components/OfflineIndicator';
+import SupabaseAuthTest from './pages/SupabaseAuthTest';
 
 // Lazy load páginas secundárias para reduzir bundle inicial
 const DisciplinesPage = lazy(() => import('./pages/DisciplinesPage'));
@@ -36,8 +37,6 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminExamsPage = lazy(() => import('./pages/admin/AdminExamsPage'));
 const AdminExamEditorPage = lazy(() => import('./pages/admin/AdminExamEditorPage'));
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'));
-const AdminABTestsPage = lazy(() => import('./pages/admin/AdminABTestsPage'));
-const AdminABTestEditorPage = lazy(() => import('./pages/admin/AdminABTestEditorPage'));
 const AdminGroupsPage = lazy(() => import('./pages/admin/AdminGroupsPage'));
 const AdminDownloadsPage = lazy(() => import('./pages/admin/AdminDownloadsPage'));
 const AdminUniversitiesPage = lazy(() => import('./pages/admin/AdminUniversitiesPage'));
@@ -82,6 +81,9 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          
+          {/* Página de Teste Supabase */}
+          <Route path="/supabase-test" element={<SupabaseAuthTest />} />
           
           <Route element={<Layout />}>
             <Route path="/disciplines" element={
@@ -236,21 +238,6 @@ function App() {
           <Route path="/admin/users" element={
             <AdminRoute>
               <AdminUsersPage />
-            </AdminRoute>
-          } />
-          <Route path="/admin/ab-tests" element={
-            <AdminRoute>
-              <AdminABTestsPage />
-            </AdminRoute>
-          } />
-          <Route path="/admin/ab-tests/new" element={
-            <AdminRoute>
-              <AdminABTestEditorPage />
-            </AdminRoute>
-          } />
-          <Route path="/admin/ab-tests/edit/:testId" element={
-            <AdminRoute>
-              <AdminABTestEditorPage />
             </AdminRoute>
           } />
           <Route path="/admin/groups" element={

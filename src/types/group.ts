@@ -1,35 +1,34 @@
-import { Timestamp } from 'firebase/firestore';
-
-export interface GroupMember {
-  userId: string;
-  displayName: string;
-  photoURL?: string | null;
-  role: 'admin' | 'member';
-  joinedAt: Timestamp;
-}
-
 export interface StudyGroup {
   id: string;
   name: string;
   description: string;
-  disciplineId: string; // 'all' ou ID específico
+  memberCount: number;
+  disciplineId: string;
   disciplineName: string;
   createdBy: string; // userId
-  createdAt: Timestamp;
-  membersCount: number;
-  maxMembers: number; // Default 20
+  createdAt?: any;
   isPrivate: boolean;
-  inviteCode?: string;
-  members?: string[]; // Array de userIds para busca rápida
+  discipline_name?: string; // Compatibility
+  created_by?: string; // Compatibility
+}
+
+export interface GroupMember {
+  userId: string;
+  joinedAt: any;
+  role: 'member' | 'admin';
 }
 
 export interface GroupMessage {
   id: string;
-  groupId: string;
+  groupId?: string;
   userId: string;
   userName: string;
-  userPhotoURL?: string | null;
-  text: string;
-  createdAt: Timestamp;
-  isSystemMessage?: boolean; // Ex: "Fulano entrou no grupo"
+  userPhoto?: string;
+  userPhotoURL?: string; // Alias
+  text?: string; // Some parts use 'text' instead of 'content'
+  content: string;
+  timestamp: any;
+  createdAt?: any; // Alias
+  type: 'text' | 'image' | 'system';
+  isSystemMessage?: boolean;
 }

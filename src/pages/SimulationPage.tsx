@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { SimulationQuestion, SimulationConfig } from '../types/simulation';
-import { saveSimulationResult } from '../services/simulationService';
+import { saveSimulationResult } from '../services/simulationService.supabase';
 import { Timer, ChevronLeft, ChevronRight } from 'lucide-react';
 import RichTextRenderer from '../components/RichTextRenderer';
-import { Timestamp } from 'firebase/firestore';
 import clsx from 'clsx';
-import { addUserActivity, updateUserProfile, updateUserScore } from '../services/dbService';
+import { addUserActivity, updateUserScore } from '../services/dbService.supabase';
 
 const SimulationPage = () => {
   const navigate = useNavigate();
@@ -22,7 +21,6 @@ const SimulationPage = () => {
   const [isFinished, setIsFinished] = useState(false);
 
   useEffect(() => {
-    // Carregar do sessionStorage
     const savedConfig = sessionStorage.getItem('simulationConfig');
     const savedQuestions = sessionStorage.getItem('simulationQuestions');
 
@@ -36,8 +34,6 @@ const SimulationPage = () => {
 
     setConfig(parsedConfig);
     setQuestions(parsedQuestions);
-    
-    // Calcular tempo (2 minutos por questão)
     setTimeLeft(parsedQuestions.length * 120);
   }, [navigate]);
 
@@ -71,18 +67,16 @@ const SimulationPage = () => {
 
     try {
       await saveSimulationResult({
-        userId: user.uid,
+        userId: user.id,
         config,
         questions,
         answers,
         score,
         correctCount,
         totalQuestions: questions.length,
-        timeSpent,
-        completedAt: Timestamp.now()
+        timeSpent
       });
 
-      // Salvar resultado no sessionStorage para tela de resultado
       sessionStorage.setItem('simulationResult', JSON.stringify({
         score,
         correctCount,
@@ -90,32 +84,19 @@ const SimulationPage = () => {
         timeSpent
       }));
 
-      navigate('/simulation/result');
-
-      // Record Activity and Update Stats
-      // Rules:
-      // - Completion: +30 XP
-      // - Correct Answer: +2 XP
-      const baseXp = 30;
-      const answerXp = correctCount * 2;
-      const xpEarned = baseXp + answerXp;
+      const xpEarned = 30 + (correctCount * 2);
       
-      // Update User Profile (XP)
-      await updateUserProfile(user.uid, {
-        xp: (user.xp || 0) + xpEarned
-      });
+      await Promise.all([
+         updateUserScore(user.id),
+         addUserActivity(user.id, {
+            type: 'exam',
+            title: `Simulado: ${getModeName(config.mode || 'random')}`,
+            score: score,
+            xpEarned: xpEarned
+         })
+      ]);
 
-      // Update User Score (for badges etc)
-      await updateUserScore(user.uid);
-
-      // Record Activity
-      await addUserActivity(user.uid, {
-        type: 'exam', // Keeping 'exam' as type for simulations as per history
-        title: `Simulado: ${getModeName(config.mode)}`,
-        timestamp: Timestamp.now(),
-        score: score,
-        xpEarned: xpEarned
-      });
+      navigate('/simulation/result');
 
     } catch (error) {
       console.error('Error saving simulation:', error);
@@ -123,7 +104,11 @@ const SimulationPage = () => {
   };
 
   if (!config || questions.length === 0) {
-    return <div className="flex justify-center items-center h-screen">Carregando...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   const currentQuestion = questions[currentIndex];
@@ -137,7 +122,6 @@ const SimulationPage = () => {
 
   return (
     <div className="h-[calc(100vh-80px)] flex flex-col">
-      {/* Header */}
       <div className="bg-white border-b px-4 py-3 flex justify-between items-center shadow-sm">
         <div>
           <h1 className="font-bold text-gray-800">Simulado Personalizado</h1>
@@ -154,7 +138,6 @@ const SimulationPage = () => {
         </div>
       </div>
 
-      {/* Progress Bar */}
       <div className="w-full bg-gray-200 h-1">
         <div 
           className="h-full bg-primary transition-all duration-300"
@@ -162,11 +145,10 @@ const SimulationPage = () => {
         />
       </div>
 
-      {/* Question */}
       <div className="flex-1 overflow-y-auto p-4 md:p-8">
         <div className="max-w-3xl mx-auto space-y-6">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <div className="text-lg md:text-xl font-medium text-gray-800 mb-6">
+            <div className="text-lg md:text-xl font-medium text-gray-800 mb-6 font-serif leading-relaxed">
               <RichTextRenderer content={currentQuestion.statement} />
             </div>
 
@@ -178,19 +160,19 @@ const SimulationPage = () => {
                   className={clsx(
                     "w-full text-left p-4 rounded-xl border-2 transition-all flex items-center gap-3",
                     answers[currentQuestion.id] === option
-                      ? "border-primary bg-primary/5 text-primary font-medium"
-                      : "border-gray-100 hover:border-gray-300 text-gray-700"
+                      ? "border-primary bg-primary/5 text-primary font-bold shadow-sm"
+                      : "border-gray-100 hover:border-gray-200 text-gray-700"
                   )}
                 >
                   <div className={clsx(
-                    "w-8 h-8 rounded-full flex items-center justify-center border-2 text-sm font-bold",
+                    "w-8 h-8 rounded-lg flex items-center justify-center border-2 text-sm font-black",
                     answers[currentQuestion.id] === option
                       ? "border-primary bg-primary text-white"
-                      : "border-gray-300 text-gray-400"
+                      : "border-gray-100 bg-gray-50 text-gray-400"
                   )}>
                     {String.fromCharCode(65 + idx)}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 text-base">
                     <RichTextRenderer content={option} />
                   </div>
                 </button>
@@ -200,34 +182,33 @@ const SimulationPage = () => {
         </div>
       </div>
 
-      {/* Navigation */}
       <div className="bg-white border-t p-4 flex items-center justify-between">
         <button
           onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
           disabled={currentIndex === 0}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-30"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-30 font-bold"
         >
           <ChevronLeft size={20} />
           Anterior
         </button>
 
-        <div className="text-sm text-gray-500">
-          {Object.keys(answers).length} de {questions.length} respondidas
+        <div className="text-sm text-gray-400 font-bold uppercase tracking-wider hidden md:block">
+          {Object.keys(answers).length} / {questions.length} Respondidas
         </div>
 
         {currentIndex === questions.length - 1 ? (
           <button
             onClick={handleFinish}
-            className="px-6 py-2 bg-green-500 text-white rounded-lg font-bold hover:bg-green-600"
+            className="px-8 py-2 bg-green-500 text-white rounded-xl font-black text-lg shadow-[0_4px_0_0_#1a4b2e] active:shadow-none active:translate-y-1 transition-all"
           >
-            Finalizar
+            FINALIZAR
           </button>
         ) : (
           <button
             onClick={() => setCurrentIndex(Math.min(questions.length - 1, currentIndex + 1))}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover"
+            className="flex items-center gap-2 px-6 py-2 rounded-xl bg-primary text-white font-black text-lg shadow-[0_4px_0_0_#1a4b2e] active:shadow-none active:translate-y-1 transition-all"
           >
-            Próxima
+            PRÓXIMA
             <ChevronRight size={20} />
           </button>
         )}

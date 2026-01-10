@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Book, Check, FileText } from 'lucide-react';
-import { getAllUsers, getAllExams, getAllUniversities, initializeDefaultContent } from '../services/dbService';
+import { Users, Book, FileText } from 'lucide-react';
+import { getAllUsers, getAllExams, getAllUniversities } from '../services/dbService.supabase';
 import { useToast } from '../hooks/useNotifications';
 import Toast from '../components/Toast';
 
@@ -16,8 +16,7 @@ const AdminDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [isDbEmpty, setIsDbEmpty] = useState(false);
-  const [migrating, setMigrating] = useState(false);
-  const { toastState, showSuccess, showError, closeToast } = useToast();
+  const { toastState, closeToast } = useToast();
 
   useEffect(() => {
     fetchStats();
@@ -34,25 +33,26 @@ const AdminDashboard = () => {
       
       setIsDbEmpty(universities.length === 0);
       
-      const now = new Date();
-      const thirtyDaysAgo = new Date(now.setDate(now.getDate() - 30));
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const newUsersCount = users.filter(u => {
+      const newUsersCount = users.filter((u: any) => {
         if (!u.createdAt) return false;
-        return u.createdAt.toDate() > thirtyDaysAgo;
+        const created = new Date(u.createdAt);
+        return created > thirtyDaysAgo;
       }).length;
       
       // Calculate online users (active in last 5 minutes)
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-      const onlineUsersCount = users.filter(u => {
+      const onlineUsersCount = users.filter((u: any) => {
         if (!u.lastActive) return false;
-        const lastActiveDate = u.lastActive.toDate();
+        const lastActiveDate = new Date(u.lastActive);
         return lastActiveDate > fiveMinutesAgo && u.isOnline;
       }).length;
       
       setStats({
         totalUsers: users.length,
-        premiumUsers: users.filter(u => u.isPremium).length,
+        premiumUsers: users.filter((u: any) => u.isPremium).length,
         totalExams: exams.length,
         newUsers: newUsersCount,
         onlineUsers: onlineUsersCount
@@ -65,45 +65,9 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleMigrate = async () => {
-    setMigrating(true);
-    try {
-      await initializeDefaultContent();
-      showSuccess('Conteúdo inicial (UEM/UP) criado com sucesso!');
-      setIsDbEmpty(false);
-      fetchStats();
-    } catch (error: any) {
-      showError('Erro na migração: ' + error.message);
-    } finally {
-      setMigrating(false);
-    }
-  };
-
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-gray-800">Painel Administrativo</h1>
-
-      {/* Migration Warning */}
-      {isDbEmpty && (
-        <div className="bg-amber-50 border-2 border-amber-200 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-amber-100 text-amber-600 rounded-xl">
-              <Book size={24} />
-            </div>
-            <div>
-              <h3 className="font-bold text-amber-900">Configuração Inicial Necessária</h3>
-              <p className="text-amber-700">O banco de dados de universidades e disciplinas está vazio.</p>
-            </div>
-          </div>
-          <button
-            onClick={handleMigrate}
-            disabled={migrating}
-            className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg active:scale-95 disabled:opacity-50"
-          >
-            {migrating ? 'Criando conteúdo...' : 'Povoar com UEM/UP e Disciplinas'}
-          </button>
-        </div>
-      )}
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6">
@@ -147,7 +111,7 @@ const AdminDashboard = () => {
             <p className="text-yellow-100 font-medium uppercase tracking-wide text-sm">Usuários Premium</p>
           </div>
           <div className="absolute -right-4 -bottom-4 text-yellow-600 opacity-30 group-hover:scale-110 transition-transform">
-            <Check size={100} />
+            <Book size={100} />
           </div>
           <div className="mt-4 pt-2 border-t border-yellow-400/30 flex items-center justify-between text-sm text-yellow-100 cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/admin/users')}>
             <span>Mais informações</span>
@@ -185,6 +149,14 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Main Content Info */}
+      {isDbEmpty && (
+        <div className="bg-amber-50 border-2 border-amber-200 p-6 rounded-2xl">
+          <h3 className="font-bold text-amber-900">Banco de Dados Inicializado</h3>
+          <p className="text-amber-700">O conteúdo está sendo carregado via Supabase.</p>
+        </div>
+      )}
 
       {/* Quick Actions */}
       <h2 className="text-xl font-bold text-gray-800">Gestão</h2>
@@ -225,4 +197,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-

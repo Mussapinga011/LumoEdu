@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useContentStore } from '../stores/useContentStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import { SimulationConfig, SimulationMode } from '../types/simulation';
-import { generateSimulation } from '../services/simulationService';
+import { generateSimulation } from '../services/simulationService.supabase';
 import { Target, BookOpen, Flame, Shuffle, Settings, ArrowRight, AlertCircle, X } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -13,7 +13,7 @@ const SimulationConfigPage = () => {
   const { user } = useAuthStore();
 
   const [mode, setMode] = useState<SimulationMode>('weaknesses');
-  const [questionCount, setQuestionCount] = useState<10 | 20 | 30 | 50>(20);
+  const [questionCount, setQuestionCount] = useState<10 | 20 | 30 | 40 | 50 | 60>(20);
   const [selectedDisciplines, setSelectedDisciplines] = useState<string[]>([]);
   const [includeAllDisciplines, setIncludeAllDisciplines] = useState(false);
   const [selectedUniversityId, setSelectedUniversityId] = useState<string | 'both'>('both');
@@ -121,7 +121,7 @@ const SimulationConfigPage = () => {
     }
   ];
 
-  const questionCounts = [10, 20, 30, 50];
+  const questionCounts = [10, 20, 30, 40, 50, 60];
 
   const filteredDisciplines = selectedUniversityId === 'both'
     ? disciplines
@@ -267,7 +267,7 @@ const SimulationConfigPage = () => {
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Número de Questões</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {questionCounts.map((count) => (
             <button
               key={count}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAllDownloads, incrementDownloadCount } from '../services/dbService';
+import { getAllDownloads, incrementDownloadCount } from '../services/dbService.supabase';
 import { DownloadMaterial } from '../types/download';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useContentStore } from '../stores/useContentStore';

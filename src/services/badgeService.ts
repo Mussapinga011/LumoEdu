@@ -1,12 +1,9 @@
-import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+
 import { Badge } from '../types/badge';
 import { Trophy, Flame, Star, Award, Zap, Book, Crown } from 'lucide-react';
+import { addUserBadge } from './dbService.supabase';
 
-export const BADGES_COLLECTION = 'badges';
-export const USER_BADGES_COLLECTION = 'userBadges';
-
-// Predefined badges - Universal MZ slang (Gender Neutral)
+// Universal MZ slang (Gender Neutral)
 export const DEFAULT_BADGES: Badge[] = [
   {
     id: 'first_win',
@@ -76,15 +73,7 @@ export const DEFAULT_BADGES: Badge[] = [
 export const BADGES = DEFAULT_BADGES;
 
 /**
- * Migration/utility for old code compatibility
- */
-export const checkNewBadges = (_user: any) => {
-  return [];
-};
-
-/**
- * Check and award badges based on user progress
- * OPTIMIZED: Uses local constants and user object to minimize Firebase Reads.
+ * Check and award badges based on user progress in Supabase
  */
 export const checkAndAwardBadges = async (
   userId: string,
@@ -130,14 +119,11 @@ export const checkAndAwardBadges = async (
   }
 
   if (newlyEarnedBadges.length > 0) {
-    const userRef = doc(db, 'users', userId);
-    const newBadgeIds = newlyEarnedBadges.map(b => b.id);
-    
-    await updateDoc(userRef, {
-      badges: arrayUnion(...newBadgeIds)
-    });
+    // Premiar no Supabase
+    for (const badge of newlyEarnedBadges) {
+      await addUserBadge(userId, badge.id);
+    }
   }
 
   return newlyEarnedBadges;
 };
-

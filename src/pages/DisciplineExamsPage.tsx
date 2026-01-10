@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-// Force update
 import { useParams, useNavigate } from 'react-router-dom';
-import { getExamsByDiscipline } from '../services/dbService';
+import { getExamsByDiscipline } from '../services/examService.supabase';
 import { Exam } from '../types/exam';
 import { useContentStore } from '../stores/useContentStore';
 import { ArrowLeft, Calendar, HelpCircle } from 'lucide-react';
@@ -28,13 +27,23 @@ const DisciplineExamsPage = ({ mode = 'study' }: DisciplineExamsPageProps) => {
     }
   }, [disciplineId, fetchContent]);
 
-
-
   const fetchExams = async (id: string) => {
     setLoading(true);
     try {
       const data = await getExamsByDiscipline(id);
-      setExams(data);
+      // Mapear campos do Supabase para o formato do frontend
+      const mappedExams: Exam[] = (data as any[]).map(e => ({
+        id: e.id,
+        name: e.title,
+        disciplineId: e.discipline_id,
+        disciplineName: discipline?.title || '',
+        universityId: e.university_id,
+        year: e.year,
+        season: e.season || 'Regular',
+        questionsCount: e.questions_count || 0,
+        createdAt: e.created_at
+      }));
+      setExams(mappedExams);
     } catch (error) {
       console.error("Error fetching exams:", error);
     } finally {
@@ -49,8 +58,6 @@ const DisciplineExamsPage = ({ mode = 'study' }: DisciplineExamsPageProps) => {
       navigate(`/study/${examId}`);
     }
   };
-
-
 
   if (loading || contentLoading) {
     return (
@@ -76,8 +83,8 @@ const DisciplineExamsPage = ({ mode = 'study' }: DisciplineExamsPageProps) => {
           <ArrowLeft size={24} />
         </button>
         <div className="flex items-center gap-3">
-          <div className={clsx("w-10 h-10 rounded-xl flex items-center justify-center text-2xl", discipline.color)}>
-            {discipline.icon}
+          <div className={clsx("w-10 h-10 rounded-xl flex items-center justify-center text-2xl", (discipline as any).color)}>
+            {(discipline as any).icon}
           </div>
           <h1 className="text-2xl font-bold text-gray-800">
             {mode === 'challenge' ? 'Selecionar Exame para Desafio' : `Exames de ${discipline.title}`}
@@ -88,7 +95,7 @@ const DisciplineExamsPage = ({ mode = 'study' }: DisciplineExamsPageProps) => {
       {exams.length === 0 ? (
         <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center">
           <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center overflow-hidden mx-auto mb-4 border-2 border-blue-100">
-             <img src="/lumo_mascot.png" alt="Mascote LumoEdu" className="w-4/5 h-4/5 object-contain" />
+             <img src="/lumo_mascot_Dormindo.png" alt="Mascote LumoEdu" className="w-full h-full object-contain" />
           </div>
           <h3 className="text-xl font-bold text-gray-700 mb-2">Ops! Nenhum exame encontrado</h3>
           <p className="text-gray-500">O Lumo ainda está organizando as questões desta disciplina. Volte em breve!</p>

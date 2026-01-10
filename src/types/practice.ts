@@ -1,56 +1,44 @@
-import { Timestamp } from 'firebase/firestore';
-
-export interface PracticeDiscipline {
+export interface PracticeSession {
   id: string;
-  name: string;
+  disciplineId: string;
+  title: string;
   description: string;
-  icon?: string;
-  color?: string;
-  createdAt: Timestamp;
+  orderIndex: number;
+  isActive: boolean;
+  createdAt?: any;
 }
 
 export interface PracticeSection {
   id: string;
-  disciplineId: string;
+  sessionId: string;
   title: string;
-  description: string;
-  order: number;
-  isPremium?: boolean;
-}
-
-export interface PracticeSession {
-  id: string;
-  disciplineId: string;
-  sectionId?: string; // New field for grouping
-  title: string;
-  order: number;
-  level: number;
-  description: string;
-  quizIds: string[]; // Reference to questions
-  xpReward: number;
-  createdAt: Timestamp;
-  type?: 'quiz' | 'review' | 'challenge';
+  description?: string; // Added for compatibility
+  content: string; // Markdown support
+  orderIndex: number;
+  isActive: boolean;
+  createdAt?: any;
 }
 
 export interface PracticeQuestion {
   id: string;
   sessionId: string;
-  question: string;
+  statement: string;
+  question?: string; // Alias for statement
   options: string[];
-  answer: string;
-  explanation: string;
-  type: 'multiple_choice' | 'boolean';
-  xp: number;
-  createdAt: Timestamp;
+  correctOption: number;
+  correctAnswer?: number; // Alias for correctOption
+  explanation?: string;
+  orderIndex: number;
+  xp?: number;
+  createdAt?: any;
 }
 
 export interface UserSessionProgress {
+  userId: string;
   sessionId: string;
-  disciplineId: string;
-  sectionId?: string; // Helpful for tracking completion of sections
   completed: boolean;
-  score: number;
-  xpEarned: number;
-  streak: number;
-  lastActive: Timestamp;
+  score?: number;
+  completedSections: string[];
+  completedQuestions: string[];
+  lastAccessed: any;
 }

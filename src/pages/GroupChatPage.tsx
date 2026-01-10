@@ -2,9 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { GroupMessage, StudyGroup } from '../types/group';
-import { subscribeToMessages, sendMessage, leaveGroup } from '../services/groupService';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { subscribeToMessages, sendMessage, leaveGroup, getGroupById, getGroupMessages } from '../services/groupService.supabase';
 import { Send, ArrowLeft, MoreVertical, LogOut, Users } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -25,33 +23,45 @@ const GroupChatPage = () => {
   useEffect(() => {
     if (!groupId || !user) return;
 
-    // Carregar dados do grupo
-    const loadGroup = async () => {
+    const loadData = async () => {
       try {
-        const docRef = doc(db, 'groups', groupId);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setGroup({ id: docSnap.id, ...docSnap.data() } as StudyGroup);
+        setLoading(true);
+        // 1. Carregar Grupo
+        const groupData = await getGroupById(groupId);
+        if (groupData) {
+          setGroup(groupData as any);
         } else {
           alert('Grupo não encontrado');
           navigate('/groups');
+          return;
         }
+
+        // 2. Carregar Mensagens Iniciais
+        const initialMsgs = await getGroupMessages(groupId);
+        setMessages(initialMsgs);
+        scrollToBottom();
+
+        // 3. Inscrever em tempo real
+        const subscription = subscribeToMessages(groupId, (mappedMsg: any) => {
+          setMessages(prev => {
+            // Evitar duplicatas (se o Supabase trigger e o insert retornarem a mesma mensagem)
+            if (prev.find(m => m.id === mappedMsg.id)) return prev;
+            return [...prev, mappedMsg];
+          });
+          scrollToBottom();
+        });
+
+        return () => {
+          subscription.unsubscribe();
+        };
       } catch (error) {
-        console.error('Error loading group:', error);
+        console.error('Error loading group chat:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadGroup();
-
-    // Inscrever nas mensagens
-    const unsubscribe = subscribeToMessages(groupId, (msgs) => {
-      setMessages(msgs);
-      scrollToBottom();
-    });
-
-    return () => unsubscribe();
+    loadData();
   }, [groupId, user, navigate]);
 
   const scrollToBottom = () => {
@@ -66,7 +76,13 @@ const GroupChatPage = () => {
 
     setSending(true);
     try {
-      await sendMessage(groupId, user, newMessage);
+      await sendMessage({
+        groupId,
+        userId: user.id,
+        userName: user.displayName,
+        userPhoto: user.photoURL,
+        text: newMessage
+      });
       setNewMessage('');
       scrollToBottom();
     } catch (error) {
@@ -81,7 +97,7 @@ const GroupChatPage = () => {
     if (!user || !groupId || !group) return;
     if (confirm('Tem certeza que deseja sair deste grupo?')) {
       try {
-        await leaveGroup(groupId, user.uid, user.displayName);
+        await leaveGroup(groupId, user.id);
         navigate('/groups');
       } catch (error) {
         console.error('Error leaving group:', error);
@@ -91,7 +107,11 @@ const GroupChatPage = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-screen">Carregando...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
+      </div>
+    );
   }
 
   if (!group) return null;
@@ -109,7 +129,7 @@ const GroupChatPage = () => {
           </div>
           <div>
             <h1 className="font-bold text-gray-800 leading-tight">{group.name}</h1>
-            <p className="text-xs text-gray-500">{group.membersCount} membros • {group.disciplineName}</p>
+            <p className="text-xs text-gray-500">{group.memberCount} membros • {group.disciplineName}</p>
           </div>
         </div>
         
@@ -141,28 +161,30 @@ const GroupChatPage = () => {
         )}
         
         {messages.map((msg) => {
-          const isMe = msg.userId === user?.uid;
-          const isSystem = msg.isSystemMessage;
+          const isMe = msg.userId === user?.id;
+          const isSystem = msg.isSystemMessage || msg.type === 'system';
 
           if (isSystem) {
             return (
               <div key={msg.id} className="flex justify-center my-4">
                 <span className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full">
-                  {msg.text}
+                  {msg.content || msg.text}
                 </span>
               </div>
             );
           }
 
+          const displayTime = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
           return (
             <div key={msg.id} className={clsx("flex gap-3 max-w-[85%]", isMe ? "ml-auto flex-row-reverse" : "")}>
               {!isMe && (
                 <div className="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0 overflow-hidden">
-                  {msg.userPhotoURL ? (
-                    <img src={msg.userPhotoURL} alt={msg.userName} className="w-full h-full object-cover" />
+                  {(msg.userPhotoURL || msg.userPhoto) ? (
+                    <img src={msg.userPhotoURL || msg.userPhoto} alt={msg.userName} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-600">
-                      {msg.userName.charAt(0)}
+                    <div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-600 uppercase">
+                      {msg.userName?.charAt(0)}
                     </div>
                   )}
                 </div>
@@ -175,9 +197,9 @@ const GroupChatPage = () => {
                   : "bg-white text-gray-800 rounded-tl-none border border-gray-100"
               )}>
                 {!isMe && <p className="text-xs font-bold text-primary mb-1">{msg.userName}</p>}
-                <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                <p className="whitespace-pre-wrap leading-relaxed">{msg.content || msg.text}</p>
                 <p className={clsx("text-[10px] mt-1 text-right opacity-70", isMe ? "text-blue-100" : "text-gray-400")}>
-                  {msg.createdAt?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {displayTime}
                 </p>
               </div>
             </div>
@@ -199,7 +221,7 @@ const GroupChatPage = () => {
         <button 
           type="submit" 
           disabled={!newMessage.trim() || sending}
-          className="bg-primary text-white p-3 rounded-full hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
+          className="bg-primary text-white p-3 rounded-full hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md active:scale-95"
         >
           <Send size={20} />
         </button>

@@ -1,382 +1,128 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getSessionsByDiscipline, saveSession, deleteSession, getSessionsBySection } from '../../services/practiceService';
-import { PracticeSession } from '../../types/practice';
-import { Plus, Edit, Trash2, ArrowLeft, LayoutList, ChevronRight, Save, X, GripVertical, Eye, EyeOff } from 'lucide-react';
-import { useModal, useToast } from '../../hooks/useNotifications';
-import { getDiscipline, updateDiscipline } from '../../services/dbService';
-import { Discipline } from '../../types/discipline';
-import Modal from '../../components/Modal';
-import Toast from '../../components/Toast';
-import clsx from 'clsx';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-
-interface SortableSessionProps {
-  session: PracticeSession;
-  onEdit: () => void;
-  onDelete: () => void;
-  onNavigate: () => void;
-}
-
-const SortableSession = ({ session, onEdit, onDelete, onNavigate }: SortableSessionProps) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: session.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors group bg-white"
-    >
-      <div className="flex items-center gap-4 flex-1">
-        <button
-          {...attributes}
-          {...listeners}
-          className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          title="Arrastar para reordenar"
-        >
-          <GripVertical size={20} className="text-gray-400" />
-        </button>
-        <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center font-black text-gray-500 text-sm">
-          {session.order}
-        </div>
-        <div>
-          <h4 className="font-bold text-gray-800">{session.title}</h4>
-          <p className="text-xs text-gray-400 font-medium">Nível {session.level} • {session.xpReward} XP</p>
-        </div>
-      </div>
-      
-      <div className="flex items-center gap-2">
-        <button 
-          onClick={onNavigate}
-          className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors flex items-center gap-1 text-xs font-bold uppercase tracking-wider"
-        >
-          Questões <ChevronRight size={16} />
-        </button>
-        <button onClick={onEdit} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg">
-          <Edit size={18} />
-        </button>
-        <button onClick={onDelete} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
-          <Trash2 size={18} />
-        </button>
-      </div>
-    </div>
-  );
-};
+import { getLearningSessionsByDiscipline, saveLearningSession, deleteLearningSession } from '../../services/contentService.supabase';
+import { useContentStore } from '../../stores/useContentStore';
+import { Plus, Edit2, Trash2, ArrowLeft, Layout, Target, X } from 'lucide-react';
 
 const AdminLearningSessionsPage = () => {
-  const { disciplineId, sectionId } = useParams<{ disciplineId: string, sectionId?: string }>();
+  const { disciplineId } = useParams<{ disciplineId: string }>();
   const navigate = useNavigate();
-  const [sessions, setSessions] = useState<PracticeSession[]>([]);
+  const { disciplines } = useContentStore();
+  const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingSession, setEditingSession] = useState<Partial<PracticeSession> | null>(null);
-  const [discipline, setDiscipline] = useState<Discipline | null>(null);
-  const { modalState, showConfirm, closeModal } = useModal();
-  const { toastState, showSuccess, showError, closeToast } = useToast();
+  const [editingSession, setEditingSession] = useState<any | null>(null);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+  const discipline = disciplines.find(d => d.id === disciplineId);
 
   useEffect(() => {
-    if (disciplineId) {
-      fetchSessions();
-      fetchDiscipline();
-    }
+    if (disciplineId) fetchSessions();
   }, [disciplineId]);
-
-  const fetchDiscipline = async () => {
-    try {
-      const data = await getDiscipline(disciplineId!);
-      setDiscipline(data);
-    } catch (error) {
-      console.error('Error fetching discipline:', error);
-    }
-  };
 
   const fetchSessions = async () => {
     setLoading(true);
     try {
-      let data;
-      if (sectionId) {
-        data = await getSessionsBySection(disciplineId!, sectionId);
-      } else {
-        data = await getSessionsByDiscipline(disciplineId!);
-      }
+      const data = await getLearningSessionsByDiscipline(disciplineId!);
       setSessions(data);
-    } catch (error) {
-      showError('Erro ao carregar etapas');
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      const oldIndex = sessions.findIndex((s) => s.id === active.id);
-      const newIndex = sessions.findIndex((s) => s.id === over.id);
-
-      const newSessions = arrayMove(sessions, oldIndex, newIndex);
-      
-      // Update order property for all sessions
-      const updatedSessions = newSessions.map((session, index) => ({
-        ...session,
-        order: index + 1
-      }));
-
-      setSessions(updatedSessions);
-
-      // Save updated orders to database
-      try {
-        await Promise.all(
-          updatedSessions.map(session => 
-            saveSession(disciplineId!, { ...session, sectionId, order: session.order })
-          )
-        );
-        showSuccess('Ordem atualizada!');
-      } catch (error) {
-        showError('Erro ao salvar ordem');
-        fetchSessions(); // Revert on error
-      }
-    }
-  };
-
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!disciplineId || !editingSession?.title) return;
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    const session = {
+      id: editingSession?.id || crypto.randomUUID(),
+      disciplineId,
+      title: formData.get('title'),
+      description: formData.get('description'),
+      rewardXp: parseInt(formData.get('rewardXp') as string),
+      orderIndex: editingSession?.order_index || sessions.length,
+    };
 
-    try {
-      await saveSession(disciplineId, {
-        ...editingSession,
-        disciplineId,
-        sectionId,
-        order: editingSession.order || sessions.length + 1,
-        xpReward: editingSession.xpReward || 50
-      });
-      showSuccess('Etapa salva com sucesso!');
-      setIsModalOpen(false);
+    await saveLearningSession(session);
+    setIsModalOpen(false);
+    fetchSessions();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Deletar esta sessão apaga também todas as seções e questões vinculadas. Continuar?')) {
+      await deleteLearningSession(id);
       fetchSessions();
-    } catch (error) {
-      showError('Erro ao salvar sessão');
     }
   };
 
-  const handleDelete = (sessionId: string) => {
-    showConfirm(
-      'Excluir Sessão',
-      'Tem certeza? Todas as questões desta sessão serão perdidas.',
-      async () => {
-        try {
-          await deleteSession(disciplineId!, sessionId, sectionId);
-          showSuccess('Etapa excluída!');
-          fetchSessions();
-        } catch (error) {
-          showError('Erro ao excluir');
-        }
-      }
-    );
-  };
-
-  if (loading) return <div className="p-8 text-center text-gray-500 font-bold uppercase tracking-widest">Carregando sessões...</div>;
+  if (loading) return <div className="p-20 text-center font-black animate-pulse text-primary">MAPA DA TRILHA...</div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/admin/learning')} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-          <ArrowLeft size={24} className="text-gray-600" />
-        </button>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black text-gray-800 uppercase tracking-tight">
-              {discipline?.title || 'Etapas de Aprendizado'}
-            </h1>
-            {discipline && (
-              <span className={clsx(
-                "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full",
-                discipline.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-              )}>
-                {discipline.isActive ? 'Ativo' : 'Inibido'}
-              </span>
-            )}
+    <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
+      <div className="flex items-center justify-between bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+        <div className="flex items-center gap-6">
+          <button onClick={() => navigate('/admin/learning')} className="p-4 bg-gray-50 text-gray-400 rounded-2xl hover:bg-primary hover:text-white transition-all"><ArrowLeft size={24} /></button>
+          <div>
+            <h1 className="text-3xl font-black text-gray-800 tracking-tighter uppercase">{discipline?.title}</h1>
+            <p className="text-gray-400 font-medium">Sessões de Aprendizado</p>
           </div>
-          <p className="text-gray-500 font-medium text-sm">Organize o currículo em módulos progressivos (Etapas)</p>
         </div>
-        
-        {discipline && (
-          <button
-            onClick={async () => {
-              try {
-                const newStatus = !discipline.isActive;
-                await updateDiscipline(discipline.id, { isActive: newStatus });
-                setDiscipline({ ...discipline, isActive: newStatus });
-                showSuccess(`Disciplina ${newStatus ? 'ativada' : 'inibida'}`);
-              } catch (error) {
-                showError('Erro ao atualizar status');
-              }
-            }}
-            className={clsx(
-              "flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all",
-              discipline.isActive ? "bg-red-50 text-red-600 hover:bg-red-100" : "bg-green-50 text-green-600 hover:bg-green-100"
-            )}
-          >
-            {discipline.isActive ? <EyeOff size={18} /> : <Eye size={18} />}
-            {discipline.isActive ? 'Inibir Curso' : 'Ativar Curso'}
-          </button>
-        )}
+        <button onClick={() => { setEditingSession(null); setIsModalOpen(true); }} className="flex items-center gap-2 bg-primary text-white px-8 py-4 rounded-2xl font-black hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:translate-y-1">
+          <Plus size={20} /> NOVA SESSÃO
+        </button>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-          <h3 className="font-bold text-gray-700 flex items-center gap-2">
-            <LayoutList size={20} className="text-primary" />
-            Estrutura do Curso
-          </h3>
-          <button
-            onClick={() => {
-              setEditingSession({ title: '', description: '', level: 1, xpReward: 50, order: sessions.length + 1 });
-              setIsModalOpen(true);
-            }}
-            className="bg-primary text-white px-4 py-2 rounded-xl font-bold hover:bg-primary-hover transition-all flex items-center gap-2 text-sm"
-          >
-            <Plus size={18} />
-            Nova Etapa
-          </button>
-        </div>
-
-        <div className="divide-y divide-gray-50">
-          {sessions.length === 0 ? (
-            <div className="p-12 text-center text-gray-400">Nenhuma etapa criada para esta sessão.</div>
-          ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={sessions.map(s => s.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {sessions.map((session) => (
-                  <SortableSession
-                    key={session.id}
-                    session={session}
-                    onEdit={() => { setEditingSession(session); setIsModalOpen(true); }}
-                    onDelete={() => handleDelete(session.id)}
-                    onNavigate={() => {
-                        const path = sectionId 
-                          ? `/admin/learning/${disciplineId}/sections/${sectionId}/sessions/${session.id}/questions`
-                          : `/admin/learning/${disciplineId}/sessions/${session.id}/questions`;
-                        navigate(path);
-                    }}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
-          )}
-        </div>
+      <div className="grid gap-4">
+        {sessions.map((s, idx) => (
+          <div key={s.id} className="group bg-white p-6 rounded-3xl border-2 border-transparent hover:border-primary transition-all shadow-sm hover:shadow-xl flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center font-black text-xl">{idx + 1}</div>
+              <div>
+                <h3 className="text-xl font-black text-gray-800 uppercase tracking-tighter">{s.title}</h3>
+                <p className="text-sm text-gray-400 font-medium">{s.description}</p>
+                <div className="flex gap-4 mt-2">
+                   <button onClick={() => navigate(`/admin/learning/sections/${s.id}`)} className="text-[10px] font-black uppercase text-primary tracking-widest bg-primary/5 px-2 py-1 rounded-lg hover:bg-primary hover:text-white transition-all flex items-center gap-1"><Layout size={12} /> Seções de Texto</button>
+                   <button onClick={() => navigate(`/admin/learning/questions/${s.id}`)} className="text-[10px] font-black uppercase text-secondary tracking-widest bg-secondary/5 px-2 py-1 rounded-lg hover:bg-secondary hover:text-white transition-all flex items-center gap-1"><Target size={12} /> Questões Práticas</button>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="bg-yellow-50 text-yellow-600 px-3 py-1 rounded-lg font-black text-[10px] uppercase mr-4">{s.reward_xp} XP</div>
+              <button onClick={() => { setEditingSession(s); setIsModalOpen(true); }} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all"><Edit2 size={18} /></button>
+              <button onClick={() => handleDelete(s.id)} className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all"><Trash2 size={18} /></button>
+            </div>
+          </div>
+        ))}
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-black text-gray-800 uppercase tracking-tight">
-                {editingSession?.id ? 'Editar Etapa' : 'Nova Etapa'}
-              </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-                <X size={24} />
-              </button>
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-[40px] p-10 w-full max-w-md shadow-2xl border-4 border-white animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tighter">{editingSession ? 'Editar Sessão' : 'Nova Sessão'}</h2>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400"><X size={32} /></button>
             </div>
-            
-            <form onSubmit={handleSave} className="space-y-4">
+            <form onSubmit={handleSave} className="space-y-6">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-wider">Título da Etapa</label>
-                <input
-                  type="text"
-                  required
-                  value={editingSession?.title}
-                  onChange={e => setEditingSession({ ...editingSession, title: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
-                  placeholder="Ex: Introdução a Funções"
-                />
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Título da Sessão</label>
+                <input name="title" required defaultValue={editingSession?.title} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-white outline-none font-bold transition-all text-lg" placeholder="Ex: Introdução à Cinemática" />
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-wider">Descrição</label>
-                <textarea
-                  value={editingSession?.description}
-                  onChange={e => setEditingSession({ ...editingSession, description: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
-                  placeholder="O que o aluno vai aprender..."
-                />
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Resumo/Dica</label>
+                <textarea name="description" required defaultValue={editingSession?.description} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary outline-none font-bold h-24" placeholder="O que o aluno vai aprender aqui?" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-wider">Nível</label>
-                  <input
-                    type="number"
-                    value={editingSession?.level}
-                    onChange={e => setEditingSession({ ...editingSession, level: parseInt(e.target.value) })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-wider">Ordem</label>
-                  <input
-                    type="number"
-                    value={editingSession?.order}
-                    onChange={e => setEditingSession({ ...editingSession, order: parseInt(e.target.value) })}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
-                  />
-                </div>
+              <div>
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Recompensa (XP)</label>
+                <input name="rewardXp" type="number" required defaultValue={editingSession?.reward_xp || 15} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary outline-none font-bold" />
               </div>
-              
-              <div className="pt-4 flex gap-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-3 bg-gray-100 text-gray-500 font-bold rounded-xl active:scale-95 transition-all">Cancelar</button>
-                <button type="submit" className="flex-1 px-4 py-3 bg-primary text-white font-bold rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
-                  <Save size={20} /> Salvar
-                </button>
+              <div className="flex gap-4 pt-4">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 font-black text-gray-400 uppercase">Cancelar</button>
+                <button type="submit" className="flex-1 bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 active:translate-y-1">SALVAR 🚀</button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      <Modal {...modalState} onClose={closeModal} />
-      {toastState.isOpen && <Toast {...toastState} onClose={closeToast} />}
     </div>
   );
 };

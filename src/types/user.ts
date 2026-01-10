@@ -1,7 +1,8 @@
-import { Timestamp } from 'firebase/firestore';
+// Retirado Timestamp do firebase para compatibilidade com Supabase
 
 export interface UserProfile {
   uid: string;
+  id: string; // Alias para uid usado no Supabase
   email: string;
   displayName: string;
   photoURL?: string;
@@ -9,17 +10,17 @@ export interface UserProfile {
   xp: number;
   level: number;
   streak: number;
-  createdAt?: Timestamp;
+  createdAt?: any;
   badges?: string[];
   
   // Premium System
   isPremium: boolean;
-  premiumUntil?: Timestamp;
+  premiumUntil?: any;
   
   // Daily Limits
-  lastStudyDate: Timestamp | null;
-  lastExamDate: Timestamp | null;
-  lastChallengeDate: Timestamp | null;
+  lastStudyDate: any | null;
+  lastExamDate: any | null;
+  lastChallengeDate: any | null;
   dailyExercisesCount: number;
   
   // Ranking & Stats
@@ -37,7 +38,7 @@ export interface UserProfile {
   dataSaverMode?: boolean;
   
   // Online Presence
-  lastActive?: Timestamp;
+  lastActive?: any;
   isOnline?: boolean;
 }
 
@@ -45,7 +46,7 @@ export interface UserActivity {
   id: string;
   type: 'exam' | 'challenge' | 'module' | 'consistency_bonus';
   title: string;
-  timestamp: Timestamp;
+  timestamp: any;
   score?: number;
   xpEarned?: number;
 }
@@ -54,7 +55,7 @@ export interface StudyPlan {
   weeklySchedule: string[];
   weakTopics: string[];
   dailyGoal: number;
-  createdAt: Timestamp;
+  createdAt: any;
 }
 
 export interface AuthState {

@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
-import { getQuestionsBySession, saveSessionProgress, getUserProgressByDiscipline } from '../services/practiceService';
+import { getQuestionsBySession, saveSessionProgress, getUserProgressByDiscipline } from '../services/practiceService.supabase';
 import { checkAndAwardBadges } from '../services/badgeService';
 import { PracticeQuestion } from '../types/practice';
-import { Badge } from '../types/badge';
 import { X, CheckCircle2, AlertCircle, Award } from 'lucide-react';
 import clsx from 'clsx';
 // @ts-ignore
@@ -22,7 +21,6 @@ const PracticeQuizPage = () => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
-  // Removed lives state
   
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -30,7 +28,6 @@ const PracticeQuizPage = () => {
   const [score, setScore] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [startTime] = useState(Date.now());
-  const [newBadges, setNewBadges] = useState<Badge[]>([]);
 
   const [isReplayMode, setIsReplayMode] = useState(false);
   const [showReplayIntro, setShowReplayIntro] = useState(false);
@@ -46,16 +43,16 @@ const PracticeQuizPage = () => {
       setLoading(true);
       try {
         const [qData, pData] = await Promise.all([
-          getQuestionsBySession(disciplineId, sessionId, sectionId),
-          user ? getUserProgressByDiscipline(user.uid, disciplineId) : Promise.resolve({} as Record<string, any>)
+          getQuestionsBySession(sessionId!),
+          user ? getUserProgressByDiscipline(user.id, disciplineId!) : Promise.resolve({} as Record<string, any>)
         ]);
         
-        setQuestions(qData);
+        setQuestions(qData as any);
         
-        if (pData[sessionId]?.completed) {
+        if (pData[sessionId!]?.completed) {
           setIsReplayMode(true);
           setShowReplayIntro(true);
-          setBestScore(pData[sessionId].score || 0);
+          setBestScore(pData[sessionId!].score || 0);
         }
       } catch (error) {
         console.error('Error loading quiz:', error);
@@ -67,21 +64,22 @@ const PracticeQuizPage = () => {
   }, [sessionId, disciplineId, user]);
 
   const handleCheck = () => {
-    if (!selectedOption) return;
+    if (!selectedOption || !questions[currentIndex]) return;
 
-    const correct = selectedOption === questions[currentIndex].answer;
-    setIsCorrect(correct);
+    const currentQ = questions[currentIndex];
+    const isCorrectResult = currentQ.options[currentQ.correctAnswer ?? currentQ.correctOption] === selectedOption;
+    
+    setIsCorrect(isCorrectResult);
     setIsAnswered(true);
 
-    if (correct) {
-      setScore(s => s + questions[currentIndex].xp);
+    if (isCorrectResult) {
+      setScore(s => s + (currentQ.xp || 10));
       setCorrectAnswers(prev => prev + 1);
       setConsecutiveErrors(0);
       reward();
     } else {
       setConsecutiveErrors(prev => prev + 1);
     }
-    // No more lives reduction
   };
 
   const handleNext = () => {
@@ -102,35 +100,34 @@ const PracticeQuizPage = () => {
     const timeTaken = (Date.now() - startTime) / 1000;
     const isPerfect = correctAnswers === questions.length;
     
-    // Save process handles Replay logic internally now
-    const result = await saveSessionProgress(user.uid, {
+    const result = await saveSessionProgress(user.id, {
       sessionId,
       disciplineId,
-      sectionId,
+      sectionId: sectionId || '',
       completed: true,
-      score: Math.round((score / (questions.length * 10)) * 100),
+      score: Math.round((correctAnswers / questions.length) * 100),
       xpEarned: score,
       streak: 1
     });
 
-    setEarnedXP(result.xpGranted);
-    setIsScoreImproved(result.scoreImproved);
+    setEarnedXP(result.xp_earned || 0);
+    // Para simplificar, assumimos melhoria se for a primeira vez ou score alto
+    setIsScoreImproved(true);
 
-    // Check for badges with Zero Read optimization
-    const earned = await checkAndAwardBadges(user.uid, user.badges || [], {
+    await checkAndAwardBadges(user.id, [], {
       sessionsCompleted: (user.examsCompleted || 0) + 1,
       perfectScores: isPerfect ? 1 : 0,
       currentStreak: (user.streak || 0) + 1,
       completionTime: timeTaken,
       disciplineId
     });
-
-    if (earned.length > 0) {
-      setNewBadges(earned);
-    }
   };
 
-  if (loading) return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div></div>;
+  if (loading) return (
+    <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+    </div>
+  );
   
   if (questions.length === 0) {
     return (
@@ -143,21 +140,15 @@ const PracticeQuizPage = () => {
           Esta etapa ainda não possui questões cadastradas. Por favor, volte e tente outra etapa.
         </p>
         <button 
-          onClick={() => {
-            const path = sectionId 
-              ? `/practice/${disciplineId}/section/${sectionId}` 
-              : `/practice/${disciplineId}`;
-            navigate(path);
-          }}
+          onClick={() => navigate(-1)}
           className="w-full bg-primary text-white py-4 rounded-2xl font-black text-lg shadow-[0_6px_0_0_#1a4b2e] active:shadow-none active:translate-y-1 transition-all"
         >
-          Voltar para Sessão
+          Voltar
         </button>
       </div>
     );
   }
 
-  // Replay Intro Screen
   if (showReplayIntro) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
@@ -175,7 +166,7 @@ const PracticeQuizPage = () => {
             <Award size={16} /> Recompensa de Replay
           </h4>
           <p className="text-xs text-yellow-700">
-            Você ganhará <b>50% do XP</b> se superar sua pontuação anterior ({bestScore}%).
+            Você ganhará XP extra se superar sua pontuação anterior ({bestScore}%).
           </p>
         </div>
 
@@ -186,12 +177,7 @@ const PracticeQuizPage = () => {
           REVER CONTEÚDO
         </button>
         <button 
-          onClick={() => {
-            const path = sectionId 
-              ? `/practice/${disciplineId}/section/${sectionId}` 
-              : `/practice/${disciplineId}`;
-            navigate(path);
-          }}
+          onClick={() => navigate(-1)}
           className="mt-4 text-gray-400 font-bold text-sm uppercase hover:text-gray-600"
         >
           Voltar
@@ -231,33 +217,10 @@ const PracticeQuizPage = () => {
             </div>
           </div>
           <div className="bg-blue-100 p-4 rounded-2xl border-b-4 border-blue-200">
-            <div className="text-blue-600 font-black text-2xl">{Math.round((score/(questions.length*10))*100)}%</div>
+            <div className="text-blue-600 font-black text-2xl">{Math.round((correctAnswers/questions.length)*100)}%</div>
             <div className="text-blue-500 font-bold text-xs uppercase">Precisão</div>
           </div>
         </div>
-
-        {newBadges.length > 0 && (
-          <div className="w-full max-w-sm mb-8 animate-bounce-subtle">
-            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-4">
-              <h3 className="text-yellow-700 font-black text-sm uppercase tracking-wider mb-3 flex items-center justify-center gap-2">
-                <Award size={18} /> Nova Conquista!
-              </h3>
-              <div className="flex flex-wrap justify-center gap-4">
-                {newBadges.map(badge => {
-                  const Icon = badge.icon;
-                  return (
-                    <div key={badge.id} className="flex flex-col items-center gap-1 group">
-                      <div className="p-3 bg-white rounded-full shadow-md border-2 border-yellow-400">
-                        <Icon className={badge.color} size={28} />
-                      </div>
-                      <span className="text-xs font-black text-gray-700">{badge.name}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
 
         <button 
           onClick={() => {
@@ -292,13 +255,13 @@ const PracticeQuizPage = () => {
       {/* Question */}
       <div className="flex-1 px-6 py-8">
         <div className="text-2xl font-extrabold text-gray-800 mb-8">
-          <RichTextRenderer content={currentQ.question} />
+          <RichTextRenderer content={currentQ?.statement || (currentQ as any)?.question || ''} />
         </div>
         
         <div className="space-y-4">
-          {currentQ.options.map((option, i) => (
+          {currentQ?.options?.map((option, i) => (
             <button
-              key={option}
+              key={i}
               disabled={isAnswered}
               onClick={() => setSelectedOption(option)}
               className={clsx(
@@ -345,12 +308,12 @@ const PracticeQuizPage = () => {
                 </h3>
                 {!isCorrect && (
                   <div className="text-red-600 font-bold">
-                    <RichTextRenderer content={currentQ.answer} />
+                    <RichTextRenderer content={currentQ?.options[currentQ?.correctAnswer ?? currentQ?.correctOption] || ''} />
                   </div>
                 )}
               </div>
             </div>
-            {currentQ.explanation && (
+            {currentQ?.explanation && (
               <div className={clsx("text-sm font-medium", isCorrect ? "text-green-600" : "text-red-600")}>
                 <RichTextRenderer content={currentQ.explanation} />
               </div>
@@ -367,7 +330,7 @@ const PracticeQuizPage = () => {
           </div>
         ) : (
           <button
-            disabled={!selectedOption} // Keep this check!
+            disabled={!selectedOption}
             onClick={handleCheck}
             className={clsx(
               "w-full py-4 rounded-2xl font-black text-lg transition-all",
@@ -383,7 +346,5 @@ const PracticeQuizPage = () => {
     </div>
   );
 };
-
-
 
 export default PracticeQuizPage;

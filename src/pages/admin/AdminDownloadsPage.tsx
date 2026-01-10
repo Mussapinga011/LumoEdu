@@ -4,9 +4,9 @@ import {
   createDownloadMaterial, 
   updateDownloadMaterial, 
   deleteDownloadMaterial 
-} from '../../services/dbService';
+} from '../../services/dbService.supabase';
 import { DownloadMaterial } from '../../types/download';
-import { Plus, Edit, Trash2, Search, Link as LinkIcon, FileText, ExternalLink } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Link as LinkIcon, FileText, ExternalLink, X } from 'lucide-react';
 import { useContentStore } from '../../stores/useContentStore';
 import { useModal, useToast } from '../../hooks/useNotifications';
 import Modal from '../../components/Modal';
@@ -113,10 +113,10 @@ const AdminDownloadsPage = () => {
     try {
       if (editingId) {
         await updateDownloadMaterial(editingId, finalData);
-        showSuccess('Material atualizado com sucesso!');
+        showSuccess('Material atualizado no Supabase!');
       } else {
         await createDownloadMaterial(finalData);
-        showSuccess('Material cadastrado com sucesso!');
+        showSuccess('Material cadastrado no Supabase!');
       }
       setIsModalOpen(false);
       fetchData();
@@ -150,102 +150,69 @@ const AdminDownloadsPage = () => {
     ? disciplines
     : disciplines.filter(d => d.universityId === formData.universityId);
 
-  if (loading || (contentLoading && universities.length === 0)) return <div className="p-8 text-center">Carregando...</div>;
+  if (loading || (contentLoading && universities.length === 0)) return <div className="p-20 text-center font-black animate-pulse text-secondary">CARREGANDO MATERIAIS...</div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Gerenciar Downloads</h1>
-        <button
-          onClick={handleOpenCreateModal}
-          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-bold hover:bg-primary-hover transition-colors"
-        >
-          <Plus size={20} />
-          Novo Material
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+        <div>
+          <h1 className="text-4xl font-black text-gray-800 tracking-tighter uppercase leading-none">Downloads</h1>
+          <p className="text-gray-400 font-medium">Gestão de provas PDF, guias e resumos.</p>
+        </div>
+        <button onClick={handleOpenCreateModal} className="flex items-center gap-2 bg-secondary text-white px-8 py-4 rounded-2xl font-black hover:bg-secondary/90 transition-all shadow-lg shadow-secondary/20 active:translate-y-1">
+          <Plus size={20} /> NOVO MATERIAL
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar por título ou disciplina..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 outline-none focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
+      <div className="relative">
+        <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300" size={24} />
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Pesquisar por título, ano ou disciplina..."
+          className="w-full pl-16 pr-8 py-5 bg-white border-2 border-gray-50 rounded-3xl focus:border-secondary focus:bg-white outline-none font-bold transition-all shadow-sm"
+        />
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
         <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-6 py-4 text-sm font-bold text-gray-500 uppercase">Material</th>
-              <th className="px-6 py-4 text-sm font-bold text-gray-500 uppercase">Disciplina/Uni</th>
-              <th className="px-6 py-4 text-sm font-bold text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-4 text-sm font-bold text-gray-500 uppercase">Downloads</th>
-              <th className="px-6 py-4 text-sm font-bold text-gray-500 uppercase text-right">Ações</th>
+          <thead>
+            <tr className="bg-gray-50/50 border-b border-gray-100">
+              <th className="p-6 font-black text-gray-400 uppercase text-[10px] tracking-widest">Identidade do Arquivo</th>
+              <th className="p-6 font-black text-gray-400 uppercase text-[10px] tracking-widest">Categoria</th>
+              <th className="p-6 font-black text-gray-400 uppercase text-[10px] tracking-widest">Acesso</th>
+              <th className="p-6 text-right font-black text-gray-400 uppercase text-[10px] tracking-widest">Ações</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-50">
             {filteredDownloads.map((item) => (
-              <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className={clsx(
-                      "p-2 rounded-lg",
-                      item.type === 'exam' ? "bg-blue-100 text-blue-600" : "bg-purple-100 text-purple-600"
-                    )}>
-                      <FileText size={20} />
+              <tr key={item.id} className="hover:bg-purple-50/30 transition-colors group">
+                <td className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className={clsx("w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner", item.type === 'exam' ? "bg-blue-100 text-blue-600" : "bg-purple-100 text-purple-600")}>
+                      <FileText size={28} />
                     </div>
                     <div>
-                      <div className="font-bold text-gray-800">{item.title}</div>
-                      <div className="text-xs text-gray-500">{item.year} • {item.fileSize || 'N/A'}</div>
+                      <div className="font-black text-gray-800 text-lg leading-none uppercase tracking-tighter">{item.title}</div>
+                      <div className="text-sm text-gray-400 font-bold uppercase mt-1 tracking-widest text-[10px]">{item.year} • {item.fileSize || 'N/A'}</div>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="text-sm font-medium text-gray-700">{item.disciplineName}</div>
-                  <div className="text-xs text-gray-500 uppercase font-bold">{item.universityName}</div>
+                <td className="p-6">
+                  <div className="font-black text-gray-700 uppercase tracking-tighter">{item.disciplineName}</div>
+                  <div className="text-[10px] font-black text-secondary uppercase opacity-60 tracking-widest">{item.universityName}</div>
                 </td>
-                <td className="px-6 py-4">
-                  <span className={clsx(
-                    "px-2 py-1 rounded-full text-xs font-bold",
-                    item.isPremium 
-                      ? "bg-yellow-100 text-yellow-700" 
-                      : "bg-green-100 text-green-700"
-                  )}>
-                    {item.isPremium ? '⭐ PREMIUM' : 'GRÁTIS'}
+                <td className="p-6">
+                  <span className={clsx("px-3 py-1 rounded-xl font-black text-[10px] uppercase tracking-widest border-2", item.isPremium ? "bg-yellow-50 text-yellow-600 border-yellow-100" : "bg-green-50 text-green-600 border-green-100")}>
+                    {item.isPremium ? '⭐ PREMIUM' : '🟢 GRÁTIS'}
                   </span>
                 </td>
-                <td className="px-6 py-4 font-medium text-gray-600">
-                  {item.downloadCount}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="flex justify-end gap-2">
-                    <a 
-                      href={item.fileUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="p-2 text-gray-400 hover:text-primary"
-                      title="Ver Link Externo"
-                    >
-                      <ExternalLink size={18} />
-                    </a>
-                    <button 
-                      onClick={() => handleOpenEditModal(item)}
-                      className="p-2 text-gray-400 hover:text-secondary"
-                    >
-                      <Edit size={18} />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteClick(item.id)}
-                      className="p-2 text-gray-400 hover:text-danger"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                <td className="p-6 text-right">
+                  <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <a href={item.fileUrl} target="_blank" rel="noopener noreferrer" className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-primary hover:text-white transition-all"><ExternalLink size={18} /></a>
+                    <button onClick={() => handleOpenEditModal(item)} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-secondary hover:text-white transition-all"><Edit size={18} /></button>
+                    <button onClick={() => handleDeleteClick(item.id)} className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all"><Trash2 size={18} /></button>
                   </div>
                 </td>
               </tr>
@@ -255,137 +222,57 @@ const AdminDownloadsPage = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
-            <h2 className="text-2xl font-bold mb-6">
-              {editingId ? 'Editar Material' : 'Cadastrar Novo Material'}
-            </h2>
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border-4 border-white animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-8">
+               <h2 className="text-3xl font-black tracking-tighter uppercase">{editingId ? 'Editar Manual' : 'Novo Recurso'}</h2>
+               <button onClick={() => setIsModalOpen(false)} className="text-gray-400"><X size={28} /></button>
+            </div>
             
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
-                <label className="block text-sm font-bold text-gray-700 mb-1">Título do Material</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={e => setFormData({...formData, title: e.target.value})}
-                  className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="Ex: Exame de Matemática UEM 2024"
-                />
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Título</label>
+                <input type="text" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-secondary focus:bg-white outline-none font-bold" placeholder="Ex: Prova de Matemática UEM 2024" />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-bold text-gray-700 mb-1">Link do Arquivo (Google Drive, etc.)</label>
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">URL Permanente</label>
                 <div className="relative">
-                  <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <input
-                    type="url"
-                    required
-                    value={formData.fileUrl}
-                    onChange={e => setFormData({...formData, fileUrl: e.target.value})}
-                    className="w-full pl-10 p-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="https://drive.google.com/..."
-                  />
+                  <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={20} />
+                  <input type="url" required value={formData.fileUrl} onChange={e => setFormData({...formData, fileUrl: e.target.value})} className="w-full pl-12 p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-secondary focus:bg-white outline-none font-bold" placeholder="Google Drive Link..." />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Universidade</label>
-                <select
-                  value={formData.universityId}
-                  onChange={e => setFormData({...formData, universityId: e.target.value, disciplineId: ''})}
-                  className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="all">Todas (Geral)</option>
-                  {universities.map(uni => (
-                    <option key={uni.id} value={uni.id}>{uni.shortName}</option>
-                  ))}
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Instituição</label>
+                <select value={formData.universityId} onChange={e => setFormData({...formData, universityId: e.target.value, disciplineId: ''})} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-secondary outline-none font-bold">
+                  <option value="all">Foco Geral</option>
+                  {universities.map(uni => <option key={uni.id} value={uni.id}>{uni.shortName}</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Disciplina</label>
-                <select
-                  required
-                  value={formData.disciplineId}
-                  onChange={e => setFormData({...formData, disciplineId: e.target.value})}
-                  className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-primary/20"
-                >
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Disciplina</label>
+                <select required value={formData.disciplineId} onChange={e => setFormData({...formData, disciplineId: e.target.value})} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-secondary outline-none font-bold">
                   <option value="">Selecione...</option>
-                  {filteredDisciplines.map(d => (
-                    <option key={d.id} value={d.id}>{d.title} ({d.universityName})</option>
-                  ))}
+                  {filteredDisciplines.map(d => <option key={d.id} value={d.id}>{d.title}</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Tipo</label>
-                <select
-                  value={formData.type}
-                  onChange={e => setFormData({...formData, type: e.target.value as any})}
-                  className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="exam">Exame Anterior</option>
-                  <option value="guide">Guia de Estudo</option>
-                  <option value="summary">Resumo</option>
-                  <option value="other">Outros</option>
-                </select>
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Ano</label>
+                <input type="number" value={formData.year} onChange={e => setFormData({...formData, year: parseInt(e.target.value)})} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-secondary outline-none font-bold" />
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Ano</label>
-                <input
-                  type="number"
-                  value={formData.year}
-                  onChange={e => setFormData({...formData, year: parseInt(e.target.value)})}
-                  className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-primary/20"
-                />
+              <div className="flex items-center gap-3 bg-yellow-50 p-4 rounded-2xl border border-yellow-100">
+                <input type="checkbox" id="isPremium" checked={formData.isPremium} onChange={e => setFormData({...formData, isPremium: e.target.checked})} className="w-6 h-6 rounded-lg text-secondary focus:ring-secondary" />
+                <label htmlFor="isPremium" className="font-black text-yellow-700 text-xs uppercase cursor-pointer">Apenas Premium ⭐</label>
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">Tamanho (Ex: 2.1 MB)</label>
-                <input
-                  type="text"
-                  value={formData.fileSize}
-                  onChange={e => setFormData({...formData, fileSize: e.target.value})}
-                  className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isPremium"
-                  checked={formData.isPremium}
-                  onChange={e => setFormData({...formData, isPremium: e.target.checked})}
-                  className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <label htmlFor="isPremium" className="text-sm font-bold text-gray-700">Apenas para Premium ⭐</label>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-bold text-gray-700 mb-1">Descrição (opcional)</label>
-                <textarea
-                  value={formData.description}
-                  onChange={e => setFormData({...formData, description: e.target.value})}
-                  className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-primary/20 h-24 resize-none"
-                  placeholder="Mais detalhes sobre o conteúdo..."
-                />
-              </div>
-
-              <div className="md:col-span-2 flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-3 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-primary text-white py-3 rounded-xl font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/20"
-                >
-                  {editingId ? 'Salvar Alterações' : 'Cadastrar Material'}
+              <div className="md:col-span-2 flex gap-4 pt-6">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 font-black text-gray-400 uppercase">Cancelar</button>
+                <button type="submit" className="flex-1 bg-secondary text-white py-4 rounded-2xl font-black shadow-lg shadow-secondary/20 active:translate-y-1 transition-all">
+                  {editingId ? 'ATUALIZAR' : 'CADASTRAR'}
                 </button>
               </div>
             </form>
@@ -393,17 +280,7 @@ const AdminDownloadsPage = () => {
         </div>
       )}
 
-      {modalState.isOpen && (
-        <Modal 
-          {...modalState} 
-          onClose={closeModal} 
-          onConfirm={async () => {
-            await modalState.onConfirm?.();
-            closeModal();
-          }} 
-        />
-      )}
-      
+      <Modal isOpen={modalState.isOpen} onClose={closeModal} onConfirm={modalState.onConfirm} title={modalState.title} message={modalState.message} />
       {toastState.isOpen && <Toast {...toastState} onClose={closeToast} />}
     </div>
   );

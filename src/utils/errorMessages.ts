@@ -89,6 +89,18 @@ export const getErrorMessage = (error: any): string => {
     return 'Você não tem permissão para realizar esta ação.';
   }
 
+  if (errorMessage.includes('email rate limit exceeded')) {
+    return 'Limite de envios de email excedido. Aguarde alguns minutos antes de tentar novamente.';
+  }
+
+  if (errorMessage.includes('invalid login credentials')) {
+    return 'Email ou senha incorretos. Por favor, verifique seus dados.';
+  }
+
+  if (errorMessage.includes('user already registered')) {
+    return 'Este email já está em uso. Tente fazer login ou use outro email.';
+  }
+
   // Default error message
   return error?.message || 'Ocorreu um erro inesperado. Por favor, tente novamente.';
 };

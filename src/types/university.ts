@@ -1,9 +1,7 @@
-import { Timestamp } from 'firebase/firestore';
-
 export interface University {
   id: string;
   name: string;
-  shortName: string; // Ex: "UEM", "UP"
+  shortName: string;
   isActive: boolean;
-  createdAt: Timestamp;
+  createdAt?: any;
 }

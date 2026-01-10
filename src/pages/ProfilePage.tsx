@@ -2,7 +2,7 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { useNavigate } from 'react-router-dom';
 import { User, Trophy, Flame, Star, Calendar, Award } from 'lucide-react';
 import { BADGES } from '../services/badgeService';
-import { updateUserProfile } from '../services/dbService';
+import { updateUserProfile } from '../services/dbService.supabase';
 import clsx from 'clsx';
 import OptimizedImage from '../components/OptimizedImage';
 

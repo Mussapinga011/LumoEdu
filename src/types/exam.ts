@@ -1,6 +1,6 @@
 export interface Question {
   id: string;
-  examId: string;
+  examId?: string;
   statement: string;
   options: string[]; // [A, B, C, D, E]
   correctOption: string; // The value of the correct option
@@ -17,8 +17,9 @@ export interface Exam {
   year: number;
   season: string; // "1ª época", "2ª época", etc.
   questionsCount: number;
-  createdAt: any; // Timestamp
+  createdAt: any; // Timestamp string or Date
   description?: string;
-  university?: string; // Universidade do exame (ID ou Sigla)
+  university?: string; // ID da Universidade (Supabase university_id)
+  universityId?: string; // Alias para compatibilidade com código antigo
   isActive?: boolean; // Se o exame está ativo/visível para os usuários
 }

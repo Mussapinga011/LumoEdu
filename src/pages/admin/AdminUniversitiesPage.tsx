@@ -1,32 +1,12 @@
 import { useState, useEffect } from 'react';
-import { 
-  getAllUniversities, 
-  createUniversity, 
-  updateUniversity, 
-  deleteUniversity 
-} from '../../services/dbService';
-import { University } from '../../types/university';
-import { Search, Edit, Trash2, Plus, Save, X } from 'lucide-react';
-import { useModal, useToast } from '../../hooks/useNotifications';
-import Modal from '../../components/Modal';
-import Toast from '../../components/Toast';
-import { getErrorMessage } from '../../utils/errorMessages';
+import { getAllUniversities, saveUniversity, deleteUniversity } from '../../services/contentService.supabase';
+import { Plus, Edit2, Trash2 } from 'lucide-react';
 
 const AdminUniversitiesPage = () => {
-  const [universities, setUniversities] = useState<University[]>([]);
+  const [universities, setUniversities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    shortName: '',
-    isActive: true
-  });
-
-  const { modalState, showConfirm, closeModal } = useModal();
-  const { toastState, showSuccess, showError, closeToast } = useToast();
+  const [editingItem, setEditingItem] = useState<any | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -37,292 +17,74 @@ const AdminUniversitiesPage = () => {
     try {
       const data = await getAllUniversities();
       setUniversities(data);
-    } catch (error) {
-      showError(getErrorMessage(error));
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    const item = {
+      id: editingItem?.id || crypto.randomUUID(),
+      name: (formData.get('name') as string) || '',
+      short_name: (formData.get('shortName') as string) || ''
+    };
 
-    if (!formData.name || !formData.shortName) {
-      showError('Preencha todos os campos obrigatórios');
-      return;
-    }
-
-    try {
-      if (editingId) {
-        await updateUniversity(editingId, formData);
-        showSuccess('Universidade atualizada com sucesso!');
-      } else {
-        await createUniversity(formData);
-        showSuccess('Universidade cadastrada com sucesso!');
-      }
-      setIsModalOpen(false);
-      resetForm();
-      fetchData();
-    } catch (error) {
-      showError(getErrorMessage(error));
-    }
+    await saveUniversity(item as any);
+    setIsModalOpen(false);
+    fetchData();
   };
 
-  const handleEdit = (university: University) => {
-    setEditingId(university.id);
-    setFormData({
-      name: university.name,
-      shortName: university.shortName,
-      isActive: university.isActive
-    });
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = (id: string) => {
-    showConfirm(
-      'Excluir Universidade',
-      'Tem certeza que deseja excluir esta universidade? Todas as disciplinas associadas também serão afetadas.',
-      async () => {
-        try {
-          await deleteUniversity(id);
-          showSuccess('Universidade excluída com sucesso!');
-          fetchData();
-        } catch (error) {
-          showError(getErrorMessage(error));
-        }
-      }
-    );
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      shortName: '',
-      isActive: true
-    });
-    setEditingId(null);
-  };
-
-  const filteredUniversities = universities.filter(uni => {
-    const matchesSearch = uni.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         uni.shortName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'active' && uni.isActive) || 
-                         (statusFilter === 'inactive' && !uni.isActive);
-    return matchesSearch && matchesStatus;
-  });
-
-  if (loading) {
-    return <div className="p-8 text-center">Carregando...</div>;
-  }
+  if (loading) return <div className="p-20 text-center font-black animate-pulse text-primary uppercase">MAPEANDO INSTITUIÇÕES...</div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+    <div className="space-y-8 animate-in slide-in-from-top duration-500">
+      <div className="flex justify-between items-center bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Gerenciar Universidades</h1>
-          <p className="text-gray-500">Adicione e gerencie as universidades da plataforma</p>
+          <h1 className="text-4xl font-black text-gray-800 tracking-tighter uppercase leading-none">Universidades</h1>
+          <p className="text-gray-400 font-medium mt-1">Gestão das {universities.length} instituições parceiras.</p>
         </div>
-
-        <div className="flex gap-4 w-full md:w-auto">
-          <button
-            onClick={() => {
-              resetForm();
-              setIsModalOpen(true);
-            }}
-            className="bg-primary text-white px-4 py-2 rounded-lg font-bold hover:bg-primary-hover transition-colors flex items-center gap-2"
-          >
-            <Plus size={20} />
-            Nova Universidade
-          </button>
-          <div className="flex-1 flex gap-2 w-full">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                placeholder="Buscar universidades..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary w-full"
-              />
-            </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white min-w-[140px]"
-            >
-              <option value="all">Todos Status</option>
-              <option value="active">Ativas</option>
-              <option value="inactive">Inativas</option>
-            </select>
-          </div>
-        </div>
+        <button onClick={() => { setEditingItem(null); setIsModalOpen(true); }} className="flex items-center gap-2 bg-primary text-white px-8 py-4 rounded-2xl font-black hover:bg-primary/90 transition-all shadow-lg shadow-black/5 active:translate-y-1">
+          <Plus size={20} /> NOVA UNI
+        </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        {filteredUniversities.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            Nenhuma universidade encontrada.
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {universities.map((u) => (
+          <div key={u.id} className="group bg-white p-10 rounded-[40px] border-2 border-transparent hover:border-primary transition-all shadow-xl text-center relative overflow-hidden">
+             <div className="absolute top-0 left-0 w-2 h-full bg-primary/20" />
+             <div className="bg-primary/10 text-primary w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 text-3xl font-black italic shadow-inner">{u.short_name?.slice(0, 2)}</div>
+             <h3 className="text-2xl font-black text-gray-800 uppercase tracking-tighter mb-1">{u.name}</h3>
+             <p className="text-primary font-black uppercase text-xs tracking-widest bg-primary/5 inline-block px-4 py-1.5 rounded-full">{u.short_name}</p>
+             
+             <div className="mt-8 flex justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => { setEditingItem(u); setIsModalOpen(true); }} className="p-4 bg-gray-50 text-gray-400 rounded-2xl hover:bg-blue-600 hover:text-white transition-all"><Edit2 size={24} /></button>
+                <button onClick={async () => { if(confirm('Excluir instituição?')) { await deleteUniversity(u.id); fetchData(); } }} className="p-4 bg-red-50 text-red-400 rounded-2xl hover:bg-red-600 hover:text-white transition-all"><Trash2 size={24} /></button>
+             </div>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="p-4 font-semibold text-gray-600">Nome</th>
-                  <th className="p-4 font-semibold text-gray-600">Sigla</th>
-                  <th className="p-4 font-semibold text-gray-600">Status</th>
-                  <th className="p-4 font-semibold text-gray-600 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUniversities.map((university) => (
-                  <tr key={university.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="p-4 font-medium text-gray-800">{university.name}</td>
-                    <td className="p-4">
-                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-bold">
-                        {university.shortName}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                        university.isActive 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {university.isActive ? 'Ativa' : 'Inativa'}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => handleEdit(university)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Editar"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(university.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Excluir"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        ))}
       </div>
 
-      {/* Modal de Cadastro/Edição */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl font-bold text-gray-800">
-                {editingId ? 'Editar Universidade' : 'Nova Universidade'}
-              </h3>
-              <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  resetForm();
-                }}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-[40px] p-10 w-full max-w-sm shadow-2xl border-4 border-white animate-in zoom-in-95">
+            <h2 className="text-3xl font-black mb-8 uppercase tracking-tighter leading-none">{editingItem ? 'Ajustar' : 'Nova'} Instituição</h2>
+            <form onSubmit={handleSave} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nome Completo *
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
-                  placeholder="Ex: Universidade Eduardo Mondlane"
-                  required
-                />
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Nome Completo</label>
+                <input name="name" required defaultValue={editingItem?.name} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary outline-none font-bold placeholder:text-gray-300" placeholder="Ex: Universidade Eduardo Mondlane" />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sigla *
-                </label>
-                <input
-                  type="text"
-                  value={formData.shortName}
-                  onChange={(e) => setFormData({ ...formData, shortName: e.target.value.toUpperCase() })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
-                  placeholder="Ex: UEM"
-                  maxLength={10}
-                  required
-                />
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Sigla</label>
+                <input name="shortName" required defaultValue={editingItem?.short_name} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary outline-none font-black text-center text-xl" placeholder="UEM" />
               </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded"
-                />
-                <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
-                  Universidade Ativa
-                </label>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    resetForm();
-                  }}
-                  className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-xl transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
-                >
-                  <Save size={20} />
-                  Salvar
-                </button>
-              </div>
+              <button type="submit" className="w-full bg-primary text-white py-5 rounded-3xl font-black shadow-lg shadow-black/5 active:translate-y-1 mt-4">CONFIRMAR INSTITUIÇÃO 🏛️</button>
             </form>
           </div>
         </div>
-      )}
-
-      <Modal
-        isOpen={modalState.isOpen}
-        onClose={closeModal}
-        onConfirm={modalState.onConfirm}
-        title={modalState.title}
-        message={modalState.message}
-        type={modalState.type}
-        confirmText={modalState.confirmText}
-        cancelText={modalState.cancelText}
-        showCancel={modalState.showCancel}
-      />
-
-      {toastState.isOpen && (
-        <Toast
-          message={toastState.message}
-          type={toastState.type}
-          onClose={closeToast}
-        />
       )}
     </div>
   );

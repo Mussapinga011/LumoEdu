@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
-import { getSessionsByDiscipline, getUserProgressByDiscipline, getSectionsByDiscipline, getSessionsBySection } from '../services/practiceService';
+import { getUserProgressByDiscipline, getSectionsByDiscipline, getSessionsBySection } from '../services/practiceService.supabase';
 import { PracticeSession, UserSessionProgress, PracticeSection } from '../types/practice';
 import { Star, Trophy, ArrowLeft, BookOpen, Lock } from 'lucide-react';
 import clsx from 'clsx';
@@ -17,7 +17,6 @@ const PracticePathPage = () => {
   const [section, setSection] = useState<PracticeSection | null>(null);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState<Record<string, UserSessionProgress>>({});
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   useEffect(() => {
     if (disciplineId && user) {
@@ -29,8 +28,8 @@ const PracticePathPage = () => {
     setLoading(true);
     try {
       // 1. Fetch User Progress
-      const userProg = await getUserProgressByDiscipline(user!.uid, disciplineId!);
-      setProgress(userProg);
+      const userProg = await getUserProgressByDiscipline(user!.id, disciplineId!);
+      setProgress(userProg as any);
 
       // 2. Fetch Content
       if (sectionId) {
@@ -39,14 +38,12 @@ const PracticePathPage = () => {
            getSessionsBySection(disciplineId!, sectionId),
            getSectionsByDiscipline(disciplineId!)
         ]);
-        setSessions(sectSessions);
-        const currentSection = allSections.find(s => s.id === sectionId);
+        setSessions(sectSessions as any);
+        const currentSection = (allSections as any[]).find(s => s.id === sectionId);
         setSection(currentSection || null);
       } else {
-        // Legacy Mode: Fetch all sessions (fallback)
-        // Ideally we should redirect to Sections Page if no sectionId, but let's keep it safe
-        const allSessions = await getSessionsByDiscipline(disciplineId!);
-        setSessions(allSessions);
+        // Fallback or redirect
+        navigate(`/practice/${disciplineId}`);
       }
 
     } catch (error) {
@@ -71,13 +68,9 @@ const PracticePathPage = () => {
     return pattern[index % pattern.length];
   };
 
-  // Determine global completion status to unlock next items
-  // Logic simplified: index 0 is always unlocked.
-  // Index N is unlocked if N-1 is COMPLETED.
   const getUnlockStatus = (index: number) => {
       if (index === 0) return true;
       const prevSession = sessions[index - 1];
-      // Check if previous session is completed in user progress
       return !!progress[prevSession.id]?.completed;
   };
 
@@ -89,7 +82,6 @@ const PracticePathPage = () => {
 
   return (
     <div className="min-h-screen pb-20 bg-gray-50">
-      {/* Stick Header (Green as per image) */}
       <div className="bg-[#58CC02] border-b border-[#46a302] sticky top-0 z-30 px-4 py-4 flex items-center justify-between shadow-md text-white">
         <div className="flex items-center gap-4">
            <button 
@@ -113,15 +105,11 @@ const PracticePathPage = () => {
       </div>
 
       <div className="max-w-md mx-auto relative pt-12 pb-20 px-4">
-          
-        {/* Snake Path */}
         <div className="flex flex-col items-center gap-6">
           {sessions.map((session, index) => {
             const isCompleted = progress[session.id]?.completed;
             const isUnlocked = getUnlockStatus(index);
             const isCurrent = isUnlocked && !isCompleted;
-            
-            // Snake offset
             const offset = getOffset(index);
 
             return (
@@ -131,7 +119,6 @@ const PracticePathPage = () => {
                 style={{ transform: `translateX(${offset}px)` }}
                 ref={isCurrent ? currentLevelRef : null}
               >
-                {/* Floating "Start" tooltip for current item */}
                 {isCurrent && (
                   <div className="absolute -top-12 animate-bounce z-20">
                      <div className="bg-white text-primary font-bold text-xs uppercase tracking-widest px-3 py-1.5 rounded-lg shadow-md border-b-4 border-gray-100">
@@ -141,23 +128,16 @@ const PracticePathPage = () => {
                   </div>
                 )}
 
-                {/* The Node Button */}
                 <div className="relative">
                   <button
                     disabled={!isUnlocked}
                     onClick={() => {
                       if (isUnlocked) {
-                          // Navigate to quiz with explicit sectionId if available
-                          if (sectionId) {
-                             navigate(`/practice/${disciplineId}/section/${sectionId}/session/${session.id}`);
-                          } else {
-                             navigate(`/practice/${disciplineId}/session/${session.id}`);
-                          }
+                          navigate(`/practice/${disciplineId}/section/${sectionId}/session/${session.id}`);
                       }
                     }}
                     className={clsx(
                       "relative w-20 h-20 rounded-full flex items-center justify-center transition-all z-10",
-                      // 3D Effect logic: border-b-4 or box-shadow
                       "shadow-[0_6px_0_0_rgba(0,0,0,0.2)] active:shadow-none active:translate-y-[6px]",
                       isCompleted
                           ? "bg-yellow-400 shadow-yellow-600" 
@@ -176,7 +156,6 @@ const PracticePathPage = () => {
                   </button>
                 </div>
                 
-                {/* Mascot (Lumo Guia) next to current element */}
                 {isCurrent && (
                    <div className="absolute top-1/2 -translate-y-1/2 left-24 w-24 h-24 animate-fade-in z-0 pointer-events-none">
                       <img src="/lumo_mascot_Guia.png" alt="Lumo Guia" className="w-full h-full object-contain animate-bounce" />
@@ -187,40 +166,11 @@ const PracticePathPage = () => {
           })}
         </div>
         
-        {/* End Path */}
         <div className="text-center mt-12">
             <Trophy size={40} className="text-yellow-600 mx-auto mb-2 opacity-50" />
             <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Fim da Unidade</p>
         </div>
-
       </div>
-
-      {/* Premium Modal */}
-      {showPremiumModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-3xl w-full max-w-sm p-6 text-center shadow-2xl">
-             <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Lock size={32} className="text-yellow-600" />
-             </div>
-             <h2 className="text-xl font-black text-gray-800 mb-2">Conteúdo Exclusivo</h2>
-             <p className="text-gray-600 text-sm font-medium mb-6">
-               Desbloqueie todas as etapas e acelere sua aprovação.
-             </p>
-             <button 
-               onClick={() => setShowPremiumModal(false)}
-               className="w-full bg-primary text-white font-bold py-3 rounded-xl mb-3"
-             >
-               Virar Premium
-             </button>
-             <button 
-               onClick={() => setShowPremiumModal(false)}
-               className="text-gray-400 font-bold text-xs uppercase"
-             >
-               Talvez depois
-             </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

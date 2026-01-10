@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
-import { getAllUsers, updateUserProfile, createUserProfile, deleteUserProfile } from '../../services/dbService';
+import { getAllUsers, updateUserProfile, deleteUser } from '../../services/dbService.supabase';
 import { UserProfile } from '../../types/user';
-import { Search, Edit, X, Save, Trash2, Shield, User, Plus } from 'lucide-react';
+import { Search, Edit, X, Trash2, Shield, User } from 'lucide-react';
 import { useModal, useToast } from '../../hooks/useNotifications';
 import Modal from '../../components/Modal';
 import Toast from '../../components/Toast';
 import { getErrorMessage } from '../../utils/errorMessages';
+import clsx from 'clsx';
 
 interface EditingUser {
-  uid: string;
+  id: string;
   displayName: string;
   email: string;
-  newPassword?: string;
 }
 
 const AdminUsersPage = () => {
@@ -20,7 +20,6 @@ const AdminUsersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'users' | 'admins'>('users');
   const [editingUser, setEditingUser] = useState<EditingUser | null>(null);
-  const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
   const { modalState, showConfirm, closeModal } = useModal();
   const { toastState, showSuccess, showError, showWarning, closeToast } = useToast();
 
@@ -43,458 +42,210 @@ const AdminUsersPage = () => {
 
   const handleEditUser = (user: UserProfile) => {
     setEditingUser({
-      uid: user.uid,
+      id: user.id || user.uid,
       displayName: user.displayName,
-      email: user.email,
-      newPassword: ''
+      email: user.email
     });
   };
 
   const handleSaveEdit = async () => {
     if (!editingUser) return;
-
-    if (!editingUser.displayName || !editingUser.email) {
-      showWarning('Nome e email são obrigatórios');
+    if (!editingUser.displayName) {
+      showWarning('Nome é obrigatório');
       return;
     }
 
     try {
-      if (isCreatingAdmin) {
-        // Creating new admin (Firestore record only)
-        // Note: This does not create Auth account. User must sign up or be created via Admin SDK.
-        // For now, we simulate by creating the profile with admin role.
-        const newUid = crypto.randomUUID(); // Temporary UID or need real auth flow
-        
-        // As we cannot create Auth user easily without logging out, 
-        // we will guide the user to Sign Up with this email or use specialized function if available.
-        // Here we just save the profile instruction.
-        
-        const newAdmin: any = {
-          uid: newUid,
-          email: editingUser.email,
-          displayName: editingUser.displayName,
-          role: 'admin',
-          createdAt: new Date(),
-          isPremium: true
-        };
-        
-        // We use createProfile but it expects UserProfile. 
-        // In reality, this might fail if UID doesn't match Auth. 
-        // Best approach for Manual Admin Creation in purely client-side app:
-        // 1. Alert that we are creating a RECORD.
-        
-        await new Promise<void>((resolve) => {
-          showConfirm(
-            'Informação Importante',
-            'Como esta é uma aplicação web, o usuário precisará criar uma conta (Registrar-se) com este email para acessar. O registro de Admin será vinculado automaticamente quando ele fizer isso.',
-            async () => {
-              resolve();
-            },
-            'Entendi, continuar',
-            'Cancelar'
-          );
-        });
-        
-        // Actually we can't create a 'ghost' profile easily that links automatically on signup 
-        // unless signup logic checks for existing doc. 
-        // Assuming your auth flow handles merge or you create users via Firebase Console first.
-        
-        // Let's stick to "Promover" logic for safety if creating is too complex.
-        // BUT user asked for "Create". So let's assume we Create the Profile Doc.
-        
-        await createUserProfile(newAdmin as UserProfile);
-         setUsers([...users, newAdmin]);
-         showSuccess('Registro de Administrador criado! O usuário deve se cadastrar com este email.');
-
-      } else {
-        // Update existing
-        const updates: Partial<UserProfile> = {
-          displayName: editingUser.displayName,
-          email: editingUser.email
-        };
-        
-        await updateUserProfile(editingUser.uid, updates);
-        
-        setUsers(users.map(u => 
-          u.uid === editingUser.uid 
-            ? { ...u, ...updates } 
-            : u
-        ));
-        showSuccess('Usuário atualizado com sucesso!');
-      }
+      const updates = {
+        display_name: editingUser.displayName
+      };
       
+      await updateUserProfile(editingUser.id, updates);
+      
+      setUsers(users.map(u => 
+        (u.id === editingUser.id || u.uid === editingUser.id)
+          ? { ...u, displayName: editingUser.displayName } 
+          : u
+      ));
+      showSuccess('Usuário atualizado com sucesso no Supabase!');
       setEditingUser(null);
-      setIsCreatingAdmin(false);
     } catch (error) {
-      console.error("Error saving user:", error);
       showError(getErrorMessage(error));
     }
   };
 
-  const handleDeleteUser = async (uid: string) => {
+  const handleDeleteUser = async (userId: string) => {
     showConfirm(
-      'Excluir Usuário',
-      'Tem certeza que deseja excluir este usuário? Isso removerá o seu perfil da plataforma. Nota: A conta de login permanecerá ativa no Firebase Auth (devido ao plano gratuito), mas o usuário não terá mais acesso aos dados e não aparecerá no sistema.',
+      'Excluir Perfil',
+      'Deseja remover este perfil do banco de dados do Supabase?',
       async () => {
         try {
-           if (activeTab === 'admins') {
-             // Demote admin to user instead of deleting
-             await updateUserProfile(uid, { role: 'user' });
-             setUsers(users.map(u => u.uid === uid ? { ...u, role: 'user' } : u));
-             showSuccess('Administrador removido (rebaixado a usuário).');
-           } else {
-             // Delete user profile directly from Firestore
-             await deleteUserProfile(uid);
-             setUsers(users.filter(u => u.uid !== uid));
-             showSuccess('Perfil do usuário excluído com sucesso!');
-           }
+           await deleteUser(userId);
+           setUsers(users.filter(u => u.id !== userId && u.uid !== userId));
+           showSuccess('Perfil removido com sucesso!');
         } catch (error) {
-           showError('Erro ao excluir usuário: ' + getErrorMessage(error));
+           showError('Erro ao excluir: ' + getErrorMessage(error));
         }
-      },
-      'Excluir',
-      'Cancelar'
+      }
     );
   };
 
-  const handleRoleChange = async (uid: string, newRole: 'admin' | 'user') => {
-    const roleLabel = newRole === 'admin' ? 'Administrador' : 'Usuário';
+  const handleRoleChange = async (userId: string, newRole: 'admin' | 'user') => {
     showConfirm(
-      'Alterar Papel',
-      `Tem certeza que deseja alterar o papel deste usuário para ${roleLabel}?`,
+      'Alterar Cargo',
+      `Mudar usuário para ${newRole === 'admin' ? 'Administrador' : 'Estudante'}?`,
       async () => {
         try {
-          await updateUserProfile(uid, { role: newRole });
-          setUsers(users.map(u => u.uid === uid ? { ...u, role: newRole } : u));
-          showSuccess(`Papel alterado para ${roleLabel} com sucesso!`);
+          await updateUserProfile(userId, { role: newRole });
+          setUsers(users.map(u => (u.id === userId || u.uid === userId) ? { ...u, role: newRole } : u));
+          showSuccess(`Permissões de ${newRole} concedidas!`);
         } catch (error) {
-          console.error("Error updating user role:", error);
           showError(getErrorMessage(error));
         }
-      },
-      'Alterar',
-      'Cancelar'
+      }
     );
   };
 
-  const handlePremiumToggle = async (uid: string, currentPremium: boolean) => {
-    const action = currentPremium ? 'remover' : 'conceder';
+  const handlePremiumToggle = async (userId: string, currentPremium: boolean) => {
+    const action = currentPremium ? 'REMOVER' : 'CONCEDER';
     showConfirm(
-      currentPremium ? 'Remover Premium' : 'Conceder Premium',
-      `Tem certeza que deseja ${action} acesso premium para este usuário?`,
+      'Status Premium',
+      `Deseja ${action} o plano Premium para este usuário?`,
       async () => {
         try {
-          const updates: Partial<UserProfile> = {
-            isPremium: !currentPremium
-          };
-          await updateUserProfile(uid, updates);
-          setUsers(users.map(u => u.uid === uid ? { ...u, ...updates } : u));
-          showSuccess(`Acesso premium ${currentPremium ? 'removido' : 'concedido'} com sucesso!`);
+          await updateUserProfile(userId, { is_premium: !currentPremium });
+          setUsers(users.map(u => (u.id === userId || u.uid === userId) ? { ...u, isPremium: !currentPremium } : u));
+          showSuccess(`Premium ${currentPremium ? 'removido' : 'ativado'}!`);
         } catch (error) {
-          console.error("Error updating premium status:", error);
           showError(getErrorMessage(error));
         }
-      },
-      action === 'conceder' ? 'Conceder' : 'Remover',
-      'Cancelar'
+      }
     );
   };
 
   const filteredUsers = users.filter(user => {
-    // Basic Search
     const matchesSearch = 
       user.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Tab Filter
-    const matchesTab = activeTab === 'admins' 
-      ? user.role === 'admin'
-      : user.role !== 'admin'; // 'user' or undefined
-
-      return matchesSearch && matchesTab;
+    const matchesTab = activeTab === 'admins' ? user.role === 'admin' : user.role !== 'admin';
+    return matchesSearch && matchesTab;
   });
 
-  if (loading) {
-    return <div className="p-8 text-center">Carregando usuários...</div>;
-  }
+  if (loading) return <div className="p-20 text-center font-black text-primary animate-pulse uppercase tracking-widest">Acessando Arquivos...</div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Gerenciar Usuários</h1>
-          <p className="text-gray-500">Administre o acesso e permissões da plataforma</p>
+          <h1 className="text-4xl font-black text-gray-800 tracking-tighter uppercase">Usuários</h1>
+          <p className="text-gray-400 font-medium">Gestão de {users.length} membros da LumoEdu.</p>
         </div>
         
-        <div className="flex gap-4 w-full md:w-auto">
-          {activeTab === 'admins' && (
-            <button
-               onClick={() => {
-                 setEditingUser({ uid: '', displayName: '', email: '', newPassword: '' });
-                 setIsCreatingAdmin(true);
-               }}
-               className="bg-primary text-white px-4 py-2 rounded-lg font-bold hover:bg-primary-hover transition-colors flex items-center gap-2 whitespace-nowrap"
-            >
-              <Plus size={20} />
-              Novo Admin
-            </button>
-          )}
-          <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder={activeTab === 'users' ? "Buscar usuários..." : "Buscar admins..."}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary w-full"
-            />
-          </div>
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={24} />
+          <input
+            type="text"
+            placeholder="Pesquisar por nome ou email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white outline-none font-bold transition-all"
+          />
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-gray-200">
-        <button
-          onClick={() => { setActiveTab('users'); setSearchTerm(''); }}
-          className={`px-6 py-3 font-medium text-sm transition-colors relative ${
-            activeTab === 'users' 
-              ? 'text-primary' 
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Usuários Normais
-          {activeTab === 'users' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-          )}
-        </button>
-        <button
-          onClick={() => { setActiveTab('admins'); setSearchTerm(''); }}
-          className={`px-6 py-3 font-medium text-sm transition-colors relative ${
-            activeTab === 'admins' 
-              ? 'text-primary' 
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Administradores
-          {activeTab === 'admins' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-          )}
-        </button>
+      <div className="flex bg-gray-100 p-1.5 rounded-2xl w-fit">
+        {[
+          { id: 'users', label: 'Estudantes', icon: User },
+          { id: 'admins', label: 'Admins', icon: Shield }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={clsx(
+              "flex items-center gap-2 px-8 py-3 rounded-xl font-black uppercase text-xs tracking-widest transition-all",
+              activeTab === tab.id ? "bg-white text-primary shadow-sm" : "text-gray-400 hover:text-gray-600"
+            )}
+          >
+            <tab.icon size={16} />
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        {filteredUsers.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            {activeTab === 'users' ? "Nenhum usuário encontrado." : "Nenhum administrador encontrado."}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left min-w-[800px]">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="p-4 font-semibold text-gray-600">Usuário</th>
-                  <th className="p-4 font-semibold text-gray-600">Status</th>
-                  {activeTab === 'users' && <th className="p-4 font-semibold text-gray-600">Premium</th>}
-                  <th className="p-4 font-semibold text-gray-600">Estatísticas</th>
-                  <th className="p-4 font-semibold text-gray-600 text-right">Ações</th>
+      <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gray-50/50 border-b border-gray-100">
+              <th className="p-6 text-left font-black text-gray-400 uppercase text-[10px] tracking-widest">Identidade</th>
+              <th className="p-6 text-left font-black text-gray-400 uppercase text-[10px] tracking-widest">Plano</th>
+              <th className="p-6 text-left font-black text-gray-400 uppercase text-[10px] tracking-widest">Progresso</th>
+              <th className="p-6 text-right font-black text-gray-400 uppercase text-[10px] tracking-widest">Ações Rápidas</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {filteredUsers.map((u) => {
+              const userId = u.id || u.uid;
+              return (
+                <tr key={userId} className="hover:bg-blue-50/30 transition-colors group">
+                  <td className="p-6">
+                    <div className="flex items-center gap-4">
+                      <div className={clsx("w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-inner", u.role === 'admin' ? "bg-purple-100 text-purple-600" : "bg-blue-100 text-blue-600")}>
+                        {u.photoURL ? <img src={u.photoURL} className="w-full h-full rounded-2xl object-cover" /> : u.displayName?.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="font-black text-gray-800 text-lg uppercase tracking-tighter leading-none">{u.displayName}</div>
+                        <div className="text-sm text-gray-400 font-medium lowercase tracking-tight">{u.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-6">
+                    <button onClick={() => handlePremiumToggle(userId, u.isPremium)} className={clsx("px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border-2", u.isPremium ? "bg-yellow-50 text-yellow-600 border-yellow-100" : "bg-gray-50 text-gray-400 border-gray-100 hover:border-yellow-200")}>
+                      {u.isPremium ? '🌟 Premium' : '⚪ Free'}
+                    </button>
+                  </td>
+                  <td className="p-6">
+                    <div className="text-xs font-black text-gray-700 uppercase">Lvl {u.level || 1}</div>
+                    <div className="text-[10px] text-gray-400 font-bold uppercase">{u.xp || 0} XP acumulados</div>
+                  </td>
+                  <td className="p-6 text-right">
+                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => handleEditUser(u)} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all"><Edit size={18} /></button>
+                      <button onClick={() => handleRoleChange(userId, u.role === 'admin' ? 'user' : 'admin')} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-purple-600 hover:text-white transition-all"><Shield size={18} /></button>
+                      <button onClick={() => handleDeleteUser(userId)} className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all"><Trash2 size={18} /></button>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((user) => (
-                  <tr key={user.uid} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold ${
-                            user.role === 'admin' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'
-                          }`}>
-                            {user.photoURL ? (
-                              <img src={user.photoURL} alt="" className="w-full h-full rounded-full object-cover" />
-                            ) : (
-                              user.displayName?.charAt(0).toUpperCase() || <User size={20} />
-                            )}
-                          </div>
-                          {/* Online Indicator */}
-                          {user.isOnline && user.lastActive && (() => {
-                            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-                            const lastActiveDate = user.lastActive.toDate();
-                            return lastActiveDate > fiveMinutesAgo;
-                          })() && (
-                            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white"></div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-bold text-gray-800">{user.displayName}</p>
-                          <p className="text-sm text-gray-500">{user.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-fit ${
-                        user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-                      }`}>
-                        {user.role === 'admin' ? <Shield size={12} /> : <User size={12} />}
-                        {user.role === 'admin' ? 'ADMIN' : 'USUÁRIO'}
-                      </span>
-                    </td>
-                    {activeTab === 'users' && (
-                      <td className="p-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                          user.isPremium ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          {user.isPremium ? '⭐ PREMIUM' : 'GRÁTIS'}
-                        </span>
-                      </td>
-                    )}
-                    <td className="p-4 text-sm text-gray-600">
-                      <p>Nível: {user.level || 0}</p>
-                      <p>Pontos: {user.score || 0}</p>
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex justify-end gap-2">
-                         <button
-                            onClick={() => {
-                              setIsCreatingAdmin(false);
-                              handleEditUser(user);
-                            }}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Editar Dados"
-                          >
-                            <Edit size={18} />
-                          </button>
-                        
-                        {activeTab === 'users' ? (
-                          <>
-                             <button
-                                onClick={() => handleRoleChange(user.uid, 'admin')}
-                                className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                                title="Promover a Admin"
-                              >
-                                <Shield size={18} />
-                              </button>
-                              <button
-                                onClick={() => handlePremiumToggle(user.uid, user.isPremium)}
-                                className={`p-2 rounded-lg transition-colors ${
-                                  user.isPremium ? 'text-orange-600 hover:bg-orange-50' : 'text-green-600 hover:bg-green-50'
-                                }`}
-                                title={user.isPremium ? "Remover Premium" : "Dar Premium"}
-                              >
-                                {user.isPremium ? "⬇️" : "⭐"}
-                              </button>
-                             <button
-                                onClick={() => handleDeleteUser(user.uid)}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Excluir Usuário"
-                              >
-                                <Trash2 size={18} />
-                              </button>
-                          </>
-                        ) : (
-                          // Admin Tab Actions
-                          <>
-                             <button
-                                onClick={() => handleDeleteUser(user.uid)}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Remover Admin"
-                              >
-                                <Trash2 size={18} />
-                              </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
-      {/* Edit User Modal */}
       {editingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-xl font-bold text-gray-800">{isCreatingAdmin ? 'Criar Novo Administrador' : 'Editar Usuário'}</h3>
-              <button
-                onClick={() => { setEditingUser(null); setIsCreatingAdmin(false); }}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X size={24} />
-              </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl border-4 border-white animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-3xl font-black text-gray-800 uppercase tracking-tighter">Ajustar Perfil</h3>
+              <button onClick={() => setEditingUser(null)} className="text-gray-400"><X size={28} /></button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-                <input
-                  type="text"
-                  value={editingUser.displayName}
-                  onChange={(e) => setEditingUser({ ...editingUser, displayName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
-                  placeholder="Nome do usuário"
-                />
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Nome de Exibição</label>
+                <input type="text" value={editingUser.displayName} onChange={(e) => setEditingUser({ ...editingUser, displayName: e.target.value })} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-white outline-none font-bold" />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input
-                  type="email"
-                  value={editingUser.email}
-                  onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
-                  placeholder="email@exemplo.com"
-                />
+              
+              <div className="flex gap-4 pt-4">
+                <button onClick={() => setEditingUser(null)} className="flex-1 font-black text-gray-400 uppercase">Cancelar</button>
+                <button onClick={handleSaveEdit} className="flex-1 bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 active:translate-y-1">SALVAR 💾</button>
               </div>
-
-              <div className="pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-500 mb-2">
-                  Nota: Para redefinir a senha, use o botão "Redefinir Senha" na lista de usuários.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-3 p-6 border-t border-gray-200">
-              <button
-                onClick={() => { setEditingUser(null); setIsCreatingAdmin(false); }}
-                className="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-xl transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSaveEdit}
-                className="flex-1 px-4 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2"
-              >
-                <Save size={20} />
-                Salvar
-              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal */}
-      <Modal
-        isOpen={modalState.isOpen}
-        onClose={closeModal}
-        onConfirm={modalState.onConfirm}
-        title={modalState.title}
-        message={modalState.message}
-        type={modalState.type}
-        confirmText={modalState.confirmText}
-        cancelText={modalState.cancelText}
-        showCancel={modalState.showCancel}
-      />
-
-      {/* Toast */}
-      {toastState.isOpen && (
-        <Toast
-          message={toastState.message}
-          type={toastState.type}
-          onClose={closeToast}
-        />
-      )}
+      <Modal isOpen={modalState.isOpen} onClose={closeModal} onConfirm={modalState.onConfirm} title={modalState.title} message={modalState.message} />
+      {toastState.isOpen && <Toast message={toastState.message} type={toastState.type} onClose={closeToast} />}
     </div>
   );
 };

@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
-import { saveStudyPlan } from '../services/dbService';
+import { saveStudyPlan } from '../services/dbService.supabase';
 import { StudyPlan } from '../types/user';
-import { Timestamp } from 'firebase/firestore';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
 
 const questions = [
@@ -67,18 +66,19 @@ const StudyPlanSetupPage = () => {
   const [loading, setLoading] = useState(false);
 
   const handleAnswer = (answer: string) => {
-    setAnswers({ ...answers, [questions[currentStep].id]: answer });
+    const updatedAnswers = { ...answers, [questions[currentStep].id]: answer };
+    setAnswers(updatedAnswers);
     if (currentStep < questions.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      generatePlan({ ...answers, [questions[currentStep].id]: answer });
+      generatePlan(updatedAnswers);
     }
   };
 
   const generatePlan = async (finalAnswers: Record<string, string>) => {
     setLoading(true);
     
-    // 1. Calculate Daily Goal based on Time Available vs Exam Date
+    // Logic remains same, just Supabase storage
     const timeOption = finalAnswers['timePerDay'];
     const examDateOption = finalAnswers['examDate'];
     
@@ -87,14 +87,12 @@ const StudyPlanSetupPage = () => {
     if (timeOption === '2 horas') baseDailyGoal = 35;
     if (timeOption === 'Mais de 2 horas') baseDailyGoal = 50;
 
-    // Adjust based on urgency
     let urgencyMultiplier = 1;
     if (examDateOption === 'Em menos de 1 mês') urgencyMultiplier = 1.5;
     if (examDateOption === 'Em 1-3 meses') urgencyMultiplier = 1.2;
     
     const dailyGoal = Math.round(baseDailyGoal * urgencyMultiplier);
 
-    // 2. Create Smart Schedule
     const daysOption = finalAnswers['daysPerWeek'];
     const weakSubject = finalAnswers['weakSubject'];
     const strongSubject = finalAnswers['strongSubject'];
@@ -105,26 +103,22 @@ const StudyPlanSetupPage = () => {
     else if (daysOption === '5-6 dias') availableDays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     else availableDays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
-    // Distribute subjects (Mock logic for now, could be more complex)
-    // Ensure weak subject appears more often
-    
     const newPlan: StudyPlan = {
       weeklySchedule: availableDays,
-      weakTopics: [weakSubject, 'Revisão Geral', strongSubject], // Track key focus areas
+      weakTopics: [weakSubject, 'Revisão Geral', strongSubject],
       dailyGoal: dailyGoal,
-      createdAt: Timestamp.now()
+      createdAt: new Date()
     };
 
     try {
       if (user) {
-        await saveStudyPlan(user.uid, newPlan);
-        // Update local state
-        updateUser({ studyPlan: newPlan });
+        await saveStudyPlan(user.id, newPlan);
+        updateUser({ studyPlan: newPlan } as any);
         navigate('/profile');
       }
     } catch (error) {
       console.error("Error saving plan:", error);
-      alert("Erro ao salvar plano. Tente novamente.");
+      alert("Erro ao salvar plano.");
     } finally {
       setLoading(false);
     }
@@ -134,21 +128,15 @@ const StudyPlanSetupPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
-        {/* Progress Bar */}
-        <div className="h-2 bg-gray-100">
-          <div 
-            className="h-full bg-primary transition-all duration-500 ease-out"
-            style={{ width: `${progress}%` }}
-          />
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-white">
+        <div className="h-3 bg-gray-100">
+          <div className="h-full bg-primary transition-all duration-700 ease-out" style={{ width: `${progress}%` }} />
         </div>
 
-        <div className="p-8">
-          <div className="mb-8">
-            <span className="text-sm font-bold text-primary uppercase tracking-wider">
-              Passo {currentStep + 1} de {questions.length}
-            </span>
-            <h2 className="text-2xl font-bold text-gray-800 mt-2">
+        <div className="p-10">
+          <div className="mb-10">
+            <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Passo {currentStep + 1} de {questions.length}</span>
+            <h2 className="text-3xl font-black text-gray-800 mt-4 leading-tight tracking-tighter">
               {questions[currentStep].question}
             </h2>
           </div>
@@ -158,29 +146,21 @@ const StudyPlanSetupPage = () => {
               <button
                 key={option}
                 onClick={() => handleAnswer(option)}
-                className="w-full text-left p-4 rounded-xl border-2 border-gray-100 hover:border-primary hover:bg-primary/5 transition-all group flex items-center justify-between"
+                className="w-full text-left p-5 rounded-2xl border-2 border-gray-50 hover:border-primary hover:bg-primary/5 transition-all group flex items-center justify-between"
               >
-                <span className="font-medium text-gray-700 group-hover:text-primary">
-                  {option}
-                </span>
-                <ArrowRight className="opacity-0 group-hover:opacity-100 text-primary transition-opacity" size={20} />
+                <span className="font-bold text-gray-600 group-hover:text-primary">{option}</span>
+                <ArrowRight className="opacity-0 group-hover:opacity-100 text-primary translate-x-[-10px] group-hover:translate-x-0 transition-all" size={24} />
               </button>
             ))}
           </div>
 
-          <div className="mt-8 flex justify-between items-center">
+          <div className="mt-10 flex justify-between items-center">
             {currentStep > 0 && (
-              <button 
-                onClick={() => setCurrentStep(currentStep - 1)}
-                className="text-gray-400 hover:text-gray-600 flex items-center gap-2 text-sm font-medium"
-              >
-                <ArrowLeft size={16} />
-                Voltar
+              <button onClick={() => setCurrentStep(currentStep - 1)} className="text-gray-400 hover:text-gray-800 flex items-center gap-2 text-sm font-black transition-colors uppercase">
+                <ArrowLeft size={16} /> Voltar
               </button>
             )}
-            {loading && (
-              <span className="text-sm text-gray-500 ml-auto">Gerando seu plano...</span>
-            )}
+            {loading && <div className="text-xs font-black text-primary animate-pulse uppercase">Construindo seu destino...</div>}
           </div>
         </div>
       </div>

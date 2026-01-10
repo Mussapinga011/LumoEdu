@@ -4,13 +4,12 @@ import {
   Users, 
   FileText, 
   LogOut,
-  TrendingUp,
   MessageCircle,
   Download,
   School,
   BookMarked
 } from 'lucide-react';
-import { signOut } from '../services/authService';
+import { signOut } from '../services/authService.supabase';
 import clsx from 'clsx';
 import MobileNav from './MobileNav';
 
@@ -26,7 +25,6 @@ const AdminLayout = () => {
     { name: 'Gerenciar Grupos', path: '/admin/groups', icon: MessageCircle },
     { name: 'Gerenciar Downloads', path: '/admin/downloads', icon: Download },
     { name: 'Gerenciar Universidades', path: '/admin/universities', icon: School },
-    { name: 'Testes A/B', path: '/admin/ab-tests', icon: TrendingUp },
   ];
 
   return (

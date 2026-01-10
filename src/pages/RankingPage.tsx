@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Trophy, Medal, User, X, Calendar, Flame } from 'lucide-react';
-import { getAllUsers } from '../services/dbService';
+import { getAllUsers } from '../services/dbService.supabase';
 import { UserProfile } from '../types/user';
 import clsx from 'clsx';
 import { useContentStore } from '../stores/useContentStore';

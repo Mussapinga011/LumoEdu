@@ -10,7 +10,7 @@ import {
   Users,
   GraduationCap
 } from 'lucide-react';
-import { signOut } from '../services/authService';
+import { signOut } from '../services/authService.supabase';
 import clsx from 'clsx';
 import MobileNav from './MobileNav';
 import { useOnlinePresence } from '../hooks/useOnlinePresence';

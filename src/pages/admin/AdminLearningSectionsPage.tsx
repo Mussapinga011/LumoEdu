@@ -1,335 +1,128 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getSectionsByDiscipline, saveSection, deleteSection } from '../../services/practiceService';
-import { PracticeSection } from '../../types/practice';
-import { Plus, Edit, Trash2, ArrowLeft, LayoutList, ChevronRight, Save, X, GripVertical, BookOpen } from 'lucide-react';
-import { useModal, useToast } from '../../hooks/useNotifications';
-import { getDiscipline } from '../../services/dbService';
-import { Discipline } from '../../types/discipline';
-import Modal from '../../components/Modal';
-import Toast from '../../components/Toast';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-
-// We need to add deleteSection to practiceService or implement it here if it's just a firestore delete.
-// For now, I'll simulate it or assume I should add it to service. I'll add it to service in next step if needed, 
-// but I'll write the component assuming it exists or I can implement inline if I had the firesbase imports here. 
-// Better to follow pattern and add to service. I will add `deleteSection` to `practiceService.ts` later or now.
-// I will just use `deleteSession` placeholder and fix it. Actually, I can use `write_to_file` to update service too.
-// Let's create the page first.
-
-interface SortableSectionProps {
-  section: PracticeSection;
-  onEdit: () => void;
-  onDelete: () => void;
-  onNavigate: () => void;
-}
-
-const SortableSection = ({ section, onEdit, onDelete, onNavigate }: SortableSectionProps) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: section.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors group bg-white"
-    >
-      <div className="flex items-center gap-4 flex-1">
-        <button
-          {...attributes}
-          {...listeners}
-          className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          title="Arrastar para reordenar"
-        >
-          <GripVertical size={20} className="text-gray-400" />
-        </button>
-        <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-black text-sm">
-          {section.order}
-        </div>
-        <div>
-          <h4 className="font-bold text-gray-800">{section.title}</h4>
-          <p className="text-xs text-gray-400 font-medium">{section.description}</p>
-        </div>
-      </div>
-      
-      <div className="flex items-center gap-2">
-        <button 
-          onClick={onNavigate}
-          className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors flex items-center gap-1 text-xs font-bold uppercase tracking-wider"
-        >
-          Lições <ChevronRight size={16} />
-        </button>
-        <button onClick={onEdit} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg">
-          <Edit size={18} />
-        </button>
-        <button onClick={onDelete} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
-          <Trash2 size={18} />
-        </button>
-      </div>
-    </div>
-  );
-};
+import { getLearningSectionsBySession, saveLearningSection, deleteLearningSection } from '../../services/contentService.supabase';
+import { Plus, Edit2, Trash2, ArrowLeft, X, Type, FileStack } from 'lucide-react';
 
 const AdminLearningSectionsPage = () => {
-  const { disciplineId } = useParams<{ disciplineId: string }>();
+  const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  const [sections, setSections] = useState<PracticeSection[]>([]);
+  const [sections, setSections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingSection, setEditingSection] = useState<Partial<PracticeSection> | null>(null);
-  const [discipline, setDiscipline] = useState<Discipline | null>(null);
-  const { modalState, showConfirm, closeModal } = useModal();
-  const { toastState, showSuccess, showError, closeToast } = useToast();
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+  const [editingSection, setEditingSection] = useState<any | null>(null);
 
   useEffect(() => {
-    if (disciplineId) {
-      fetchSections();
-      fetchDiscipline();
-    }
-  }, [disciplineId]);
-
-  const fetchDiscipline = async () => {
-    try {
-      const data = await getDiscipline(disciplineId!);
-      setDiscipline(data);
-    } catch (error) {
-      console.error('Error fetching discipline:', error);
-    }
-  };
+    if (sessionId) fetchSections();
+  }, [sessionId]);
 
   const fetchSections = async () => {
     setLoading(true);
     try {
-      const data = await getSectionsByDiscipline(disciplineId!);
+      const data = await getLearningSectionsBySession(sessionId!);
       setSections(data);
-    } catch (error) {
-      showError('Erro ao carregar sessões');
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = (sectionId: string) => {
-    showConfirm(
-      'Excluir Sessão',
-      'Tem certeza? Todas as etapas e questões desta sessão serão perdidas (mas permanecerão no banco se não deletadas manualmente).',
-      async () => {
-        try {
-          await deleteSection(disciplineId!, sectionId);
-          showSuccess('Sessão excluída!');
-          fetchSections();
-        } catch (error) {
-          showError('Erro ao excluir');
-        }
-      }
-    );
-  };
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      const oldIndex = sections.findIndex((s) => s.id === active.id);
-      const newIndex = sections.findIndex((s) => s.id === over.id);
-
-      const newSections = arrayMove(sections, oldIndex, newIndex);
-      
-      const updatedSections = newSections.map((section, index) => ({
-        ...section,
-        order: index + 1
-      }));
-
-      setSections(updatedSections);
-
-      try {
-        await Promise.all(
-          updatedSections.map(section => 
-            saveSection(disciplineId!, { ...section, order: section.order })
-          )
-        );
-        showSuccess('Ordem atualizada!');
-      } catch (error) {
-        showError('Erro ao salvar ordem');
-        fetchSections();
-      }
-    }
-  };
-
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!disciplineId || !editingSection?.title) return;
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    const section = {
+      id: editingSection?.id || crypto.randomUUID(),
+      sessionId,
+      title: formData.get('title'),
+      content: formData.get('content'),
+      orderIndex: editingSection?.order_index || sections.length,
+    };
 
-    try {
-      await saveSection(disciplineId, {
-        ...editingSection,
-        disciplineId,
-        order: editingSection.order || sections.length + 1
-      });
-      showSuccess('Seção salva com sucesso!');
-      setIsModalOpen(false);
+    await saveLearningSection(section);
+    setIsModalOpen(false);
+    fetchSections();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Deletar esta seção teórica?')) {
+      await deleteLearningSection(id);
       fetchSections();
-    } catch (error) {
-      showError('Erro ao salvar seção');
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-gray-500 font-bold uppercase tracking-widest">Carregando seções...</div>;
+  if (loading) return <div className="p-20 text-center font-black animate-pulse text-secondary">ORGANIZANDO TEORIA...</div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/admin/learning')} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-          <ArrowLeft size={24} className="text-gray-600" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-black text-gray-800 uppercase tracking-tight">
-            {discipline?.title ? `${discipline.title} - Sessões` : 'Sessões de Aprendizado'}
-          </h1>
-          <p className="text-gray-500 font-medium text-sm">Organize o curso em grandes blocos (Sessões)</p>
+    <div className="space-y-8 animate-in slide-in-from-right duration-500">
+      <div className="flex items-center justify-between bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+        <div className="flex items-center gap-6">
+          <button onClick={() => navigate(-1)} className="p-4 bg-gray-50 text-gray-400 rounded-2xl hover:bg-secondary hover:text-white transition-all"><ArrowLeft size={24} /></button>
+          <div>
+            <h1 className="text-3xl font-black text-gray-800 tracking-tighter uppercase">Teoria & Conteúdo</h1>
+            <p className="text-gray-400 font-medium font-mono text-xs uppercase tracking-widest">Sessão ID: {sessionId?.slice(0, 8)}...</p>
+          </div>
         </div>
+        <button onClick={() => { setEditingSection(null); setIsModalOpen(true); }} className="flex items-center gap-2 bg-secondary text-white px-8 py-4 rounded-2xl font-black hover:bg-secondary/90 transition-all shadow-lg shadow-secondary/20 active:translate-y-1">
+          <Plus size={20} /> NOVA PÁGINA
+        </button>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-          <h3 className="font-bold text-gray-700 flex items-center gap-2">
-            <LayoutList size={20} className="text-primary" />
-            Estrutura de Sessões
-          </h3>
-          <button
-            onClick={() => {
-              setEditingSection({ title: '', description: '', order: sections.length + 1 });
-              setIsModalOpen(true);
-            }}
-            className="bg-primary text-white px-4 py-2 rounded-xl font-bold hover:bg-primary-hover transition-all flex items-center gap-2 text-sm"
-          >
-            <Plus size={18} />
-            Nova Sessão
-          </button>
-        </div>
-
-        <div className="divide-y divide-gray-50">
-          {sections.length === 0 ? (
-            <div className="p-12 text-center text-gray-400">
-               <BookOpen size={40} className="mx-auto mb-2 opacity-20" />
-               <p>Nenhuma seção criada.</p>
+      <div className="space-y-4">
+        {sections.length === 0 ? (
+          <div className="bg-gray-50 p-20 rounded-[40px] text-center border-4 border-dashed border-gray-100">
+             <FileStack className="mx-auto text-gray-200 mb-6" size={80} />
+             <p className="text-gray-400 font-black uppercase text-xs tracking-widest">Nenhuma página de conteúdo ainda.</p>
+          </div>
+        ) : (
+          sections.map((s, idx) => (
+            <div key={s.id} className="group bg-white p-8 rounded-[32px] border-2 border-transparent hover:border-secondary transition-all shadow-sm hover:shadow-xl">
+              <div className="flex items-start justify-between">
+                <div className="flex gap-6">
+                  <div className="w-12 h-12 bg-secondary/10 text-secondary rounded-2xl flex items-center justify-center font-black text-xl shrink-0">{idx + 1}</div>
+                  <div>
+                    <h3 className="text-2xl font-black text-gray-800 uppercase tracking-tighter mb-2">{s.title}</h3>
+                    <div className="text-gray-400 font-medium line-clamp-3 prose prose-sm max-w-none prose-p:leading-relaxed text-sm">
+                      {s.content}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity ml-4 shrink-0">
+                  <button onClick={() => { setEditingSection(s); setIsModalOpen(true); }} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all"><Edit2 size={18} /></button>
+                  <button onClick={() => handleDelete(s.id)} className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all"><Trash2 size={18} /></button>
+                </div>
+              </div>
             </div>
-          ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={sections.map(s => s.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {sections.map((section) => (
-                  <SortableSection
-                    key={section.id}
-                    section={section}
-                    onEdit={() => { setEditingSection(section); setIsModalOpen(true); }}
-                    onDelete={() => handleDelete(section.id)}
-                    onNavigate={() => navigate(`/admin/learning/${disciplineId}/sections/${section.id}/sessions`)}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
-          )}
-        </div>
+          ))
+        )}
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-black text-gray-800 uppercase tracking-tight">
-                {editingSection?.id ? 'Editar Sessão' : 'Nova Sessão'}
-              </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-                <X size={24} />
-              </button>
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-[40px] p-10 w-full max-w-2xl shadow-2xl border-4 border-white animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tighter leading-none">{editingSection ? 'Ajustar Conteúdo' : 'Novo Bloco Teórico'}</h2>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400"><X size={32} /></button>
             </div>
-            
-            <form onSubmit={handleSave} className="space-y-4">
+            <form onSubmit={handleSave} className="space-y-8">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-wider">Título da Sessão</label>
-                <input
-                  type="text"
-                  required
-                  value={editingSection?.title}
-                  onChange={e => setEditingSection({ ...editingSection, title: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
-                  placeholder="Ex: Fundamentos de Matemática"
-                />
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Título do Tópico</label>
+                <div className="relative">
+                  <Type className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={20} />
+                  <input name="title" required defaultValue={editingSection?.title} className="w-full pl-12 p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-secondary focus:bg-white outline-none font-black text-lg" placeholder="Ex: Aceleração Escalar" />
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-wider">Descrição</label>
-                <textarea
-                  value={editingSection?.description}
-                  onChange={e => setEditingSection({ ...editingSection, description: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
-                  placeholder="O que esta seção abrange..."
-                />
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Conteúdo Teórico (Markdown/HTML)</label>
+                <textarea name="content" required defaultValue={editingSection?.content} className="w-full p-6 bg-gray-50 rounded-3xl border-2 border-transparent focus:border-secondary outline-none font-bold h-64 resize-y leading-relaxed" placeholder="Escreva aqui a teoria detalhada..." />
               </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-wider">Ordem</label>
-                <input
-                  type="number"
-                  value={editingSection?.order}
-                  onChange={e => setEditingSection({ ...editingSection, order: parseInt(e.target.value) })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none"
-                />
-              </div>
-              
-              <div className="pt-4 flex gap-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-3 bg-gray-100 text-gray-500 font-bold rounded-xl active:scale-95 transition-all">Cancelar</button>
-                <button type="submit" className="flex-1 px-4 py-3 bg-primary text-white font-bold rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
-                  <Save size={20} /> Salvar
-                </button>
+              <div className="flex gap-4 pt-4">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 font-black text-gray-400 uppercase tracking-widest">Cancelar</button>
+                <button type="submit" className="flex-1 bg-secondary text-white py-5 rounded-3xl font-black shadow-lg shadow-secondary/20 active:translate-y-1 transition-all">PUBLICAR ✍️</button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      <Modal {...modalState} onClose={closeModal} />
-      {toastState.isOpen && <Toast {...toastState} onClose={closeToast} />}
     </div>
   );
 };

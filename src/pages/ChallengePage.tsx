@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getExam, getQuestionsByExam, addUserActivity, updateUserScore, updateUserProfile, updateUserDisciplineScore } from '../services/dbService';
+import { getExam, getQuestionsByExam } from '../services/examService.supabase';
+import { addUserActivity, updateUserScore, updateUserProfile } from '../services/dbService.supabase';
 import { Exam, Question } from '../types/exam';
 import { useAuthStore } from '../stores/useAuthStore';
 import { Timer, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import RichTextRenderer from '../components/RichTextRenderer';
-import { Timestamp } from 'firebase/firestore';
 import clsx from 'clsx';
 import { useModal } from '../hooks/useNotifications';
 import Modal from '../components/Modal';
@@ -13,7 +13,7 @@ import Modal from '../components/Modal';
 const ChallengePage = () => {
   const { examId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const { modalState, showConfirm, closeModal } = useModal();
   
   const [exam, setExam] = useState<Exam | null>(null);
@@ -22,7 +22,7 @@ const ChallengePage = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [flaggedQuestions, setFlaggedQuestions] = useState<string[]>([]);
-  const [timeLeft, setTimeLeft] = useState(90 * 60); // 90 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(90 * 60); 
   const [isFinished, setIsFinished] = useState(false);
   const [score, setScore] = useState(0);
   const [limitReached, setLimitReached] = useState(false);
@@ -36,19 +36,16 @@ const ChallengePage = () => {
 
   const checkDailyLimit = () => {
     if (!user) return;
+    if (user.isPremium || user.role === 'admin') return;
     
-    // Premium users bypass limits
-    if (user.isPremium) return;
-    
-    // Check if user already took a challenge today
     if (user.lastChallengeDate) {
-      const lastChallengeDate = user.lastChallengeDate.toDate();
+      const lastDate = new Date(user.lastChallengeDate);
       const today = new Date();
       
       if (
-        lastChallengeDate.getDate() === today.getDate() &&
-        lastChallengeDate.getMonth() === today.getMonth() &&
-        lastChallengeDate.getFullYear() === today.getFullYear()
+        lastDate.getDate() === today.getDate() &&
+        lastDate.getMonth() === today.getMonth() &&
+        lastDate.getFullYear() === today.getFullYear()
       ) {
         setLimitReached(true);
       }
@@ -57,9 +54,7 @@ const ChallengePage = () => {
 
   useEffect(() => {
     if (!loading && !isFinished && timeLeft > 0) {
-      const timer = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
+      const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
       return () => clearInterval(timer);
     } else if (timeLeft === 0 && !isFinished) {
       handleSubmit();
@@ -70,18 +65,32 @@ const ChallengePage = () => {
     setLoading(true);
     try {
       const examData = await getExam(id);
-      
-      // Check if exam is active (for non-admin users)
-      if (examData && examData.isActive === false && user?.role !== 'admin') {
+      if (examData && examData.is_active === false && user?.role !== 'admin') {
         navigate('/challenge');
         return;
       }
       
       const questionsData = await getQuestionsByExam(id);
-      setExam(examData);
-      setQuestions(questionsData);
+      
+      setExam({
+        id: examData.id,
+        name: examData.title,
+        disciplineId: examData.discipline_id,
+        year: examData.year,
+        season: examData.season
+      } as any);
+
+      const mappedQuestions: Question[] = (questionsData as any[]).map((q, index) => ({
+        id: q.id,
+        statement: q.question_text,
+        options: q.options,
+        correctOption: q.options[q.correct_answer],
+        order: index + 1
+      }));
+
+      setQuestions(mappedQuestions);
     } catch (error) {
-      console.error("Error fetching exam:", error);
+      console.error("Error fetching challenge data:", error);
     } finally {
       setLoading(false);
     }
@@ -93,392 +102,187 @@ const ChallengePage = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleAnswer = (option: string) => {
-    if (isFinished) return;
-    const currentQ = questions[currentQuestionIndex];
-    setAnswers({ ...answers, [currentQ.id]: option });
-  };
-
-  const toggleFlag = () => {
-    const currentQ = questions[currentQuestionIndex];
-    if (flaggedQuestions.includes(currentQ.id)) {
-      setFlaggedQuestions(flaggedQuestions.filter(id => id !== currentQ.id));
-    } else {
-      setFlaggedQuestions([...flaggedQuestions, currentQ.id]);
-    }
-  };
-
   const handleSubmit = async () => {
     if (!user || !exam) return;
-    
     setIsFinished(true);
     
-    // Calculate score
     let correctCount = 0;
     questions.forEach(q => {
-      if (answers[q.id] === q.correctOption) {
-        correctCount++;
-      }
+      if (answers[q.id] === q.correctOption) correctCount++;
     });
 
-    // Calculate Score and XP
-    // Rules: 
-    // - Completion: +100 XP
-    // - Performance Bonus: Up to +50 XP based on accuracy
-    const baseXP = 100;
     const accuracy = correctCount / questions.length;
-    const performanceBonus = Math.round(accuracy * 50);
-    const xpEarned = baseXP + performanceBonus;
-    
-    const finalScore = Math.round(accuracy * 20); // 0-20 scale for grade
+    const xpEarned = 100 + Math.round(accuracy * 50);
+    const finalScore = Math.round(accuracy * 20);
     setScore(finalScore);
 
-    // Update User Profile
-    await updateUserProfile(user.uid, {
+    const updates = {
       xp: (user.xp || 0) + xpEarned,
-      lastChallengeDate: Timestamp.now(),
-      challengesCompleted: (user.challengesCompleted || 0) + 1
+      challengesCompleted: (user.challengesCompleted || 0) + 1,
+      lastChallengeDate: new Date()
+    };
+
+    await updateUserProfile(user.id, {
+      xp: updates.xp,
+      challenges_completed: updates.challengesCompleted,
+      last_challenge_date: updates.lastChallengeDate.toISOString()
     });
 
-    // Update User Score (Global logic, separate from XP)
-    await updateUserScore(user.uid);
-
-    // Record Activity
-    await addUserActivity(user.uid, {
+    await updateUserScore(user.id);
+    await addUserActivity(user.id, {
       type: 'challenge',
-      title: `Challenge: ${exam.name}`,
-      timestamp: Timestamp.now(),
+      title: `Desafio: ${exam.name}`,
       score: finalScore,
       xpEarned: xpEarned
     });
 
-    if (exam.disciplineId) {
-       // 10 points per correct answer for discipline score
-       await updateUserDisciplineScore(user.uid, exam.disciplineId, correctCount * 10);
-    }
-
-
+    updateUser(updates as any);
   };
-  if (loading) {
-    return <div className="flex justify-center items-center h-screen">Carregando desafio...</div>;
-  }
+
+  if (loading) return <div className="flex h-screen items-center justify-center bg-gray-50 font-black text-primary animate-pulse">CARREGANDO DESAFIO...</div>;
 
   if (limitReached) {
-    // Tela padrão de limite diário
     return (
-      <div className="max-w-2xl mx-auto p-8">
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center space-y-6">
-          <div className="text-6xl">🚫</div>
-          <h2 className="text-2xl font-bold text-gray-800">Limite Diário Atingido</h2>
-          <p className="text-gray-600">
-            Você já completou um desafio hoje. Volte amanhã ou atualize para Premium para desafios ilimitados!
-          </p>
-          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
-            <h3 className="font-bold text-yellow-800 mb-2">Com Premium você tem:</h3>
-            <ul className="text-left text-sm text-yellow-700 space-y-1">
-              <li>✓ Desafios ilimitados por dia</li>
-              <li>✓ Acesso ao Modo Aprender</li>
-              <li>✓ Estatísticas detalhadas</li>
-              <li>✓ Sem anúncios</li>
-            </ul>
-          </div>
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={() => navigate('/challenge')}
-              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-colors"
-            >
-              Voltar
-            </button>
-            <button
-              onClick={() => navigate('/profile')}
-              className="px-6 py-3 bg-yellow-500 text-white rounded-xl font-bold hover:bg-yellow-600 transition-colors"
-            >
-              ⭐ Atualizar para Premium
-            </button>
-          </div>
+      <div className="max-w-2xl mx-auto p-4 md:p-8 mt-10">
+        <div className="bg-white rounded-3xl shadow-xl p-8 text-center space-y-6 border-4 border-gray-100">
+           <div className="text-7xl">✋</div>
+           <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tighter">Um de cada vez!</h2>
+           <p className="text-gray-500 text-lg">Você já enfrentou o desafio de hoje. Descanse um pouco e volte amanhã, ou torne-se Premium para desafios infinitos!</p>
+           <div className="flex flex-col md:flex-row gap-4 justify-center">
+             <button onClick={() => navigate('/challenge')} className="px-8 py-3 bg-gray-100 rounded-2xl font-black">VOLTAR</button>
+             <button onClick={() => navigate('/profile')} className="px-8 py-3 bg-primary text-white rounded-2xl font-black shadow-lg">SER PREMIUM ⭐</button>
+           </div>
         </div>
       </div>
     );
-  }
-
-  if (!exam) {
-    return <div className="text-center p-8">Exame não encontrado.</div>;
   }
 
   if (isFinished) {
-    const correctAnswers = Object.keys(answers).filter(id => answers[id] === questions.find(q => q.id === id)?.correctOption).length;
-    const incorrectAnswers = questions.length - correctAnswers;
-    const percentage = Math.round((correctAnswers / questions.length) * 100);
-    const timeTaken = (90 * 60) - timeLeft;
-    const minutesTaken = Math.floor(timeTaken / 60);
-    const secondsTaken = timeTaken % 60;
+    const correctCount = questions.filter(q => answers[q.id] === q.correctOption).length;
+    const percentage = Math.round((correctCount / questions.length) * 100);
 
     return (
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="min-h-screen bg-gray-50 py-10 px-4">
         <div className="max-w-3xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center border-2 border-gray-100">
-            <div className="text-6xl mb-4">
-              {percentage >= 80 ? '🎉' : percentage >= 60 ? '👍' : '💪'}
-            </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Desafio Concluído!</h1>
-            <p className="text-gray-500">
-              {percentage >= 80 ? 'Excelente desempenho!' : 
-               percentage >= 60 ? 'Bom trabalho!' : 
-               'Continue praticando!'}
-            </p>
-          </div>
+           <div className="bg-white rounded-3xl shadow-xl p-10 text-center border-b-8 border-secondary">
+              <div className="text-7xl mb-4">{percentage >= 70 ? '🦁' : '🐆'}</div>
+              <h1 className="text-4xl font-black text-gray-800">Desafio Finalizado</h1>
+              <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">{exam?.name}</p>
+           </div>
 
-          {/* Performance Stats */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
-            <h2 className="text-xl font-bold text-gray-800 mb-6">Relatório Detalhado</h2>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div className="text-center p-4 bg-blue-50 rounded-xl">
-                <div className="text-3xl font-bold text-blue-600">{score}/20</div>
-                <div className="text-xs text-gray-500 font-bold uppercase mt-1">Nota Final</div>
-              </div>
-              <div className="text-center p-4 bg-green-50 rounded-xl">
-                <div className="text-3xl font-bold text-green-600">{correctAnswers}</div>
-                <div className="text-xs text-gray-500 font-bold uppercase mt-1">Acertos</div>
-              </div>
-              <div className="text-center p-4 bg-red-50 rounded-xl">
-                <div className="text-3xl font-bold text-red-600">{incorrectAnswers}</div>
-                <div className="text-xs text-gray-500 font-bold uppercase mt-1">Erros</div>
-              </div>
-              <div className="text-center p-4 bg-purple-50 rounded-xl">
-                <div className="text-3xl font-bold text-purple-600">{percentage}%</div>
-                <div className="text-xs text-gray-500 font-bold uppercase mt-1">Aproveitamento</div>
-              </div>
-            </div>
+           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { label: 'Nota', value: `${score}/20`, color: 'text-secondary' },
+                { label: 'Acertos', value: correctCount, color: 'text-green-500' },
+                { label: 'Precisão', value: `${percentage}%`, color: 'text-primary' },
+                { label: 'Tempo', value: formatTime((90 * 60) - timeLeft), color: 'text-blue-500' }
+              ].map((stat, i) => (
+                <div key={i} className="bg-white p-6 rounded-3xl shadow-sm text-center">
+                   <div className={clsx("text-3xl font-black mb-1", stat.color)}>{stat.value}</div>
+                   <div className="text-[10px] font-black text-gray-400 uppercase">{stat.label}</div>
+                </div>
+              ))}
+           </div>
 
-            {/* Progress Bar */}
-            <div className="mb-6">
-              <div className="flex justify-between text-sm text-gray-600 mb-2">
-                <span>Progresso</span>
-                <span>{correctAnswers}/{questions.length} questões</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-500"
-                  style={{ width: `${percentage}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Time Taken */}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-              <div className="flex items-center gap-2">
-                <Timer className="text-gray-400" size={20} />
-                <span className="text-gray-700 font-medium">Tempo Utilizado</span>
-              </div>
-              <span className="font-bold text-gray-800">{minutesTaken}:{secondsTaken.toString().padStart(2, '0')}</span>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <button 
-                onClick={() => navigate('/ranking')}
-                className="flex items-center justify-center gap-2 bg-yellow-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-yellow-600 transition-colors"
-              >
-                🏆 Ver Ranking
-              </button>
-              <button 
-                onClick={() => window.location.reload()}
-                className="flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary-hover transition-colors"
-              >
-                🔄 Tentar Novamente
-              </button>
-              <button 
-                onClick={() => navigate('/challenge')}
-                className="flex items-center justify-center gap-2 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors"
-              >
-                🏠 Voltar ao Início
-              </button>
-            </div>
-          </div>
+           <div className="bg-white p-6 rounded-3xl shadow-xl flex flex-col md:flex-row gap-4">
+              <button onClick={() => navigate('/ranking')} className="flex-1 py-4 bg-yellow-500 text-white rounded-2xl font-black text-lg shadow-lg active:translate-y-1">🏆 VER RANKING</button>
+              <button onClick={() => navigate('/challenge')} className="flex-1 py-4 bg-primary text-white rounded-2xl font-black text-lg shadow-lg active:translate-y-1">🏠 INÍCIO</button>
+           </div>
         </div>
-      </div>
-    );
-  }
-
-  if (questions.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen p-8">
-        <div className="text-6xl mb-4">📝</div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Sem Questões</h2>
-        <p className="text-gray-500 mb-6">Este exame ainda não possui questões cadastradas.</p>
-        <button
-          onClick={() => navigate('/challenge')}
-          className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary-hover transition-colors"
-        >
-          Voltar
-        </button>
       </div>
     );
   }
 
   const currentQuestion = questions[currentQuestionIndex];
 
-  return (
-    <div className="h-[calc(100vh-80px)] flex flex-col">
-      {/* Header */}
-      <div className="bg-white border-b px-4 py-3 flex justify-between items-center shadow-sm z-10">
-        <div>
-          <h1 className="font-bold text-gray-800 truncate max-w-[200px] md:max-w-md">{exam.name}</h1>
-          <p className="text-xs text-gray-500">Questão {currentQuestionIndex + 1} de {questions.length}</p>
+  // Proteção: Se não houver questões ou questão atual, mostrar loading
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!currentQuestion || questions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500">Nenhuma questão disponível para este exame.</p>
+          <button onClick={() => navigate('/challenge')} className="mt-4 px-6 py-2 bg-primary text-white rounded-lg">
+            Voltar
+          </button>
         </div>
-        <div className={clsx(
-          "flex items-center gap-2 px-3 py-1.5 rounded-lg font-mono font-bold",
-          timeLeft < 300 ? "bg-red-100 text-red-600" : "bg-blue-50 text-blue-600"
-        )}>
-          <Timer size={18} />
-          {formatTime(timeLeft)}
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-[calc(100vh-80px)] flex flex-col bg-white">
+      <div className="bg-white px-6 py-4 border-b-2 flex justify-between items-center shadow-sm z-10">
+        <div>
+           <h1 className="font-black text-gray-800 truncate max-w-[200px] leading-none uppercase tracking-tighter">{exam?.name}</h1>
+           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Questão {currentQuestionIndex + 1} de {questions.length}</span>
+        </div>
+        <div className={clsx("flex items-center gap-2 px-4 py-2 rounded-2xl font-black", timeLeft < 300 ? "bg-red-500 text-white animate-pulse" : "bg-blue-50 text-blue-600")}>
+           <Timer size={20} />
+           <span className="font-mono">{formatTime(timeLeft)}</span>
         </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24">
-          <div className="max-w-3xl mx-auto space-y-8">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-              <div className="flex justify-between items-start mb-4">
-                <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-sm font-bold">
-                  Questão {currentQuestionIndex + 1}
-                </span>
-                <button 
-                  onClick={toggleFlag}
-                  className={clsx(
-                    "p-2 rounded-full transition-colors",
-                    flaggedQuestions.includes(currentQuestion.id) ? "text-orange-500 bg-orange-50" : "text-gray-400 hover:bg-gray-100"
-                  )}
-                >
-                  <Flag size={20} />
-                </button>
+        <div className="flex-1 overflow-y-auto p-4 md:p-10 pb-32">
+           <div className="max-w-2xl mx-auto space-y-8">
+              <div className="flex justify-between items-center">
+                 <span className="bg-gray-100 text-gray-500 px-3 py-1 rounded-xl text-xs font-black uppercase">Questão #{currentQuestionIndex + 1}</span>
+                 <button onClick={() => {
+                   const id = currentQuestion.id;
+                   setFlaggedQuestions(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
+                 }} className={clsx("p-2 rounded-xl transition-all", flaggedQuestions.includes(currentQuestion.id) ? "bg-orange-500 text-white" : "bg-gray-50 text-gray-300 hover:text-orange-400")}>
+                   <Flag size={20} />
+                 </button>
               </div>
-              
-              <div className="text-lg md:text-xl font-medium text-gray-800 mb-8">
-                <RichTextRenderer content={currentQuestion.statement} />
+
+              <div className="text-xl md:text-2xl font-serif text-gray-800 leading-relaxed min-h-[100px]">
+                 <RichTextRenderer content={currentQuestion.statement} />
               </div>
 
               <div className="space-y-3">
-                {currentQuestion.options.map((option, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleAnswer(option)}
-                    className={clsx(
-                      "w-full text-left p-4 rounded-xl border-2 transition-all flex items-center gap-3",
-                      answers[currentQuestion.id] === option
-                        ? "border-primary bg-primary/5 text-primary font-medium"
-                        : "border-gray-100 hover:border-gray-300 text-gray-700"
-                    )}
-                  >
-                    <div className={clsx(
-                      "w-8 h-8 rounded-full flex items-center justify-center border-2 text-sm font-bold",
-                      answers[currentQuestion.id] === option ? "border-primary bg-primary text-white" : "border-gray-300 text-gray-400"
-                    )}>
-                      {String.fromCharCode(65 + idx)}
-                    </div>
-                    <div className="flex-1">
-                      <RichTextRenderer content={option} />
-                    </div>
-                  </button>
-                ))}
+                 {currentQuestion.options.map((option, idx) => (
+                    <button key={idx} onClick={() => setAnswers({ ...answers, [currentQuestion.id]: option })} className={clsx("w-full text-left p-5 rounded-3xl border-2 transition-all flex items-center gap-4 group", answers[currentQuestion.id] === option ? "border-primary bg-primary/5 shadow-md" : "border-gray-100 hover:border-gray-200")}>
+                       <div className={clsx("w-10 h-10 rounded-2xl flex items-center justify-center border-2 text-sm font-black transition-colors", answers[currentQuestion.id] === option ? "bg-primary border-primary text-white" : "bg-gray-50 border-gray-100 text-gray-300 group-hover:border-gray-300")}>
+                          {String.fromCharCode(65 + idx)}
+                       </div>
+                       <div className="font-medium text-gray-700">
+                          <RichTextRenderer content={option} />
+                       </div>
+                    </button>
+                 ))}
               </div>
-            </div>
-          </div>
+           </div>
         </div>
 
-        {/* Sidebar (Desktop) */}
-        <div className="hidden md:flex w-72 bg-gray-50 border-l flex-col p-4">
-          <h3 className="font-bold text-gray-700 mb-4">Navegação</h3>
-          <div className="grid grid-cols-5 gap-2">
-            {questions.map((q, idx) => (
-              <button
-                key={q.id}
-                onClick={() => setCurrentQuestionIndex(idx)}
-                className={clsx(
-                  "aspect-square rounded-lg flex items-center justify-center text-sm font-bold transition-colors relative",
-                  currentQuestionIndex === idx ? "ring-2 ring-primary ring-offset-2" : "",
-                  answers[q.id] 
-                    ? "bg-blue-100 text-blue-700" 
-                    : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-100"
-                )}
-              >
-                {idx + 1}
-                {flaggedQuestions.includes(q.id) && (
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full" />
-                )}
-              </button>
-            ))}
-          </div>
-          <div className="mt-auto">
-            <button
-              onClick={() => {
-                showConfirm(
-                  'Finalizar Desafio',
-                  'Tem certeza que deseja finalizar o desafio? Você não poderá mais alterar suas respostas.',
-                  handleSubmit,
-                  'Finalizar',
-                  'Continuar'
-                );
-              }}
-              className="w-full bg-primary text-white py-3 rounded-xl font-bold hover:bg-primary-hover transition-colors"
-            >
-              Finalizar Desafio
-            </button>
-          </div>
+        <div className="hidden lg:flex w-72 bg-gray-50 border-l p-6 flex-col">
+           <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">MAPA DA PROVA</h3>
+           <div className="grid grid-cols-5 gap-2 overflow-y-auto max-h-[60vh] p-1">
+              {questions.map((q, idx) => (
+                 <button key={idx} onClick={() => setCurrentQuestionIndex(idx)} className={clsx("aspect-square rounded-xl flex items-center justify-center text-xs font-black transition-all border-2 relative", currentQuestionIndex === idx ? "border-primary bg-primary text-white scale-110 z-10 shadow-lg" : answers[q.id] ? "border-blue-500 bg-blue-50 text-blue-600" : "border-gray-100 bg-white text-gray-300")}>
+                    {idx + 1}
+                    {flaggedQuestions.includes(q.id) && <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full border-2 border-white" />}
+                 </button>
+              ))}
+           </div>
+           <button onClick={() => showConfirm('FINALIZAR?', 'Deseja entregar a prova agora?', handleSubmit)} className="mt-auto w-full py-4 bg-primary text-white rounded-2xl font-black shadow-lg hover:brightness-110 active:scale-95 transition-all">FINALIZAR PROVA</button>
         </div>
       </div>
 
-      {/* Mobile Footer */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex items-center justify-between z-20">
-        <button
-          onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
-          disabled={currentQuestionIndex === 0}
-          className="p-2 rounded-lg text-gray-600 disabled:opacity-30"
-        >
-          <ChevronLeft size={24} />
-        </button>
-        
-        <button
-          onClick={() => {
-            showConfirm(
-              'Finalizar Desafio',
-              'Tem certeza que deseja finalizar o desafio?',
-              handleSubmit,
-              'Finalizar',
-              'Continuar'
-            );
-          }}
-          className="bg-primary text-white px-6 py-2 rounded-lg font-bold text-sm"
-        >
-          Finalizar
-        </button>
-
-        <button
-          onClick={() => setCurrentQuestionIndex(Math.min(questions.length - 1, currentQuestionIndex + 1))}
-          disabled={currentQuestionIndex === questions.length - 1}
-          className="p-2 rounded-lg text-gray-600 disabled:opacity-30"
-        >
-          <ChevronRight size={24} />
-        </button>
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 p-4 flex justify-between items-center z-20">
+         <button onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))} className="p-4 bg-gray-100 rounded-2xl text-gray-500"><ChevronLeft size={24} /></button>
+         <button onClick={() => showConfirm('FINALIZAR?', 'Entrega agora?', handleSubmit)} className="px-10 py-3 bg-primary text-white rounded-2xl font-black shadow-md">ENTREGAR</button>
+         <button onClick={() => setCurrentQuestionIndex(Math.min(questions.length - 1, currentQuestionIndex + 1))} className="p-4 bg-gray-100 rounded-2xl text-gray-500"><ChevronRight size={24} /></button>
       </div>
 
-      {/* Modal */}
-      <Modal
-        isOpen={modalState.isOpen}
-        onClose={closeModal}
-        onConfirm={modalState.onConfirm}
-        title={modalState.title}
-        message={modalState.message}
-        type={modalState.type}
-        confirmText={modalState.confirmText}
-        cancelText={modalState.cancelText}
-        showCancel={modalState.showCancel}
-      />
+      <Modal isOpen={modalState.isOpen} onClose={closeModal} onConfirm={modalState.onConfirm} title={modalState.title} message={modalState.message} />
     </div>
   );
 };

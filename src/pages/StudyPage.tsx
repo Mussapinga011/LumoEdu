@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
-import { getExam, getQuestionsByExam, updateUserProfile, updateUserScore, addUserActivity, updateUserDisciplineScore } from '../services/dbService';
+import { getExam, getQuestionsByExam } from '../services/examService.supabase';
+import { updateUserProfile, updateUserScore, addUserActivity } from '../services/dbService.supabase';
 import { Exam, Question } from '../types/exam';
 import { ArrowLeft, Check, X } from 'lucide-react';
-import { Timestamp } from 'firebase/firestore';
 import clsx from 'clsx';
 import RichTextRenderer from '../components/RichTextRenderer';
 
@@ -33,9 +33,7 @@ const StudyPage = () => {
 
   const checkDailyLimit = () => {
     if (!user) return;
-    
-    // Free users cannot access Study mode (Aprender)
-    if (!user.isPremium) {
+    if (!user.isPremium && user.role !== 'admin') {
       setLimitReached(true);
       return;
     }
@@ -45,16 +43,37 @@ const StudyPage = () => {
     setLoading(true);
     try {
       const examData = await getExam(id);
-      
-      // Check if exam is active (for non-admin users)
-      if (examData && examData.isActive === false && user?.role !== 'admin') {
+      if (examData && examData.is_active === false && user?.role !== 'admin') {
         navigate('/disciplines');
         return;
       }
       
       const questionsData = await getQuestionsByExam(id);
-      setExam(examData);
-      setQuestions(questionsData);
+      
+      // Mapear campos do Supabase
+      const mappedExam: Exam = {
+        id: examData.id,
+        name: examData.title,
+        disciplineId: examData.discipline_id,
+        year: examData.year,
+        season: examData.season,
+        questionsCount: examData.questions_count,
+        createdAt: examData.created_at
+      };
+
+      const mappedQuestions: Question[] = (questionsData as any[]).map(q => ({
+        id: q.id,
+        examId: q.exam_id,
+        statement: q.question_text,
+        options: q.options,
+        correctOption: q.options[q.correct_answer],
+        explanation: q.explanation,
+        difficulty: q.difficulty,
+        order: q.order_index
+      }));
+
+      setExam(mappedExam);
+      setQuestions(mappedQuestions);
     } catch (error) {
       console.error("Error fetching study data:", error);
     } finally {
@@ -63,7 +82,6 @@ const StudyPage = () => {
   };
 
   const currentQuestion = questions[currentQuestionIndex];
-
 
   const handleCheck = () => {
     if (!selectedOption || !currentQuestion) return;
@@ -93,73 +111,71 @@ const StudyPage = () => {
         const updates = {
           xp: (user.xp || 0) + 50,
           dailyExercisesCount: (user.dailyExercisesCount || 0) + questions.length,
-          lastExamDate: Timestamp.now(),
+          lastExamDate: new Date(),
           examsCompleted: newExamsCompleted,
           averageGrade: Math.round(newAverageGrade)
         };
 
-        await updateUserProfile(user.uid, updates);
-        await updateUserScore(user.uid);
+        await updateUserProfile(user.id, {
+          xp: updates.xp,
+          daily_exercises_count: updates.dailyExercisesCount,
+          last_exam_date: updates.lastExamDate.toISOString(),
+          exams_completed: updates.examsCompleted,
+          average_grade: updates.averageGrade
+        });
+        await updateUserScore(user.id);
         
-        // Record Activity
-        await addUserActivity(user.uid, {
+        await addUserActivity(user.id, {
           type: 'exam',
           title: `Exame Concluído: ${exam?.name || 'Exame'}`,
-          timestamp: Timestamp.now(),
           score: grade,
           xpEarned: 50
         });
 
-        // Update Discipline Score
-        if (exam?.disciplineId) {
-          await updateUserDisciplineScore(user.uid, exam.disciplineId, grade);
-        }
-
+        // O store precisa de atualização também
         updateUser(updates);
       }
-      // Show summary instead of navigating
       setShowSummary(true);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
       </div>
     );
   }
 
   if (limitReached) {
     return (
-      <div className="max-w-2xl mx-auto p-8">
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center space-y-6">
-          <div className="text-6xl">⭐</div>
-          <h2 className="text-2xl font-bold text-gray-800">Modo Prática - Premium</h2>
-          <p className="text-gray-600">
-            O Modo Prática é exclusivo para usuários Premium. Atualize sua conta para ter acesso ilimitado a todos os recursos de estudo!
+      <div className="max-w-2xl mx-auto p-4 md:p-8 mt-10">
+        <div className="bg-white rounded-3xl shadow-xl p-8 text-center space-y-6 border-4 border-yellow-100">
+          <div className="text-7xl">🌟</div>
+          <h2 className="text-3xl font-black text-gray-800">Modo Estudo - Premium</h2>
+          <p className="text-gray-600 text-lg">
+            O Modo Estudo guiado é exclusivo para membros Premium da LumoEdu. Estude com explicações detalhadas e questões ilimitadas!
           </p>
-          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
-            <h3 className="font-bold text-yellow-800 mb-2">Benefícios Premium:</h3>
-            <ul className="text-left text-sm text-yellow-700 space-y-1">
-              <li>✓ Acesso ilimitado ao Modo Prática</li>
-              <li>✓ Desafios ilimitados por dia</li>
-              <li>✓ Explicações detalhadas de todas as questões</li>
-              <li>✓ Estatísticas avançadas de desempenho</li>
+          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-6">
+            <h3 className="font-bold text-yellow-800 mb-4 text-xl">Dourado - Vantagens:</h3>
+            <ul className="text-left text-base text-yellow-700 space-y-3">
+              <li className="flex items-center gap-2 font-medium">✨ Explicações detalhadas em cada questão</li>
+              <li className="flex items-center gap-2 font-medium">✨ Acesso ilimitado a todos os exames</li>
+              <li className="flex items-center gap-2 font-medium">✨ Estatísticas personalizadas de evolução</li>
             </ul>
           </div>
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-col md:flex-row gap-4 justify-center">
             <button
               onClick={() => navigate('/disciplines')}
-              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-colors"
+              className="px-8 py-4 bg-gray-100 text-gray-700 rounded-2xl font-bold hover:bg-gray-200 transition-all text-lg"
             >
-              Voltar às Disciplinas
+              Voltar
             </button>
             <button
               onClick={() => navigate('/profile')}
-              className="px-6 py-3 bg-yellow-500 text-white rounded-xl font-bold hover:bg-yellow-600 transition-colors"
+              className="px-8 py-4 bg-yellow-500 text-white rounded-2xl font-black hover:bg-yellow-600 transition-all text-lg shadow-[0_4px_0_0_#d97706] active:shadow-none active:translate-y-1"
             >
-              ⭐ Atualizar para Premium
+              SEJA PREMIUM AGORA! 🚀
             </button>
           </div>
         </div>
@@ -170,99 +186,74 @@ const StudyPage = () => {
   if (!exam || questions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-screen p-8">
-        <div className="text-6xl mb-4">📝</div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Sem Questões</h2>
-        <p className="text-gray-500 mb-6">Este exame ainda não possui questões cadastradas.</p>
+        <div className="text-8xl mb-6">🏜️</div>
+        <h2 className="text-3xl font-black text-gray-800 mb-2 text-center">Deserto de Questões</h2>
+        <p className="text-gray-500 mb-8 max-w-md text-center">Incrível! Você explorou tanto que chegamos onde o Lumo ainda não colocou questões. Volte daqui a pouco!</p>
         <button
           onClick={() => navigate('/disciplines')}
-          className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary-hover transition-colors"
+          className="bg-primary text-white px-8 py-3 rounded-2xl font-bold hover:bg-primary-hover shadow-lg transition-transform active:scale-95"
         >
-          Voltar
+          Explorar outras áreas
         </button>
       </div>
     );
   }
 
   if (showSummary) {
-    const incorrectCount = questions.length - correctCount;
     const percentage = Math.round((correctCount / questions.length) * 100);
-
     return (
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
-        <div className="max-w-3xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center border-2 border-gray-100">
-            <div className="text-6xl mb-4">
-              {percentage >= 80 ? '🎉' : percentage >= 60 ? '👍' : '📚'}
-            </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Estudo Concluído!</h1>
-            <p className="text-gray-500">
-              {percentage >= 80 ? 'Excelente trabalho!' : 
-               percentage >= 60 ? 'Bom progresso!' : 
-               'Continue estudando!'}
-            </p>
+      <div className="min-h-screen bg-gray-50 py-12 px-4">
+        <div className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="bg-white rounded-3xl shadow-xl p-10 text-center border-b-8 border-primary">
+            <div className="text-7xl mb-6">{percentage >= 80 ? '🥇' : percentage >= 60 ? '🥈' : '🥉'}</div>
+            <h1 className="text-4xl font-black text-gray-800 mb-2">Estudo Concluído!</h1>
+            <p className="text-xl text-gray-500 font-medium">{exam.name}</p>
           </div>
 
-          {/* Performance Stats */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
-            <h2 className="text-xl font-bold text-gray-800 mb-6">Resumo do Desempenho</h2>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div className="text-center p-4 bg-blue-50 rounded-xl">
-                <div className="text-3xl font-bold text-blue-600">{questions.length}</div>
-                <div className="text-xs text-gray-500 font-bold uppercase mt-1">Questões</div>
+          <div className="bg-white rounded-3xl shadow-xl p-8 space-y-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              {[
+                { label: 'Questões', value: questions.length, color: 'text-blue-600', bg: 'bg-blue-50' },
+                { label: 'Acertos', value: correctCount, color: 'text-green-600', bg: 'bg-green-50' },
+                { label: 'Erros', value: questions.length - correctCount, color: 'text-red-600', bg: 'bg-red-50' },
+                { label: 'Aproveitamento', value: `${percentage}%`, color: 'text-purple-600', bg: 'bg-purple-50' }
+              ].map((stat, i) => (
+                <div key={i} className={clsx("p-4 rounded-2xl", stat.bg)}>
+                  <div className={clsx("text-3xl font-black", stat.color)}>{stat.value}</div>
+                  <div className="text-[10px] uppercase font-black text-gray-400 mt-1">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between font-bold text-gray-600 text-sm">
+                <span>Precisão Geral</span>
+                <span>{percentage}%</span>
               </div>
-              <div className="text-center p-4 bg-green-50 rounded-xl">
-                <div className="text-3xl font-bold text-green-600">{correctCount}</div>
-                <div className="text-xs text-gray-500 font-bold uppercase mt-1">Acertos</div>
-              </div>
-              <div className="text-center p-4 bg-red-50 rounded-xl">
-                <div className="text-3xl font-bold text-red-600">{incorrectCount}</div>
-                <div className="text-xs text-gray-500 font-bold uppercase mt-1">Erros</div>
-              </div>
-              <div className="text-center p-4 bg-purple-50 rounded-xl">
-                <div className="text-3xl font-bold text-purple-600">{percentage}%</div>
-                <div className="text-xs text-gray-500 font-bold uppercase mt-1">Precisão</div>
+              <div className="h-4 bg-gray-100 rounded-full overflow-hidden border">
+                <div className="h-full bg-primary transition-all duration-1000" style={{ width: `${percentage}%` }} />
               </div>
             </div>
 
-            {/* Progress Bar */}
-            <div className="mb-6">
-              <div className="flex justify-between text-sm text-gray-600 mb-2">
-                <span>Progresso</span>
-                <span>{correctCount}/{questions.length} questões corretas</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-500"
-                  style={{ width: `${percentage}%` }}
-                />
-              </div>
-            </div>
-
-            {/* XP Earned */}
-            <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-xl border-2 border-yellow-200">
-              <span className="text-gray-700 font-medium">XP Ganho</span>
-              <span className="font-bold text-yellow-600 text-xl">+50 XP</span>
+            <div className="bg-yellow-50 p-4 rounded-2xl flex justify-between items-center border border-yellow-200">
+              <span className="font-bold text-yellow-800">Recompensa:</span>
+              <span className="text-xl font-black text-yellow-600">+50 XP</span>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button 
-                onClick={() => navigate(`/disciplines/${exam.disciplineId}/exams`)}
-                className="flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary-hover transition-colors"
-              >
-                📚 Continuar Estudando
-              </button>
-              <button 
-                onClick={() => navigate('/profile')}
-                className="flex items-center justify-center gap-2 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors"
-              >
-                👤 Ver Perfil
-              </button>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button
+              onClick={() => navigate(`/disciplines/${exam.disciplineId}/exams`)}
+              className="py-4 bg-primary text-white rounded-2xl font-black text-xl shadow-[0_4px_0_0_#1a4b2e] active:shadow-none active:translate-y-1 transition-all"
+            >
+              CONTINUAR 📚
+            </button>
+            <button
+              onClick={() => navigate('/profile')}
+              className="py-4 bg-gray-100 text-gray-700 rounded-2xl font-black text-xl hover:bg-gray-200 transition-all"
+            >
+              MEU PERFIL 👤
+            </button>
           </div>
         </div>
       </div>
@@ -270,207 +261,156 @@ const StudyPage = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-80px)] flex flex-col">
-      {/* Header */}
-      <div className="bg-white border-b px-4 py-3 flex justify-between items-center shadow-sm z-10">
+    <div className="h-[calc(100vh-80px)] flex flex-col bg-white overflow-hidden">
+      <div className="h-1 bg-gray-100">
+        <div 
+          className="h-full bg-primary transition-all duration-300" 
+          style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+        />
+      </div>
+
+      <div className="bg-white px-4 py-4 flex justify-between items-center shadow-sm z-10">
         <div className="flex items-center gap-4">
-          <button 
-            onClick={() => navigate(`/disciplines/${exam.disciplineId}/exams`)} 
-            className="text-gray-400 hover:text-gray-600"
-          >
+          <button onClick={() => navigate(`/disciplines/${exam.disciplineId}/exams`)} className="p-2 bg-gray-50 rounded-xl text-gray-400 hover:text-primary transition-colors">
             <ArrowLeft size={24} />
           </button>
           <div>
-            <h1 className="font-bold text-gray-800 truncate max-w-[200px] md:max-w-md">{exam.name}</h1>
-            <p className="text-xs text-gray-500">Questão {currentQuestionIndex + 1} de {questions.length}</p>
+            <h1 className="font-black text-gray-800 max-w-[150px] md:max-w-md truncate leading-none">{exam.name}</h1>
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{currentQuestionIndex + 1} de {questions.length}</span>
           </div>
         </div>
-        <div className="text-sm font-bold text-gray-500">
+        <div className="bg-secondary/10 text-secondary px-3 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-tighter">
           Modo Estudo
         </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto p-3 md:p-8 pb-24">
-          <div className="max-w-3xl mx-auto space-y-4 md:space-y-8">
-            <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-gray-100">
-              <div className="flex justify-between items-start mb-3 md:mb-4">
-                <span className="bg-gray-100 text-gray-600 px-2 md:px-3 py-1 rounded-lg text-xs md:text-sm font-bold">
-                  Questão {currentQuestionIndex + 1}
-                </span>
-              </div>
-              
-              <div className="text-base md:text-lg lg:text-xl font-medium text-gray-800 mb-6 md:mb-8">
-                <RichTextRenderer content={currentQuestion.statement} />
-              </div>
-
-              <div className="space-y-2 md:space-y-3">
-                {currentQuestion.options.map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => status === 'idle' && setSelectedOption(option)}
-                    disabled={status !== 'idle'}
-                    className={clsx(
-                      "w-full text-left p-3 md:p-4 rounded-xl border-2 transition-all flex items-center gap-2 md:gap-3",
-                      selectedOption === option
-                        ? "border-secondary bg-blue-50 text-secondary"
-                        : "border-gray-100 hover:border-gray-300 text-gray-700",
-                      status === 'correct' && option === currentQuestion.correctOption && "bg-green-100 border-primary text-primary",
-                      status === 'incorrect' && option === selectedOption && "bg-red-100 border-danger text-danger"
-                    )}
-                  >
-                    <div className={clsx(
-                      "w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center border-2 text-sm font-bold shrink-0",
-                      // Logic for circle color
-                      status === 'correct' && option === currentQuestion.correctOption ? "border-primary bg-primary text-white" :
-                      status === 'incorrect' && option === selectedOption ? "border-danger bg-danger text-white" :
-                      selectedOption === option ? "border-secondary bg-secondary text-white" :
-                      "border-gray-300 text-gray-400"
-                    )}>
-                      {/* Option Letter (A, B, C...) could be added here if we had index, but option is string. 
-                          We can map index in the loop above if needed, but for now just showing check/x or empty */}
-                       {status === 'correct' && option === currentQuestion.correctOption ? <Check size={14} /> :
-                        status === 'incorrect' && option === selectedOption ? <X size={14} /> :
-                        null}
-                    </div>
-                    <div className="flex-1 min-w-0 text-sm md:text-base">
-                      <RichTextRenderer content={option} />
-                    </div>
-                  </button>
-                ))}
-              </div>
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-32">
+          <div className="max-w-2xl mx-auto space-y-8">
+            <div className="text-lg md:text-2xl font-serif text-gray-800 leading-relaxed">
+              <RichTextRenderer content={currentQuestion.statement} />
             </div>
 
-             {/* Feedback Section (Only visible when answered) */}
-             {status !== 'idle' && (
-              <div className={clsx(
-                "p-4 md:p-6 rounded-2xl border-2",
-                status === 'correct' ? "bg-green-50 border-green-100" : "bg-red-50 border-red-100"
-              )}>
-                <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-0">
-                  <div className={clsx(
-                    "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center shrink-0",
-                    status === 'correct' ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
-                  )}>
-                    {status === 'correct' ? <Check size={20} /> : <X size={20} />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className={clsx("font-bold text-base md:text-lg mb-1", status === 'correct' ? "text-green-800" : "text-red-800")}>
-                      {status === 'correct' ? 'Excelente!' : 'Incorreto'}
-                    </h3>
-                    {status === 'incorrect' && (
-                      <div className="text-red-600 text-sm md:text-base mb-2">
-                        <span className="font-bold">Resposta correta: </span>
-                        <RichTextRenderer content={currentQuestion.correctOption} />
-                      </div>
-                    )}
-                    {currentQuestion.explanation && (
-                      <div className="bg-white/50 rounded-lg mt-2 border border-gray-200">
-                        <div className="p-2 md:p-3 max-h-[40vh] md:max-h-none overflow-y-auto">
-                          <span className="font-bold block mb-1 text-xs md:text-sm text-gray-700">Explicação:</span>
-                          <div className="text-gray-600 text-xs md:text-sm">
-                            <RichTextRenderer content={currentQuestion.explanation} />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  {/* Desktop Continue Button */}
-                  <button
-                    onClick={handleNext}
-                    className={clsx(
-                      "hidden md:block ml-auto px-6 py-2 rounded-xl font-bold text-white uppercase tracking-wide transition-all shadow-sm active:translate-y-1",
-                      status === 'correct' ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
-                    )}
-                  >
-                    Continuar
-                  </button>
-                </div>
-                {/* Mobile Continue Button */}
+            <div className="space-y-3">
+              {currentQuestion.options.map((option, idx) => (
                 <button
-                  onClick={handleNext}
+                  key={idx}
+                  onClick={() => status === 'idle' && setSelectedOption(option)}
+                  disabled={status !== 'idle'}
                   className={clsx(
-                    "md:hidden w-full mt-3 py-3 rounded-xl font-bold text-white uppercase tracking-wide transition-all shadow-sm active:translate-y-1",
-                    status === 'correct' ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
+                    "w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center gap-4 relative group",
+                    selectedOption === option ? "border-primary bg-primary/5" : "border-gray-100 hover:border-gray-200",
+                    status === 'correct' && option === currentQuestion.correctOption && "border-green-500 bg-green-50",
+                    status === 'incorrect' && option === selectedOption && "border-red-500 bg-red-50"
                   )}
                 >
-                  Continuar
+                  <div className={clsx(
+                    "w-10 h-10 rounded-xl flex items-center justify-center border-2 text-sm font-black shrink-0",
+                    status === 'correct' && option === currentQuestion.correctOption ? "border-green-500 bg-green-500 text-white" :
+                    status === 'incorrect' && option === selectedOption ? "border-red-500 bg-red-500 text-white" :
+                    selectedOption === option ? "border-primary bg-primary text-white" : "border-gray-100 bg-gray-50 text-gray-300"
+                  )}>
+                    {String.fromCharCode(65 + idx)}
+                  </div>
+                  <div className="flex-1 font-medium">
+                    <RichTextRenderer content={option} />
+                  </div>
                 </button>
+              ))}
+            </div>
+
+            {status !== 'idle' && (
+              <div className={clsx(
+                "p-6 rounded-3xl border-2 animate-in slide-in-from-bottom-2 duration-300",
+                status === 'correct' ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+              )}>
+                <div className="flex gap-4 mb-4">
+                  <div className={clsx("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm", status === 'correct' ? "bg-green-500 text-white" : "bg-red-500 text-white")}>
+                    {status === 'correct' ? <Check size={28} strokeWidth={4} /> : <X size={28} strokeWidth={4} />}
+                  </div>
+                  <div>
+                    <h3 className={clsx("text-2xl font-black", status === 'correct' ? "text-green-800" : "text-red-800")}>
+                      {status === 'correct' ? 'ESPETACULAR! ✨' : 'OPS! QUASE ISSO... 💡'}
+                    </h3>
+                  </div>
+                </div>
+
+                {status === 'incorrect' && (
+                  <div className="mb-4 bg-white/50 p-4 rounded-xl border border-red-100">
+                     <span className="text-xs font-black text-red-400 uppercase block mb-1">A CORRETA ERA:</span>
+                     <div className="text-red-900 font-bold"><RichTextRenderer content={currentQuestion.correctOption} /></div>
+                  </div>
+                )}
+
+                {currentQuestion.explanation && (
+                  <div className="bg-white/80 p-5 rounded-2xl border border-gray-100 shadow-sm">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Por que?</span>
+                    <div className="text-gray-700 text-sm leading-relaxed prose prose-sm max-w-none">
+                      <RichTextRenderer content={currentQuestion.explanation} />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
 
-        {/* Sidebar (Desktop) */}
-        <div className="hidden md:flex w-72 bg-gray-50 border-l flex-col p-4">
-          <h3 className="font-bold text-gray-700 mb-4">Navegação</h3>
+        <div className="hidden lg:flex w-80 bg-gray-50 border-l border-gray-100 flex-col p-6 space-y-6">
+          <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">NAVEGAÇÃO</h3>
           <div className="grid grid-cols-5 gap-2">
-            {questions.map((q, idx) => (
-              <button
-                key={q.id}
-                onClick={() => {
-                  setCurrentQuestionIndex(idx);
-                  setStatus('idle');
-                  setSelectedOption(null);
-                }}
+            {questions.map((_, idx) => (
+              <div
+                key={idx}
                 className={clsx(
-                  "aspect-square rounded-lg flex items-center justify-center text-sm font-bold transition-colors relative",
-                  currentQuestionIndex === idx ? "ring-2 ring-primary ring-offset-2" : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-100"
-                  // Add logic here if we want to show answered state in grid for study mode
+                  "aspect-square rounded-xl flex items-center justify-center text-xs font-bold transition-all border-2",
+                  currentQuestionIndex === idx ? "border-primary bg-primary text-white scale-110 shadow-lg" : "border-gray-100 bg-white text-gray-300"
                 )}
               >
                 {idx + 1}
-              </button>
+              </div>
             ))}
           </div>
-          
-          {/* Check Button in Sidebar for Desktop */}
-          <div className="mt-auto">
-             {status === 'idle' && (
-              <button
-                onClick={handleCheck}
-                disabled={!selectedOption}
-                className={clsx(
-                  "w-full py-3 rounded-xl font-bold text-white uppercase tracking-wide transition-all shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:shadow-none active:translate-y-[4px]",
-                  selectedOption ? "bg-primary hover:bg-primary-hover shadow-primary-shade" : "bg-gray-300 cursor-not-allowed"
-                )}
-              >
-                Verificar
-              </button>
-            )}
+
+          <div className="mt-auto bg-white p-4 rounded-2xl border border-gray-200">
+             <div className="flex items-center gap-3 text-sm font-bold text-gray-600">
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">📚</div>
+                <div>
+                   <p className="leading-tight">Progresso</p>
+                   <p className="text-xs text-gray-400">{currentQuestionIndex + 1}/{questions.length} Questões</p>
+                </div>
+             </div>
           </div>
         </div>
       </div>
 
-      {/* Mobile Footer */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-20">
-         {status === 'idle' ? (
+      <div className="fixed bottom-0 left-0 right-0 p-4 md:p-6 bg-white border-t border-gray-100 z-20">
+        <div className="max-w-2xl mx-auto">
+          {status === 'idle' ? (
             <button
               onClick={handleCheck}
               disabled={!selectedOption}
               className={clsx(
-                "w-full py-3 rounded-xl font-bold text-white uppercase tracking-wide transition-all shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:shadow-none active:translate-y-[4px]",
-                selectedOption ? "bg-primary hover:bg-primary-hover shadow-primary-shade" : "bg-gray-300 cursor-not-allowed"
+                "w-full py-4 rounded-2xl font-black text-xl uppercase tracking-tighter transition-all shadow-[0_6px_0_0_#1a4b2e] active:shadow-none active:translate-y-1.5",
+                selectedOption ? "bg-primary text-white" : "bg-gray-100 text-gray-300 shadow-none cursor-not-allowed"
               )}
             >
-              Verificar
+              VERIFICAR RESPOSTA
             </button>
           ) : (
-             <button
-                onClick={handleNext}
-                className={clsx(
-                  "w-full py-3 rounded-xl font-bold text-white uppercase tracking-wide transition-all shadow-[0_4px_0_0_rgba(0,0,0,0.2)] active:shadow-none active:translate-y-[4px]",
-                  status === 'correct' ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
-                )}
-              >
-                Continuar
-              </button>
+            <button
+               onClick={handleNext}
+               className={clsx(
+                 "w-full py-4 rounded-2xl font-black text-xl uppercase tracking-tighter transition-all active:translate-y-1.5",
+                 status === 'correct' ? "bg-green-500 text-white shadow-[0_6px_0_0_#15803d]" : "bg-red-500 text-white shadow-[0_6px_0_0_#b91c1c]"
+               )}
+            >
+              {currentQuestionIndex === questions.length - 1 ? 'FINALIZAR ESTUDO 🏁' : 'PRÓXIMA QUESTÃO 🚀'}
+            </button>
           )}
+        </div>
       </div>
     </div>
   );
 };
 
 export default StudyPage;
-

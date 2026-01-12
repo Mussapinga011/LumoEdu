@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getAllDownloads, incrementDownloadCount } from '../services/dbService.supabase';
 import { DownloadMaterial } from '../types/download';
-import { useAuthStore } from '../stores/useAuthStore';
+import { useAuth } from '../hooks/useAuth';
 import { useContentStore } from '../stores/useContentStore';
 import { 
   FileText, 
@@ -20,7 +20,7 @@ import { useToast } from '../hooks/useNotifications';
 import Toast from '../components/Toast';
 
 const DownloadsPage = () => {
-  const { user } = useAuthStore();
+  const { hasPremiumAccess } = useAuth();
   const { disciplines, universities, fetchContent, loading: contentLoading } = useContentStore();
   const { toastState, showWarning, closeToast } = useToast();
 
@@ -50,7 +50,7 @@ const DownloadsPage = () => {
   };
 
   const handleDownload = async (item: DownloadMaterial) => {
-    if (item.isPremium && !user?.isPremium) {
+    if (item.isPremium && !hasPremiumAccess) {
       showWarning('Este material é exclusivo para membros Premium! ✨');
       return;
     }
@@ -226,12 +226,12 @@ const DownloadsPage = () => {
                     onClick={() => handleDownload(item)}
                     className={clsx(
                       "flex items-center gap-2 font-bold text-sm px-4 py-2 rounded-xl transition-all shadow-sm active:scale-95",
-                      item.isPremium && !user?.isPremium
+                      item.isPremium && !hasPremiumAccess
                         ? "bg-gray-100 text-gray-400"
                         : "bg-primary text-white hover:bg-primary-hover shadow-primary/10"
                     )}
                   >
-                    {item.isPremium && !user?.isPremium ? (
+                    {item.isPremium && !hasPremiumAccess ? (
                       <>
                         <Lock size={16} />
                         Premium
@@ -250,7 +250,7 @@ const DownloadsPage = () => {
         </div>
       )}
 
-      {!user?.isPremium && (
+      {!hasPremiumAccess && (
         <div className="bg-gray-900 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden mt-12">
           <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <div className="space-y-6">

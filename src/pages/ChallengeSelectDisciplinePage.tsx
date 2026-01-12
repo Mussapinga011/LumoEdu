@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContentStore } from '../stores/useContentStore';
-import { useAuthStore } from '../stores/useAuthStore';
+import { useAuth } from '../hooks/useAuth';
 import { ArrowRight, Book } from 'lucide-react';
 import clsx from 'clsx';
 
 const ChallengeSelectDisciplinePage = () => {
   const { disciplines, universities, fetchContent, loading: contentLoading } = useContentStore();
-  const { user } = useAuthStore();
+  const { user, hasPremiumAccess } = useAuth();
   const navigate = useNavigate();
   const [selectedUniversityId, setSelectedUniversityId] = useState<string>('');
 
@@ -24,7 +24,7 @@ const ChallengeSelectDisciplinePage = () => {
 
   const getChallengesLeft = () => {
     if (!user) return 0;
-    if (user.isPremium) return -1;
+    if (hasPremiumAccess) return -1;
     
     if (user.lastChallengeDate) {
       const lastChallengeDate = user.lastChallengeDate.toDate();
@@ -86,7 +86,7 @@ const ChallengeSelectDisciplinePage = () => {
         </div>
       </div>
 
-      {user && !user.isPremium && (
+      {!hasPremiumAccess && (
         <div className={clsx(
           "rounded-xl p-4 border-2",
           challengesLeft > 0 

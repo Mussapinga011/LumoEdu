@@ -1,4 +1,5 @@
 import { useAuthStore } from '../stores/useAuthStore';
+import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { User, Trophy, Flame, Star, Calendar, Award } from 'lucide-react';
 import { BADGES } from '../services/badgeService';
@@ -8,7 +9,8 @@ import OptimizedImage from '../components/OptimizedImage';
 
 
 const ProfilePage = () => {
-  const { user, updateUser } = useAuthStore();
+  const { user, isAdmin, hasPremiumAccess } = useAuth();
+  const { updateUser } = useAuthStore(); // Manter apenas para updates
   const navigate = useNavigate();
 
   if (!user) return null;
@@ -30,10 +32,12 @@ const ProfilePage = () => {
           <h2 className="text-2xl font-bold text-gray-800">{user.displayName}</h2>
           <p className="text-gray-500">Membro desde {new Date().toLocaleDateString('pt-MZ')}</p>
           <div className={clsx(
-            "mt-2 inline-flex items-center px-3 py-1 rounded-full font-bold text-sm",
-            user.isPremium ? "bg-green-100 text-green-700" : "bg-blue-100 text-primary"
+            "mt-2 inline-flex items-center px-3 py-1 rounded-full font-bold text-sm gap-2",
+            isAdmin ? "bg-purple-100 text-purple-700" :
+            hasPremiumAccess ? "bg-yellow-100 text-yellow-800" : "bg-blue-100 text-secondary"
           )}>
-            {user.isPremium ? '⭐ MEMBRO PREMIUM' : '👤 MEMBRO GRÁTIS'}
+            {isAdmin ? '👑 ADMINISTRADOR' : 
+             hasPremiumAccess ? '⭐ MEMBRO PREMIUM' : '👤 MEMBRO GRÁTIS'}
           </div>
         </div>
         <div className="flex gap-4 w-full md:w-auto justify-center md:justify-start">

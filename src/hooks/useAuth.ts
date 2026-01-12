@@ -34,6 +34,7 @@ export const useAuth = () => {
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
     isPremium: user?.isPremium || false,
+    hasPremiumAccess: user?.role === 'admin' || user?.isPremium || false,
     logout
   };
 };

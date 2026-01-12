@@ -4,6 +4,7 @@ import { getExam, getQuestionsByExam } from '../services/examService.supabase';
 import { addUserActivity, updateUserScore, updateUserProfile } from '../services/dbService.supabase';
 import { Exam, Question } from '../types/exam';
 import { useAuthStore } from '../stores/useAuthStore';
+import { useAuth } from '../hooks/useAuth';
 import { Timer, ChevronLeft, ChevronRight, Flag } from 'lucide-react';
 import RichTextRenderer from '../components/RichTextRenderer';
 import clsx from 'clsx';
@@ -13,7 +14,8 @@ import Modal from '../components/Modal';
 const ChallengePage = () => {
   const { examId } = useParams();
   const navigate = useNavigate();
-  const { user, updateUser } = useAuthStore();
+  const { user, hasPremiumAccess } = useAuth();
+  const { updateUser } = useAuthStore();
   const { modalState, showConfirm, closeModal } = useModal();
   
   const [exam, setExam] = useState<Exam | null>(null);
@@ -36,7 +38,7 @@ const ChallengePage = () => {
 
   const checkDailyLimit = () => {
     if (!user) return;
-    if (user.isPremium || user.role === 'admin') return;
+    if (hasPremiumAccess) return;
     
     if (user.lastChallengeDate) {
       const lastDate = new Date(user.lastChallengeDate);

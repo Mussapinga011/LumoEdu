@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, LogOut } from 'lucide-react';
+import { Menu, X, LogOut, ArrowLeftCircle } from 'lucide-react';
 import clsx from 'clsx';
-import { signOut } from '../services/authService.supabase';
+import { useAuth } from '../hooks/useAuth';
 
 interface NavItem {
   name: string;
@@ -18,6 +18,7 @@ interface MobileNavProps {
 const MobileNav = ({ navItems, isAdmin = false }: MobileNavProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { logout } = useAuth();
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -72,10 +73,21 @@ const MobileNav = ({ navItems, isAdmin = false }: MobileNavProps) => {
               );
             })}
             
+            {isAdmin && (
+              <Link
+                to="/learning"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-4 px-4 py-4 rounded-xl font-bold text-gray-400 hover:bg-gray-800 text-lg transition-colors border-t border-gray-800 mt-2"
+              >
+                <ArrowLeftCircle size={24} />
+                Ver Site Público
+              </Link>
+            )}
+            
             <div className="mt-auto pt-4 border-t border-gray-200 pb-8">
               <button
                 onClick={() => {
-                  signOut();
+                  logout();
                   setIsOpen(false);
                 }}
                 className={clsx(

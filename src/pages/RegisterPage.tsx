@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signUp } from '../services/authService.supabase';
 import { checkDisplayNameExists } from '../services/dbService.supabase';
@@ -13,7 +13,16 @@ const RegisterPage = () => {
   const [nameError, setNameError] = useState('');
   const [isCheckingName, setIsCheckingName] = useState(false);
   const navigate = useNavigate();
-  const { setLoading } = useAuthStore();
+  const { setLoading, user } = useAuthStore();
+
+  // Redirecionar automaticamente se já estiver logado
+  useEffect(() => {
+    if (user) {
+      console.log('🔀 User already logged in, redirecting...');
+      const destination = user.role === 'admin' ? '/admin' : '/learning';
+      navigate(destination, { replace: true });
+    }
+  }, [user, navigate]);
 
   // Validate name uniqueness in real-time
   const handleNameChange = async (value: string) => {
@@ -54,7 +63,13 @@ const RegisterPage = () => {
     setLoading(true);
     try {
       await signUp({ email, password, displayName: name });
-      navigate('/learning');
+      
+      // Aguardar um pouco para o perfil ser criado
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Redirecionar para learning (novos usuários sempre começam como 'user')
+      console.log('✅ Registration successful, redirecting to /learning');
+      navigate('/learning', { replace: true });
     } catch (err: any) {
       console.error('Registration error:', err);
       setError(getErrorMessage(err));

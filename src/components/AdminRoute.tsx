@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useEffect, useState } from 'react';
 
@@ -8,17 +8,22 @@ interface AdminRouteProps {
 
 const AdminRoute = ({ children }: AdminRouteProps) => {
   const { user, loading } = useAuthStore();
+  const location = useLocation();
   const [isChecking, setIsChecking] = useState(true);
+  const [hasChecked, setHasChecked] = useState(false);
 
   useEffect(() => {
-    // Dar tempo para o perfil carregar do banco
-    if (!loading) {
+    // Dar tempo para o perfil carregar
+    if (!loading && !hasChecked) {
       const timer = setTimeout(() => {
         setIsChecking(false);
-      }, 1000); // Espera 1 segundo após loading=false
+        setHasChecked(true);
+      }, 2000); // Espera 2 segundos
       return () => clearTimeout(timer);
+    } else if (!loading) {
+      setIsChecking(false);
     }
-  }, [loading]);
+  }, [loading, hasChecked]);
 
   // Mostrar loading enquanto verifica
   if (loading || isChecking) {
@@ -26,7 +31,7 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-500 text-sm">Verificando permissões...</p>
+          <p className="text-gray-500 text-sm">Carregando painel administrativo...</p>
         </div>
       </div>
     );
@@ -34,11 +39,11 @@ const AdminRoute = ({ children }: AdminRouteProps) => {
 
   // Verificar se é admin
   if (!user || user.role !== 'admin') {
-    console.warn('AdminRoute: Access denied. User role:', user?.role);
+    console.warn('AdminRoute: Access denied. User role:', user?.role, '| Path:', location.pathname);
     return <Navigate to="/learning" replace />;
   }
 
-  console.log('✅ AdminRoute: Access granted. User is admin.');
+  console.log('✅ AdminRoute: Access granted for admin user');
   return <>{children}</>;
 };
 

@@ -1,31 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signIn } from '../services/authService.supabase';
 import { useAuthStore } from '../stores/useAuthStore';
 import { getErrorMessage } from '../utils/errorMessages';
+import { loadProfileCache } from '../utils/profileCache';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { setLoading } = useAuthStore();
+  const { setLoading, user } = useAuthStore();
+
+  // Redirecionar automaticamente se já estiver logado
+  useEffect(() => {
+    if (user) {
+      console.log('🔀 User already logged in, redirecting...');
+      const destination = user.role === 'admin' ? '/admin' : '/learning';
+      navigate(destination, { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+    
     try {
-      const { user } = await signIn({ email, password });
+      const { user: supabaseUser } = await signIn({ email, password });
       
-      // O useAuthStore vai capturar a mudança de sessão automaticamente
-      // Mas podemos buscar o perfil aqui se quisermos redirecionar baseado no cargo
-      if (user) {
-        // Redirecionamento básico - o store e o initAuth cuidam do resto
-        // Se houver lógica específica de admin, o store carregará o perfil em breve
-        // Por segurança, vamos aguardar o store atualizar ou apenas navegar para learning
-        // Na maioria das vezes, o '/learning' é o destino padrão
-        navigate('/learning');
+      if (supabaseUser) {
+        console.log('✅ Login successful, waiting for profile...');
+        
+        // Aguardar um pouco para o perfil carregar
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Tentar carregar do cache primeiro
+        const cachedProfile = loadProfileCache(supabaseUser.id);
+        
+        if (cachedProfile) {
+          console.log(`🔀 Redirecting ${cachedProfile.role} to appropriate page`);
+          const destination = cachedProfile.role === 'admin' ? '/admin' : '/learning';
+          navigate(destination, { replace: true });
+        } else {
+          // Fallback: redirecionar para learning e deixar o useEffect cuidar
+          console.log('🔀 No cache, redirecting to /learning');
+          navigate('/learning', { replace: true });
+        }
       }
     } catch (err: any) {
       console.error('Login error:', err);

@@ -62,22 +62,11 @@ export const getUserById = async (userId: string): Promise<UserProfile | null> =
   try {
     console.log('dbService: Executing query for', userId);
     
-    // Timeout de 5 segundos para a consulta
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Supabase timeout')), 5000)
-    );
-
-    const queryPromise = supabase
+    const { data, error } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('id', userId)
       .maybeSingle();
-
-    // Corrida entre a consulta e o timeout
-    const { data, error } = await Promise.race([
-      queryPromise,
-      timeoutPromise
-    ]) as any;
 
     if (error) {
       console.error('dbService: Supabase error in getUserById:', error);

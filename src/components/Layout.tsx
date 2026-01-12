@@ -10,13 +10,14 @@ import {
   Users,
   GraduationCap
 } from 'lucide-react';
-import { signOut } from '../services/authService.supabase';
 import clsx from 'clsx';
 import MobileNav from './MobileNav';
 import { useOnlinePresence } from '../hooks/useOnlinePresence';
+import { useAuth } from '../hooks/useAuth';
 
 const Layout = () => {
   const location = useLocation();
+  const { logout } = useAuth();
   
   // Track user online presence
   useOnlinePresence();
@@ -67,7 +68,7 @@ const Layout = () => {
 
         <div className="mt-auto pt-4 border-t border-gray-200">
           <button
-            onClick={() => signOut()}
+            onClick={logout}
             className="flex items-center gap-4 px-4 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 w-full uppercase tracking-wide text-sm"
           >
             <LogOut size={24} />

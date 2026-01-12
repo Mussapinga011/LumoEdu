@@ -2,6 +2,7 @@ import { useEffect, lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
+import HomePage from './pages/HomePage';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -78,7 +79,8 @@ function App() {
       <OfflineIndicator />
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/landing" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           

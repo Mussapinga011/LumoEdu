@@ -7,14 +7,16 @@ import {
   MessageCircle,
   Download,
   School,
-  BookMarked
+  BookMarked,
+  ArrowLeftCircle
 } from 'lucide-react';
-import { signOut } from '../services/authService.supabase';
 import clsx from 'clsx';
 import MobileNav from './MobileNav';
+import { useAuth } from '../hooks/useAuth';
 
 const AdminLayout = () => {
   const location = useLocation();
+  const { logout } = useAuth();
 
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
@@ -62,9 +64,20 @@ const AdminLayout = () => {
           </nav>
         </div>
 
+        <div className="px-4 mb-6">
+          <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Acesso Rápido</div>
+          <Link
+            to="/learning"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-400 hover:bg-gray-800 hover:text-white text-sm transition-colors"
+          >
+            <ArrowLeftCircle size={20} />
+            Ver Site Público
+          </Link>
+        </div>
+
         <div className="mt-auto pt-4 border-t border-gray-800">
           <button
-            onClick={() => signOut()}
+            onClick={logout}
             className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-gray-400 hover:bg-red-900/20 hover:text-red-400 w-full text-sm transition-colors"
           >
             <LogOut size={20} />

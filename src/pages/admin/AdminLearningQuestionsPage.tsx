@@ -1,26 +1,109 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getLearningQuestionsBySession, saveLearningQuestion, deleteLearningQuestion } from '../../services/contentService.supabase';
-import { Plus, Edit2, Trash2, ArrowLeft, X, CheckCircle2 } from 'lucide-react';
+import { 
+  getLearningQuestionsBySession, saveLearningQuestion, deleteLearningQuestion,
+  getLearningSectionsBySession, saveLearningSection, deleteLearningSection
+} from '../../services/contentService.supabase';
+import { Plus, Edit2, Trash2, ArrowLeft, X, BookOpen, HelpCircle } from 'lucide-react';
 import clsx from 'clsx';
+import RichTextRenderer from '../../components/RichTextRenderer';
+
+type ContentItem = 
+  | { type: 'theory', id: string, title?: string, content: string, order_index: number }
+  | { type: 'question', id: string, statement: string, options: string[], correct_option: number, explanation?: string, order_index: number };
+
+// Sub-componente para Input com Preview
+const LiveInput = ({ 
+  label, 
+  value, 
+  onChange, 
+  height = 'h-32', 
+  placeholder,
+  required = false 
+}: {
+  label: string, value: string, onChange: (v: string) => void, height?: string, placeholder?: string, required?: boolean
+}) => (
+  <div className="space-y-2">
+    <div className="flex justify-between items-end px-2">
+        <label className="text-xs font-black text-gray-400 uppercase">{label} <span className="text-gray-300 font-normal normal-case">(Markdown/LaTeX suportado)</span></label>
+        {required && <span className="text-red-400 text-xs font-bold">*Obrigatório</span>}
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <textarea 
+          required={required}
+          value={value} 
+          onChange={e => onChange(e.target.value)} 
+          className={`w-full p-4 bg-gray-50 rounded-2xl font-mono text-sm font-medium outline-none border-2 border-transparent focus:border-primary focus:bg-white transition-all resize-y ${height}`}
+          placeholder={placeholder || "Digite aqui... Use $$ formula $$ para LaTeX"}
+      />
+      <div className={`w-full p-4 bg-white rounded-2xl border-2 border-gray-100 overflow-x-auto overflow-y-auto ${height} prose prose-sm max-w-none`}>
+          <div className="px-4 pb-4">
+            {value ? <RichTextRenderer content={value} /> : <span className="text-gray-300 italic text-sm">A pré-visualização aparecerá aqui...</span>}
+          </div>
+      </div>
+    </div>
+  </div>
+);
 
 const AdminLearningQuestionsPage = () => {
-  const { sessionId } = useParams<{ sessionId: string }>();
+  const { disciplineId, sectionId, sessionId } = useParams<{ disciplineId: string, sectionId: string, sessionId: string }>();
   const navigate = useNavigate();
-  const [questions, setQuestions] = useState<any[]>([]);
+  
+  const [content, setContent] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<any | null>(null);
+  
+  // Modais
+  const [isTheoryModalOpen, setIsTheoryModalOpen] = useState(false);
+  const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
+  
+  // Estado de Edição
+  const [editingId, setEditingId] = useState<string | null>(null);
+  
+  // States dos Formulários
+  const [theoryForm, setTheoryForm] = useState({ title: '', content: '', order_index: 0 });
+  
+  const [questionForm, setQuestionForm] = useState<{
+    statement: string,
+    options: string[],
+    correctOption: number,
+    explanation: string,
+    order_index: number
+  }>({
+    statement: '',
+    options: ['', '', '', ''], // Default 4 opções
+    correctOption: 0,
+    explanation: '',
+    order_index: 0
+  });
 
   useEffect(() => {
-    if (sessionId) fetchQuestions();
+    if (sessionId) fetchContent();
   }, [sessionId]);
 
-  const fetchQuestions = async () => {
+  const fetchContent = async () => {
     setLoading(true);
     try {
-      const data = await getLearningQuestionsBySession(sessionId!);
-      setQuestions(data);
+      const [questions, theories] = await Promise.all([
+        getLearningQuestionsBySession(sessionId!),
+        getLearningSectionsBySession(sessionId!)
+      ]);
+
+      const mappedQuestions = (questions || []).map((q: any) => ({
+        ...q,
+        type: 'question',
+        // Garantir que options seja array
+        options: Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options) : []),
+        order_index: (q.order_index || 0) + 1000
+      }));
+
+      const mappedTheories = (theories || []).map((t: any) => ({
+        ...t,
+        type: 'theory',
+        order_index: t.order_index || 0
+      }));
+
+      const merged = [...mappedTheories, ...mappedQuestions].sort((a, b) => a.order_index - b.order_index);
+      setContent(merged as ContentItem[]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -28,141 +111,341 @@ const AdminLearningQuestionsPage = () => {
     }
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  // --- THEORY HANDLERS ---
+  const openTheoryModal = (item?: any) => {
+    if (item) {
+      setEditingId(item.id);
+      setTheoryForm({ title: item.title, content: item.content, order_index: item.order_index });
+    } else {
+      setEditingId(null);
+      setTheoryForm({ title: '', content: '', order_index: content.length * 10 });
+    }
+    setIsTheoryModalOpen(true);
+  };
+
+  const handleSaveTheory = async (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget as HTMLFormElement);
-    const question = {
-      id: editingQuestion?.id || crypto.randomUUID(),
+    const theory = {
+      id: editingId || crypto.randomUUID(),
       sessionId,
-      statement: formData.get('statement'),
-      options: [
-        formData.get('opt0'),
-        formData.get('opt1'),
-        formData.get('opt2'),
-        formData.get('opt3'),
-      ],
-      correctOption: parseInt(formData.get('correctOption') as string),
-      explanation: formData.get('explanation'),
-      orderIndex: editingQuestion?.order_index || questions.length,
+      discipline_id: disciplineId,
+      title: theoryForm.title,
+      content: theoryForm.content,
+      orderIndex: theoryForm.order_index,
+    };
+    await saveLearningSection(theory);
+    setIsTheoryModalOpen(false);
+    fetchContent();
+  };
+
+  // --- QUESTION HANDLERS ---
+  const openQuestionModal = (item?: any) => {
+    if (item) {
+      setEditingId(item.id);
+      let opts = item.options;
+      if (typeof opts === 'string') {
+          try { opts = JSON.parse(opts); } catch { opts = ['', '', '', '']; }
+      }
+      setQuestionForm({
+        statement: item.statement || item.question_text || '', // Fallback para nomes antigos
+        options: Array.isArray(opts) ? opts : ['', '', '', ''],
+        correctOption: item.correct_option ?? item.correctOption ?? 0,
+        explanation: item.explanation || '',
+        order_index: item.order_index
+      });
+    } else {
+      setEditingId(null);
+      setQuestionForm({
+        statement: '',
+        options: ['', '', '', ''],
+        correctOption: 0,
+        explanation: '',
+        order_index: content.length * 10 + 5
+      });
+    }
+    setIsQuestionModalOpen(true);
+  };
+
+  const handleSaveQuestion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // Validar opções vazias ou duplicadas se necessário
+    const validOptions = questionForm.options.filter(o => o.trim() !== '');
+    if (validOptions.length < 2) {
+        alert("A questão precisa de pelo menos 2 alternativas válidas.");
+        return;
+    }
+    
+    // Se o índice correto estiver fora dos limites após filtrar, ajustar
+    // (Mas aqui vamos salvar os inputs vazios? Melhor salvar como está no form para manter índice)
+    
+    const question = {
+      id: editingId || crypto.randomUUID(),
+      sessionId,
+      statement: questionForm.statement,
+      options: questionForm.options, // Salva o array (Supabase lida com array text[])
+      correctOption: Number(questionForm.correctOption),
+      explanation: questionForm.explanation,
+      orderIndex: questionForm.order_index,
     };
 
     await saveLearningQuestion(question);
-    setIsModalOpen(false);
-    fetchQuestions();
+    setIsQuestionModalOpen(false);
+    fetchContent();
+  };
+  
+  const handleAddOption = () => {
+    if (questionForm.options.length >= 5) return;
+    setQuestionForm(prev => ({ ...prev, options: [...prev.options, ''] }));
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Deletar esta questão prática?')) {
-      await deleteLearningQuestion(id);
-      fetchQuestions();
+  const handleRemoveOption = (idx: number) => {
+    if (questionForm.options.length <= 2) {
+        alert("Mínimo de 2 opções obrigatório.");
+        return;
     }
+    const newOpts = questionForm.options.filter((_, i) => i !== idx);
+    // Ajustar correctOption se necessário
+    let newCorrect = questionForm.correctOption;
+    if (newCorrect === idx) newCorrect = 0; // Reset se removeu a correta
+    else if (newCorrect > idx) newCorrect--; // Shift se removeu anterior
+
+    setQuestionForm(prev => ({ ...prev, options: newOpts, correctOption: newCorrect }));
   };
 
-  if (loading) return <div className="p-20 text-center font-black animate-pulse text-primary">PREPARANDO DESAFIOS...</div>;
+  const handleOptionChange = (idx: number, val: string) => {
+    const newOpts = [...questionForm.options];
+    newOpts[idx] = val;
+    setQuestionForm(prev => ({ ...prev, options: newOpts }));
+  };
+
+
+  const handleDelete = async (item: ContentItem) => {
+    if (!confirm('Tem certeza que deseja excluir? Esta ação é irreversível.')) return;
+    if (item.type === 'theory') await deleteLearningSection(item.id);
+    else await deleteLearningQuestion(item.id);
+    fetchContent();
+  };
+
+  if (loading) return <div className="p-20 text-center font-black animate-pulse text-primary">CARREGANDO CONTEÚDO...</div>;
 
   return (
-    <div className="space-y-8 animate-in zoom-in-95 duration-500">
-      <div className="flex items-center justify-between bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+    <div className="space-y-8 animate-in zoom-in-95 duration-500 pb-20">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between bg-white p-6 rounded-3xl border border-gray-100 shadow-sm sticky top-4 z-40 gap-4">
         <div className="flex items-center gap-6">
-          <button onClick={() => navigate(-1)} className="p-4 bg-gray-50 text-gray-400 rounded-2xl hover:bg-primary hover:text-white transition-all"><ArrowLeft size={24} /></button>
+          <button onClick={() => navigate(`/admin/learning/${disciplineId}/sections/${sectionId}/sessions`)} className="p-4 bg-gray-50 text-gray-400 rounded-2xl hover:bg-primary hover:text-white transition-all"><ArrowLeft size={24} /></button>
           <div>
-            <h1 className="text-3xl font-black text-gray-800 tracking-tighter uppercase leading-none">Questões de Fixação</h1>
-            <p className="text-gray-400 font-medium mt-1">Sessão ID: {sessionId?.slice(0, 8)}...</p>
+            <h1 className="text-2xl font-black text-gray-800 tracking-tighter uppercase leading-none">Conteúdo da Aula</h1>
+            <div className="flex items-center gap-2 mt-1">
+                <span className="bg-gray-100 px-2 py-1 rounded text-xs font-bold text-gray-400 font-mono">{content.length} itens</span>
+                <span className="text-gray-300 text-xs">ID: {sessionId?.slice(0, 8)}</span>
+            </div>
           </div>
         </div>
-        <button onClick={() => { setEditingQuestion(null); setIsModalOpen(true); }} className="flex items-center gap-2 bg-primary text-white px-8 py-4 rounded-2xl font-black hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:translate-y-1">
-          <Plus size={20} /> ADICIONAR QUESTÃO
-        </button>
+        <div className="flex gap-2 w-full md:w-auto">
+           <button onClick={() => openTheoryModal()} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-purple-500 text-white px-6 py-3 rounded-2xl font-black hover:bg-purple-600 transition-all shadow-lg shadow-purple-500/20 active:translate-y-1 text-sm uppercase">
+             <Plus size={18} /> Teoria
+           </button>
+           <button onClick={() => openQuestionModal()} className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-2xl font-black hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:translate-y-1 text-sm uppercase">
+             <Plus size={18} /> Questão
+           </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {questions.map((q, idx) => (
-          <div key={q.id} className="group bg-white p-8 rounded-[40px] border-2 border-transparent hover:border-primary transition-all shadow-sm hover:shadow-2xl">
-            <div className="flex justify-between items-start mb-6">
-              <span className="bg-primary/10 text-primary px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">Questão {idx + 1}</span>
-              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => { setEditingQuestion(uTranslate(q)); setIsModalOpen(true); }} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all"><Edit2 size={18} /></button>
-                <button onClick={() => handleDelete(q.id)} className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all"><Trash2 size={18} /></button>
-              </div>
-            </div>
-            
-            <p className="text-gray-800 font-bold text-lg mb-6 leading-relaxed line-clamp-3">{q.statement}</p>
-            
-            <div className="space-y-2 mb-6">
-              {q.options.map((opt: string, i: number) => (
-                <div key={i} className={clsx("p-4 rounded-2xl border-2 font-medium flex items-center justify-between", i === q.correct_option ? "bg-green-50 border-green-200 text-green-700 font-black" : "border-gray-50 text-gray-400")}>
-                  <div className="text-sm">{opt}</div>
-                  {i === q.correct_option && <CheckCircle2 size={18} />}
-                </div>
-              ))}
-            </div>
+      {/* Lista de Conteúdo */}
+      <div className="space-y-6">
+        {content.length === 0 ? (
+           <div className="text-center py-24 bg-white rounded-[40px] border-4 border-dashed border-gray-100 items-center flex flex-col justify-center">
+               <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-gray-300"><Plus size={32} /></div>
+               <p className="text-gray-400 font-bold text-lg">Nenhum conteúdo criado</p>
+               <p className="text-gray-300 text-sm">Adicione teoria ou questões para começar.</p>
+           </div>
+        ) : content.map((item, idx) => (
+          <div key={item.id} className={clsx("group relative p-8 rounded-[32px] border-2 shadow-sm hover:shadow-lg transition-all", item.type === 'theory' ? "bg-purple-50/20 border-purple-100 hover:border-purple-300" : "bg-white border-gray-100 hover:border-primary/50")}>
+             
+             {/* Ações */}
+             <div className="absolute top-6 right-6 flex items-center gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                <span className="text-xs font-mono text-gray-300 mr-2">#{idx + 1}</span>
+                <button onClick={() => item.type === 'theory' ? openTheoryModal(item) : openQuestionModal(item)} className="p-2 bg-white text-gray-400 border border-gray-100 rounded-xl hover:text-blue-500 hover:border-blue-200 transition-colors"><Edit2 size={16} /></button>
+                <button onClick={() => handleDelete(item)} className="p-2 bg-white text-gray-400 border border-gray-100 rounded-xl hover:text-red-500 hover:border-red-200 transition-colors"><Trash2 size={16} /></button>
+             </div>
 
-            <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 flex gap-3">
-              <div className="text-blue-500 shrink-0"><CheckCircle2 size={20} /></div>
-              <div className="text-xs text-blue-600 font-bold italic leading-relaxed">{q.explanation || 'Nenhuma explicação cadastrada.'}</div>
-            </div>
+             <div className="flex gap-6">
+                <div className={clsx("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border-2", item.type === 'theory' ? "bg-purple-100 border-purple-200 text-purple-600" : "bg-green-100 border-green-200 text-green-600")}>
+                   {item.type === 'theory' ? <BookOpen size={24} /> : <HelpCircle size={24} />}
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                   {item.type === 'theory' ? (
+                      <div className="space-y-4">
+                         <h3 className="font-black text-gray-800 text-xl">{item.title}</h3>
+                         <div className="bg-white/50 p-4 rounded-2xl border border-dashed border-purple-200 text-gray-600 prose prose-sm max-w-none line-clamp-3">
+                             <RichTextRenderer content={item.content} />
+                         </div>
+                      </div>
+                   ) : (
+                      <div className="space-y-4">
+                         <h3 className="font-bold text-gray-700 text-lg"><RichTextRenderer content={item.statement} /></h3>
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {item.options.map((opt, i) => (
+                               <div key={i} className={clsx("text-sm p-3 rounded-xl border flex items-center gap-3", i === item.correct_option ? "bg-green-50 border-green-200 text-green-800 font-bold shadow-sm" : "bg-white border-gray-100 text-gray-500")}>
+                                  <span className={clsx("w-6 h-6 rounded flex items-center justify-center text-xs font-black border", i === item.correct_option ? "bg-green-200 border-green-300 text-green-700" : "bg-gray-50 border-gray-200 text-gray-400")}>
+                                    {String.fromCharCode(65 + i)}
+                                  </span>
+                                  <span className="truncate"><RichTextRenderer content={opt} /></span>
+                               </div>
+                            ))}
+                         </div>
+                      </div>
+                   )}
+                </div>
+             </div>
           </div>
         ))}
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[40px] p-8 w-full max-w-2xl shadow-2xl border-4 border-white animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[95vh]">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tighter">{editingQuestion ? 'Ajustar Questão' : 'Novo Desafio'}</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400"><X size={32} /></button>
+      {/* --- MODAL TEORIA --- */}
+      {isTheoryModalOpen && (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-end md:items-center justify-center z-50 p-0 md:p-6">
+          <div className="bg-white rounded-t-[40px] md:rounded-[40px] p-6 md:p-8 w-full max-w-4xl shadow-2xl border-4 border-white animate-in slide-in-from-bottom-10 md:zoom-in-95 duration-200 h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-black text-gray-800 uppercase flex items-center gap-3">
+                    <span className="w-10 h-10 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center"><BookOpen size={20}/></span>
+                    {editingId ? 'Editar Teoria' : 'Nova Teoria'}
+                </h2>
+                <button onClick={() => setIsTheoryModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full text-gray-400"><X size={24} /></button>
             </div>
-            <form onSubmit={handleSave} className="space-y-6">
-              <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Enunciado da Questão</label>
-                <textarea name="statement" required defaultValue={editingQuestion?.statement} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary outline-none font-bold h-32 leading-relaxed" />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[0, 1, 2, 3].map(i => (
-                  <div key={i}>
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Opção {['A', 'B', 'C', 'D'][i]}</label>
-                    <input name={`opt${i}`} required defaultValue={editingQuestion?.options?.[i]} className="w-full p-3 bg-gray-100 rounded-xl border-2 border-transparent focus:border-primary outline-none font-bold" />
+            
+            <form onSubmit={handleSaveTheory} className="flex-1 flex flex-col gap-6 overflow-hidden">
+               <div className="flex-1 overflow-y-auto space-y-6 pr-2">
+                   <div className="space-y-2">
+                       <label className="text-xs font-black text-gray-400 uppercase ml-2">Título do Tópico</label>
+                       <input 
+                           required 
+                           value={theoryForm.title} 
+                           onChange={e => setTheoryForm({...theoryForm, title: e.target.value})}
+                           placeholder="Ex: Introdução à Cinemática" 
+                           className="w-full p-4 bg-gray-50 rounded-2xl font-black text-xl outline-none border-2 border-transparent focus:border-purple-500 focus:bg-white transition-all" 
+                        />
+                   </div>
+                   
+                   <LiveInput 
+                      label="Conteúdo da Teoria"
+                      required
+                      value={theoryForm.content}
+                      onChange={v => setTheoryForm({...theoryForm, content: v})}
+                      height="h-[400px]"
+                      placeholder="# Título Principal\n\nTexto explicativo...\n\n$$ E = mc^2 $$"
+                   />
+               </div>
+
+               <div className="flex gap-4 pt-4 border-t border-gray-100">
+                  <button type="button" onClick={() => setIsTheoryModalOpen(false)} className="px-8 py-4 font-black text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-2xl transition-all">CANCELAR</button>
+                  <button type="submit" className="flex-1 py-4 bg-purple-500 text-white rounded-2xl font-black shadow-lg shadow-purple-500/20 hover:bg-purple-600 transition-all transform active:scale-[0.98]">SALVAR TEORIA</button>
+               </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- MODAL QUESTÃO --- */}
+      {isQuestionModalOpen && (
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-end md:items-center justify-center z-50 p-0 md:p-6">
+          <div className="bg-white rounded-t-[40px] md:rounded-[40px] p-6 md:p-8 w-full max-w-5xl shadow-2xl border-4 border-white animate-in slide-in-from-bottom-10 md:zoom-in-95 duration-200 h-[95vh] flex flex-col">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-black text-gray-800 uppercase flex items-center gap-3">
+                    <span className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center"><HelpCircle size={20}/></span>
+                    {editingId ? 'Editar Questão' : 'Nova Questão'}
+                </h2>
+                <button onClick={() => setIsQuestionModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full text-gray-400"><X size={24} /></button>
+            </div>
+
+            <form onSubmit={handleSaveQuestion} className="flex-1 flex flex-col gap-6 overflow-hidden">
+               <div className="flex-1 overflow-y-auto space-y-8 pr-4 custom-scrollbar">
+                  
+                  {/* ENUNCIADO */}
+                  <LiveInput 
+                      label="Enunciado da Questão"
+                      required
+                      value={questionForm.statement}
+                      onChange={v => setQuestionForm({...questionForm, statement: v})}
+                      height="h-40"
+                  />
+
+                  {/* ALTERNATIVAS */}
+                  <div className="space-y-4">
+                      <div className="flex justify-between items-center px-2 border-b border-gray-100 pb-2">
+                          <label className="text-xs font-black text-gray-400 uppercase">Alternativas ({questionForm.options.length})</label>
+                          <button 
+                            type="button" 
+                            onClick={handleAddOption} 
+                            disabled={questionForm.options.length >= 5}
+                            className="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-bold text-gray-600 disabled:opacity-50"
+                          >+ Adicionar Opção</button>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-6">
+                          {questionForm.options.map((opt, i) => (
+                             <div key={i} className="flex gap-4 items-start group">
+                                <div className="pt-4 flex flex-col items-center gap-2">
+                                   <div className="w-8 h-8 rounded-full bg-gray-200 text-gray-500 font-black flex items-center justify-center text-sm shadow-inner">{String.fromCharCode(65 + i)}</div>
+                                   <input 
+                                     type="radio" 
+                                     name="correctOption" 
+                                     checked={questionForm.correctOption === i} 
+                                     onChange={() => setQuestionForm({...questionForm, correctOption: i})}
+                                     className="w-5 h-5 accent-green-500 cursor-pointer"
+                                     title="Marcar como correta"
+                                   />
+                                </div>
+                                
+                                <div className="flex-1">
+                                    <LiveInput 
+                                        label={`Opção ${String.fromCharCode(65 + i)} ${questionForm.correctOption === i ? '(CORRETA)' : ''}`}
+                                        value={opt}
+                                        onChange={(v) => handleOptionChange(i, v)}
+                                        height="h-24"
+                                        required
+                                        placeholder={`Texto da alternativa ${String.fromCharCode(65 + i)}`}
+                                    />
+                                </div>
+
+                                <button 
+                                  type="button" 
+                                  onClick={() => handleRemoveOption(i)} 
+                                  className="mt-8 p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                                  title="Remover opção"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                             </div>
+                          ))}
+                      </div>
                   </div>
-                ))}
-              </div>
 
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="flex-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Opção Correta</label>
-                  <select name="correctOption" defaultValue={editingQuestion?.correctOption ?? 0} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary font-black outline-none">
-                    <option value="0">Opção A</option>
-                    <option value="1">Opção B</option>
-                    <option value="2">Opção C</option>
-                    <option value="3">Opção D</option>
-                  </select>
-                </div>
-              </div>
+                  {/* EXPLICAÇÃO */}
+                  <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100">
+                      <LiveInput 
+                          label="Explicação da Resposta (Opcional)"
+                          value={questionForm.explanation}
+                          onChange={v => setQuestionForm({...questionForm, explanation: v})}
+                          height="h-24"
+                          placeholder="Aparecerá para o aluno após responder..."
+                      />
+                  </div>
 
-              <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Explicação / Porquê desta resposta</label>
-                <textarea name="explanation" required defaultValue={editingQuestion?.explanation} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary outline-none font-bold h-24" placeholder="Ajude o aluno a entender o erro..." />
-              </div>
+               </div>
 
-              <div className="flex gap-4 pt-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 font-black text-gray-400 uppercase">Cancelar</button>
-                <button type="submit" className="flex-1 bg-primary text-white py-5 rounded-3xl font-black shadow-lg shadow-primary/20 active:translate-y-1">SALVAR 🎯</button>
-              </div>
+               <div className="flex gap-4 pt-4 border-t border-gray-100 bg-white z-10">
+                  <button type="button" onClick={() => setIsQuestionModalOpen(false)} className="px-8 py-4 font-black text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-2xl transition-all">CANCELAR</button>
+                  <button type="submit" className="flex-1 py-4 bg-primary text-white rounded-2xl font-black shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all transform active:scale-[0.98]">SALVAR QUESTÃO</button>
+               </div>
             </form>
           </div>
         </div>
       )}
     </div>
   );
-};
-
-// Helper to translate snake_case from DB to camelCase for form if needed
-const uTranslate = (q: any) => {
-  if (!q) return null;
-  return {
-    ...q,
-    correctOption: q.correct_option
-  };
 };
 
 export default AdminLearningQuestionsPage;

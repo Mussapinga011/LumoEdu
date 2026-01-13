@@ -81,7 +81,14 @@ const AdminUniversitiesPage = () => {
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Sigla</label>
                 <input name="shortName" required defaultValue={editingItem?.short_name} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary outline-none font-black text-center text-xl" placeholder="UEM" />
               </div>
-              <button type="submit" className="w-full bg-primary text-white py-5 rounded-3xl font-black shadow-lg shadow-black/5 active:translate-y-1 mt-4">CONFIRMAR INSTITUIÇÃO 🏛️</button>
+              <div className="flex gap-4 mt-6">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-gray-100 text-gray-400 rounded-3xl font-black hover:bg-gray-200 hover:text-gray-600 transition-colors">
+                  CANCELAR
+                </button>
+                <button type="submit" className="flex-[2] bg-primary text-white py-4 rounded-3xl font-black shadow-lg shadow-black/5 active:translate-y-1 hover:brightness-110 transition-all">
+                  SALVAR
+                </button>
+              </div>
             </form>
           </div>
         </div>

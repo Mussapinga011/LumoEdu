@@ -27,7 +27,7 @@ const AdminLearningPage = () => {
         {disciplines.map((d) => (
           <button
             key={d.id}
-            onClick={() => navigate(`/admin/learning/sessions/${d.id}`)}
+            onClick={() => navigate(`/admin/learning/${d.id}/sections`)}
             className="group relative bg-white p-8 rounded-[32px] border-2 border-transparent hover:border-primary transition-all shadow-xl hover:shadow-2xl hover:-translate-y-2 text-left overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -mr-8 -mt-8 grayscale group-hover:grayscale-0 transition-all" />

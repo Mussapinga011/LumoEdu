@@ -77,3 +77,24 @@
 .animate-slideInRight {
   animation: slideInRight 0.3s ease-out;
 }
+
+/* KaTeX Formula Spacing - Prevent Cutoff */
+.katex-display {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.katex {
+  white-space: normal !important;
+}
+
+.katex-display > .katex {
+  white-space: nowrap;
+}
+
+
+/* Ensure formulas have proper spacing in scrollable containers */
+.katex-html {
+  padding: 0 0.25rem;
+}

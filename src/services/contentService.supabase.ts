@@ -211,11 +211,15 @@ export const deleteLearningSession = async (id: string) => {
 /**
  * Learning Sections CRUD
  */
+/**
+ * Learning Contents (Teoria) CRUD
+ * Agora usando a tabela correta 'learning_contents'
+ */
 export const getLearningSectionsBySession = async (sessionId: string) => {
   const { data, error } = await supabase
-    .from('learning_sections')
+    .from('learning_contents')
     .select('*')
-    .eq('session_id', sessionId)
+    .eq('step_id', sessionId)
     .order('order_index');
   if (error) throw error;
   return data;
@@ -223,10 +227,10 @@ export const getLearningSectionsBySession = async (sessionId: string) => {
 
 export const saveLearningSection = async (section: any) => {
   const { error } = await supabase
-    .from('learning_sections')
+    .from('learning_contents')
     .upsert({
       id: section.id,
-      session_id: section.sessionId,
+      step_id: section.sessionId, // Mapeando sessionId do front para step_id do banco
       title: section.title,
       content: section.content,
       order_index: section.orderIndex,
@@ -236,7 +240,7 @@ export const saveLearningSection = async (section: any) => {
 };
 
 export const deleteLearningSection = async (id: string) => {
-  const { error } = await supabase.from('learning_sections').delete().eq('id', id);
+  const { error } = await supabase.from('learning_contents').delete().eq('id', id);
   if (error) throw error;
 };
 
@@ -247,14 +251,18 @@ export const getLearningQuestionsBySession = async (sessionId: string) => {
   const { data, error } = await supabase
     .from('learning_questions')
     .select('*')
-    .eq('session_id', sessionId)
+    .eq('step_id', sessionId) // step_id em vez de session_id
     .order('order_index');
   if (error) throw error;
   return data.map(q => ({
     ...q,
+    id: q.id,
+    sessionId: q.step_id,
+    statement: q.question_text, // question_text no banco
     options: q.options,
-    correctOption: q.correct_option, // Mapear para camelCase se necessário
-    explanation: q.explanation
+    correctOption: q.correct_answer, // correct_answer no banco
+    explanation: q.explanation,
+    order_index: q.order_index
   }));
 };
 
@@ -263,10 +271,10 @@ export const saveLearningQuestion = async (question: any) => {
     .from('learning_questions')
     .upsert({
       id: question.id,
-      session_id: question.sessionId,
-      statement: question.statement,
+      step_id: question.sessionId, // step_id no banco
+      question_text: question.statement, // question_text no banco
       options: question.options,
-      correct_option: question.correctOption,
+      correct_answer: question.correctOption, // correct_answer no banco
       explanation: question.explanation,
       order_index: question.orderIndex,
       updated_at: new Date().toISOString()

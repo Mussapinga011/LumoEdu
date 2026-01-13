@@ -220,12 +220,8 @@ const PracticeSectionsPage = () => {
                // My calculation of 'progress' is percentage.
                
                let isLocked = false;
-               if (index > 0) {
-                 const prevSection = sections[index - 1];
-                 const prevProgress = sectionProgress[prevSection.id] || 0;
-                 // Unlock if previous is at least 90% done (tolerance) or 100%
-                 isLocked = prevProgress < 99; // Require full completion
-               }
+               // Lógica de desbloqueio removida para permitir acesso livre
+               // if (index > 0) { ... }
 
                return (
                  <SectionCard 

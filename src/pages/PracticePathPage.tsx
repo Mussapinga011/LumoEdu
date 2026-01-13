@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { getUserProgressByDiscipline, getSectionsByDiscipline, getSessionsBySection } from '../services/practiceService.supabase';
 import { PracticeSession, UserSessionProgress, PracticeSection } from '../types/practice';
-import { Star, Trophy, ArrowLeft, BookOpen, Lock } from 'lucide-react';
+import { Star, Trophy, ArrowLeft, BookOpen, Lock as LockIcon } from 'lucide-react';
 import clsx from 'clsx';
 
 const PracticePathPage = () => {
@@ -74,6 +74,8 @@ const PracticePathPage = () => {
       return !!progress[prevSession.id]?.completed;
   };
 
+
+
   if (loading) return (
      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -109,7 +111,8 @@ const PracticePathPage = () => {
           {sessions.map((session, index) => {
             const isCompleted = progress[session.id]?.completed;
             const isUnlocked = getUnlockStatus(index);
-            const isCurrent = isUnlocked && !isCompleted;
+            const isCurrent = isUnlocked && !isCompleted; 
+            
             const offset = getOffset(index);
 
             return (
@@ -151,7 +154,7 @@ const PracticePathPage = () => {
                     ) : isCurrent ? (
                        <Star size={32} className="text-white fill-white animate-pulse" />
                     ) : (
-                       <Lock size={28} />
+                       <LockIcon size={28} />
                     )}
                   </button>
                 </div>

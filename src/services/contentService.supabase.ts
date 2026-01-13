@@ -4,8 +4,9 @@ export interface University {
   id: string;
   name: string;
   short_name: string;
-  is_active: boolean;
 }
+
+// ... (University interface remains unchanged)
 
 export interface Discipline {
   id: string;
@@ -30,8 +31,7 @@ export const getAllUniversities = async (): Promise<University[]> => {
     return data.map(uni => ({
       id: uni.id,
       name: uni.name,
-      short_name: uni.short_name,
-      is_active: uni.is_active !== false
+      short_name: uni.short_name
     }));
   } catch (error) {
     console.error('Error in getAllUniversities:', error);
@@ -91,6 +91,10 @@ export const getDisciplinesByUniversity = async (universityId: string): Promise<
   }
 };
 
+// ... saveUniversity ...
+
+// ... (funções anteriores mantidas)
+
 /**
  * Salvar/Atualizar universidade (Admin)
  */
@@ -102,7 +106,6 @@ export const saveUniversity = async (university: Partial<University>): Promise<v
         id: university.id,
         name: university.name!,
         short_name: university.short_name!,
-        is_active: university.is_active ?? true,
         updated_at: new Date().toISOString()
       });
 

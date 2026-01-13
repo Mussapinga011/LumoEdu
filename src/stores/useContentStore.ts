@@ -48,7 +48,9 @@ export const useContentStore = create<ContentState>((set, get) => ({
       clearTimeout(timeoutId);
       console.log(`useContentStore: Success! Found ${disciplinesResult.length} disciplines and ${universitiesResult.length} universities`);
 
-      const mappedDisciplines: Discipline[] = (disciplinesResult || []).map(d => ({
+      const mappedDisciplines: Discipline[] = (disciplinesResult || [])
+        .filter(d => d.is_active !== false) // Apenas disciplinas ativas para o usuário final
+        .map(d => ({
         id: d.id,
         title: d.title,
         icon: d.icon,
@@ -61,7 +63,7 @@ export const useContentStore = create<ContentState>((set, get) => ({
         id: u.id,
         name: u.name,
         shortName: u.short_name,
-        isActive: u.is_active !== false
+        isActive: true // Universidades agora são sempre ativas por padrão
       }));
 
       set({ 

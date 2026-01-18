@@ -178,7 +178,7 @@ const AdminUsersPage = () => {
             <tr className="bg-gray-50/50 border-b border-gray-100">
               <th className="p-6 text-left font-black text-gray-400 uppercase text-[10px] tracking-widest">Identidade</th>
               <th className="p-6 text-left font-black text-gray-400 uppercase text-[10px] tracking-widest">Plano</th>
-              <th className="p-6 text-left font-black text-gray-400 uppercase text-[10px] tracking-widest">Progresso</th>
+              <th className="p-6 text-left font-black text-gray-400 uppercase text-[10px] tracking-widest">Atividade</th>
               <th className="p-6 text-right font-black text-gray-400 uppercase text-[10px] tracking-widest">Ações Rápidas</th>
             </tr>
           </thead>
@@ -204,8 +204,8 @@ const AdminUsersPage = () => {
                     </button>
                   </td>
                   <td className="p-6">
-                    <div className="text-xs font-black text-gray-700 uppercase">Lvl {u.level || 1}</div>
-                    <div className="text-[10px] text-gray-400 font-bold uppercase">{u.xp || 0} XP acumulados</div>
+                    <div className="text-xs font-black text-gray-700 uppercase">{u.dailyExercisesCount || 0} resolvidos</div>
+                    <div className="text-[10px] text-gray-400 font-bold uppercase">Questões no total</div>
                   </td>
                   <td className="p-6 text-right">
                     <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

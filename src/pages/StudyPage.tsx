@@ -109,15 +109,13 @@ const StudyPage = () => {
           : grade;
 
         const updates = {
-          xp: (user.xp || 0) + 50,
-          dailyExercisesCount: (user.dailyExercisesCount || 0) + questions.length,
+          dailyExercisesCount: (user.dailyExercisesCount || 0) + questions.length, // Counts for daily exercises statistic
           lastExamDate: new Date(),
           examsCompleted: newExamsCompleted,
           averageGrade: Math.round(newAverageGrade)
         };
 
         await updateUserProfile(user.id, {
-          xp: updates.xp,
           daily_exercises_count: updates.dailyExercisesCount,
           last_exam_date: updates.lastExamDate.toISOString(),
           exams_completed: updates.examsCompleted,
@@ -125,12 +123,8 @@ const StudyPage = () => {
         });
         await updateUserScore(user.id);
         
-        await addUserActivity(user.id, {
-          type: 'exam',
-          title: `Exame Concluído: ${exam?.name || 'Exame'}`,
-          score: grade,
-          xpEarned: 50
-        });
+        // Removed Activity Feed for Study Mode
+        // await addUserActivity(user.id, { ... });
 
         // O store precisa de atualização também
         updateUser(updates);
@@ -235,9 +229,9 @@ const StudyPage = () => {
               </div>
             </div>
 
-            <div className="bg-yellow-50 p-4 rounded-2xl flex justify-between items-center border border-yellow-200">
-              <span className="font-bold text-yellow-800">Recompensa:</span>
-              <span className="text-xl font-black text-yellow-600">+50 XP</span>
+            <div className="bg-blue-50 p-4 rounded-2xl flex justify-between items-center border border-blue-200">
+               <span className="font-bold text-blue-800">Próximos Passos:</span>
+               <span className="text-xl font-black text-blue-600">Continuar Praticando 📚</span>
             </div>
           </div>
 

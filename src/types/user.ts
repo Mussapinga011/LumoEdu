@@ -7,8 +7,6 @@ export interface UserProfile {
   displayName: string;
   photoURL?: string;
   role: 'user' | 'admin';
-  xp: number;
-  level: number;
   streak: number;
   createdAt?: any;
   badges?: string[];
@@ -27,7 +25,6 @@ export interface UserProfile {
   examsCompleted: number;
   challengesCompleted: number;
   averageGrade: number;
-  score: number;
   
   // Enhanced Profile Stats
   recentActivity?: UserActivity[];
@@ -48,13 +45,16 @@ export interface UserActivity {
   title: string;
   timestamp: any;
   score?: number;
-  xpEarned?: number;
 }
 
 export interface StudyPlan {
+  targetCourse?: string; // e.g., 'Engenharia Informática'
+  targetUniversity?: string; // e.g., 'UEM'
+  subjects: string[]; // IDs das disciplinas nucleares (ex: ['math', 'physics'])
   weeklySchedule: string[];
   weakTopics: string[];
   dailyGoal: number;
+  startDate: string; // ISO Date
   createdAt: any;
 }
 

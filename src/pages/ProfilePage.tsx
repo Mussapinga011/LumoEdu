@@ -1,8 +1,9 @@
 import { useAuthStore } from '../stores/useAuthStore';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { User, Trophy, Flame, Star, Calendar, Award } from 'lucide-react';
-import { BADGES } from '../services/badgeService';
+import { User, Flame, Calendar, Award, Check } from 'lucide-react';
+import { PREPARATION_MILESTONES } from '../types/milestone';
+import { isMilestoneIrrelevant, getMilestoneDisplayData } from '../services/milestoneService';
 import { updateUserProfile } from '../services/dbService.supabase';
 import clsx from 'clsx';
 import OptimizedImage from '../components/OptimizedImage';
@@ -14,6 +15,10 @@ const ProfilePage = () => {
   const navigate = useNavigate();
 
   if (!user) return null;
+
+
+
+
 
   return (
     <div className="space-y-8">
@@ -40,77 +45,99 @@ const ProfilePage = () => {
              hasPremiumAccess ? '⭐ MEMBRO PREMIUM' : '👤 MEMBRO GRÁTIS'}
           </div>
         </div>
-        <div className="flex gap-4 w-full md:w-auto justify-center md:justify-start">
+<div className="flex gap-4 w-full md:w-auto justify-center md:justify-start">
            <div className="text-center">
-             <div className="text-2xl font-bold text-accent">{user.level}</div>
-             <div className="text-xs text-gray-500 font-bold uppercase">Nível</div>
-           </div>
-           <div className="text-center">
-             <div className="text-2xl font-bold text-primary">{user.xp}</div>
-             <div className="text-xs text-gray-500 font-bold uppercase">XP Total</div>
+             <div className="text-2xl font-bold text-primary">{user.streak}</div>
+             <div className="text-xs text-gray-500 font-bold uppercase tracking-widest">DIAS SEGUIDOS</div>
            </div>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        <div className="bg-white p-3 md:p-4 rounded-xl border-2 border-gray-100 flex flex-col items-center gap-2">
-          <Flame className="text-orange-500" size={24} />
-          <div className="text-lg md:text-xl font-bold">{user.streak}</div>
-          <div className="text-[10px] md:text-xs text-gray-400 font-bold uppercase text-center">Sequência</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+        <div className="bg-white p-4 rounded-xl border-2 border-gray-100 flex items-center gap-4 transition-all hover:border-orange-200">
+          <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-500">
+            <Flame size={28} />
+          </div>
+          <div>
+            <div className="text-2xl font-black text-gray-800">{user.streak} dias</div>
+            <div className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">Sua Sequência Atual</div>
+          </div>
         </div>
-        <div className="bg-white p-3 md:p-4 rounded-xl border-2 border-gray-100 flex flex-col items-center gap-2">
-          <Star className="text-yellow-500" size={24} />
-          <div className="text-lg md:text-xl font-bold">{user.xp}</div>
-          <div className="text-[10px] md:text-xs text-gray-400 font-bold uppercase text-center">Total XP</div>
-        </div>
-        <div className="bg-white p-3 md:p-4 rounded-xl border-2 border-gray-100 flex flex-col items-center gap-2">
-          <Trophy className="text-blue-500" size={24} />
-          <div className="text-lg md:text-xl font-bold">Top 10%</div>
-          <div className="text-[10px] md:text-xs text-gray-400 font-bold uppercase text-center">Liga</div>
-        </div>
-        <div className="bg-white p-3 md:p-4 rounded-xl border-2 border-gray-100 flex flex-col items-center gap-2">
-          <Calendar className="text-green-500" size={24} />
-          <div className="text-lg md:text-xl font-bold">{user.dailyExercisesCount}</div>
-          <div className="text-[10px] md:text-xs text-gray-400 font-bold uppercase text-center">Exercícios Hoje</div>
+        <div className="bg-white p-4 rounded-xl border-2 border-gray-100 flex items-center gap-4 transition-all hover:border-green-200">
+          <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-500">
+            <Calendar size={28} />
+          </div>
+          <div>
+            <div className="text-2xl font-black text-gray-800">{user.dailyExercisesCount}</div>
+            <div className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">Exercícios Hoje</div>
+          </div>
         </div>
       </div>
 
-      {/* Badges Section */}
+      {/* Preparation Milestones Section */}
       <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
         <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-          <Award className="text-yellow-500" />
-          Conquistas
+          <Award className="text-blue-600" />
+          Marcos de Preparação
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {BADGES.map((badge) => {
-            const isUnlocked = user.badges?.includes(badge.id);
-            const Icon = badge.icon;
-            
-            return (
-              <div 
-                key={badge.id} 
-                className={`p-4 rounded-xl border-2 flex flex-col items-center text-center gap-2 transition-all ${
-                  isUnlocked 
-                    ? 'bg-white border-yellow-100 shadow-sm' 
-                    : 'bg-gray-50 border-gray-100 opacity-60 grayscale'
-                }`}
-              >
-                <div className={`p-3 rounded-full ${isUnlocked ? 'bg-yellow-50' : 'bg-gray-200'}`}>
-                  <Icon className={isUnlocked ? badge.color : 'text-gray-400'} size={24} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-gray-800 text-sm">{badge.name}</h4>
-                  <p className="text-xs text-gray-500 mt-1">{badge.description}</p>
-                </div>
-                {isUnlocked && (
-                  <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full uppercase tracking-wide">
-                    Desbloqueado
-                  </span>
-                )}
-              </div>
-            );
-          })}
+        <p className="text-gray-500 text-sm mb-6">
+          Acompanhe sua prontidão técnica para o exame. Estes marcos indicam competência, não apenas participação.
+        </p>
+
+        <div className="space-y-4">
+          {(() => {
+            const stats = {
+              totalQuestionsAnswered: user.dailyExercisesCount || 0,
+              examsCompleted: user.examsCompleted || 0,
+              simulationsCompleted: user.challengesCompleted || 0,
+              averageScore: user.averageGrade || 0,
+              studyPlanSubjects: user.studyPlan?.subjects || [],
+              studyStreak: user.streak || 0,
+              questionsPerDiscipline: user.disciplineScores || {}
+            };
+
+            return PREPARATION_MILESTONES
+              .filter(m => !isMilestoneIrrelevant(m, stats))
+              .map((milestone) => {
+                const isAchieved = user.badges?.includes(milestone.id);
+                const { name, description } = getMilestoneDisplayData(milestone, stats);
+                
+                return (
+                  <div 
+                    key={milestone.id} 
+                    className={clsx(
+                      "flex items-center gap-4 p-4 rounded-xl border transition-all",
+                      isAchieved 
+                        ? "bg-green-50 border-green-200" 
+                        : "bg-white border-gray-100 opacity-75"
+                    )}
+                  >
+                    <div className={clsx(
+                      "w-12 h-12 rounded-full flex items-center justify-center shrink-0",
+                      isAchieved ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"
+                    )}>
+                      {isAchieved ? <Check size={24} strokeWidth={3} /> : <div className="w-6 h-6 border-2 border-gray-300 rounded-full" />}
+                    </div>
+                    
+                    <div className="flex-1">
+                      <h4 className={clsx("font-bold text-base", isAchieved ? "text-gray-900" : "text-gray-600")}>
+                        {name}
+                      </h4>
+                      <p className="text-sm text-gray-500">
+                        {description}
+                      </p>
+                    </div>
+
+                    {isAchieved && (
+                       <span className="text-xs font-bold text-green-700 bg-white px-3 py-1 rounded-full border border-green-100 shadow-sm">
+                         Concluído
+                       </span>
+                    )}
+                  </div>
+                );
+              });
+          })()}
         </div>
       </div>
 
@@ -199,13 +226,22 @@ const ProfilePage = () => {
           {user.recentActivity && user.recentActivity.length > 0 ? (
             [...user.recentActivity].reverse().slice(0, 5).map((activity) => (
               <div key={activity.id} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors">
-                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-primary font-bold">
-                  +{activity.xpEarned || 0}
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary font-bold">
+                   <Check size={20} />
                 </div>
                 <div className="flex-1">
                   <h4 className="font-bold text-gray-700">{activity.title}</h4>
                   <p className="text-sm text-gray-400">
-                    {activity.timestamp?.toDate().toLocaleDateString('pt-MZ')} às {activity.timestamp?.toDate().toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' })}
+                    {(() => {
+                      // Handle both Date objects (from standard JSON/Supabase) and Firestore Timestamps
+                      const date = activity.timestamp && typeof (activity.timestamp as any).toDate === 'function' 
+                        ? (activity.timestamp as any).toDate() 
+                        : new Date(activity.timestamp);
+                        
+                      return !isNaN(date.getTime()) 
+                        ? `${date.toLocaleDateString('pt-MZ')} às ${date.toLocaleTimeString('pt-MZ', { hour: '2-digit', minute: '2-digit' })}`
+                        : 'Data inválida';
+                    })()}
                   </p>
                 </div>
               </div>

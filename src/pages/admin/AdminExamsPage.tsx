@@ -156,6 +156,7 @@ const AdminExamsPage = () => {
                 <th className="p-4 font-semibold text-gray-600">Nome</th>
                 <th className="p-4 font-semibold text-gray-600">Disciplina</th>
                 <th className="p-4 font-semibold text-gray-600">Universidade</th>
+                <th className="p-4 font-semibold text-gray-600">Status</th>
                 <th className="p-4 font-semibold text-gray-600">Ano/Época</th>
                 <th className="p-4 font-semibold text-gray-600 text-right">Ações</th>
               </tr>
@@ -163,7 +164,7 @@ const AdminExamsPage = () => {
             <tbody>
               {filteredExams.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-500">
+                  <td colSpan={6} className="p-8 text-center text-gray-500">
                     Nenhum exame encontrado.
                   </td>
                 </tr>
@@ -182,6 +183,15 @@ const AdminExamsPage = () => {
                       <td className="p-4 text-gray-600">
                         <span className="px-2 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700">
                           {university?.shortName || exam.universityId || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="p-4 text-gray-600">
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          exam.isActive
+                            ? 'bg-green-100 text-green-700 border border-green-200'
+                            : 'bg-gray-100 text-gray-500 border border-gray-200'
+                        }`}>
+                          {exam.isActive ? 'Ativo' : 'Inativo'}
                         </span>
                       </td>
                       <td className="p-4 text-gray-600">{exam.year} - {exam.season}</td>

@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { getQuestionsBySession, saveSessionProgress, getUserProgressByDiscipline } from '../services/practiceService.supabase';
+import { updateUserProfile, addUserActivity } from '../services/dbService.supabase';
 import { getLearningSectionsBySession } from '../services/contentService.supabase'; // Importe a função de teoria
-import { checkAndAwardBadges } from '../services/badgeService';
+import { checkAndUpdateMilestones } from '../services/milestoneService';
+import { getSyllabusCoverage } from '../services/syllabusService';
 import { PracticeQuestion } from '../types/practice';
 import { X, CheckCircle2, AlertCircle, BookOpen } from 'lucide-react';
 import clsx from 'clsx';
@@ -45,7 +47,6 @@ const PracticeQuizPage = () => {
   const [isReplayMode, setIsReplayMode] = useState(false);
   const [showReplayIntro, setShowReplayIntro] = useState(false);
   const [bestScore, setBestScore] = useState(0);
-  const [earnedXP, setEarnedXP] = useState(0);
   const [consecutiveErrors, setConsecutiveErrors] = useState(0);
 
   useEffect(() => {
@@ -109,7 +110,6 @@ const PracticeQuizPage = () => {
     setIsAnswered(true);
 
     if (isCorrectResult) {
-      setScore(s => s + (currentQ.xp || 10));
       setCorrectAnswers(prev => prev + 1);
       setConsecutiveErrors(0);
       reward();
@@ -137,27 +137,39 @@ const PracticeQuizPage = () => {
     
     // Se não houver perguntas (só teoria), score é 100%
     const finalScore = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 100;
-    const timeTaken = (Date.now() - startTime) / 1000;
-    const isPerfect = correctAnswers === totalQuestions;
     
-    const result = await saveSessionProgress(user.id, {
+    // 1. Salvar Progresso da Sessão (Apenas marcar como completo e salvar score local da sessão)
+    await saveSessionProgress(user.id, {
       sessionId,
       disciplineId,
       sectionId: sectionId || '',
       completed: true,
       score: finalScore,
-      xpEarned: score + (totalQuestions === 0 ? 50 : 0), // XP base se for só leitura
       streak: 1
     });
 
-    setEarnedXP(result.xp_earned || 0);
 
-    await checkAndAwardBadges(user.id, [], {
-      sessionsCompleted: (user.examsCompleted || 0) + 1,
-      perfectScores: isPerfect && totalQuestions > 0 ? 1 : 0,
-      currentStreak: (user.streak || 0) + 1,
-      completionTime: timeTaken,
-      disciplineId
+
+    // 2. Atualizar estatísticas básicas (sem XP)
+    // Opcional: Aqui poderíamos atualizar contadores se desejado
+    
+    // 3. Verificar Marcos de Preparação (Milestones)
+    let coverageMap: Record<string, number> = {};
+    if (user.studyPlan?.subjects) {
+      const coverageData = await getSyllabusCoverage(user.id, user.studyPlan.subjects);
+      coverageData.forEach(c => {
+        coverageMap[c.disciplineId] = c.percentage;
+      });
+    }
+
+    await checkAndUpdateMilestones(user.id, {
+       totalQuestionsAnswered: (user.dailyExercisesCount || 0) + totalQuestions,
+       examsCompleted: (user.examsCompleted || 0),
+       simulationsCompleted: (user.challengesCompleted || 0),
+       averageScore: finalScore,
+       studyPlanSubjects: user.studyPlan?.subjects || [],
+       studyStreak: user.streak || 0,
+       syllabusCoverage: coverageMap
     });
   };
 
@@ -224,11 +236,7 @@ const PracticeQuizPage = () => {
         </p>
         
         <div className="grid grid-cols-2 gap-4 w-full max-w-sm mb-8">
-          <div className={clsx("p-4 rounded-2xl border-b-4", earnedXP > 0 ? "bg-orange-100 border-orange-200" : "bg-gray-100 border-gray-200")}>
-            <div className={clsx("font-black text-2xl", earnedXP > 0 ? "text-orange-600" : "text-gray-500")}>+{earnedXP}</div>
-            <div className={clsx("font-bold text-xs uppercase", earnedXP > 0 ? "text-orange-500" : "text-gray-400")}>XP Ganho</div>
-          </div>
-          <div className="bg-blue-100 p-4 rounded-2xl border-b-4 border-blue-200">
+          <div className="bg-blue-100 p-4 rounded-2xl border-b-4 border-blue-200 col-span-2">
             <div className="text-blue-600 font-black text-2xl">{percentage}%</div>
             <div className="text-blue-500 font-bold text-xs uppercase">Precisão</div>
           </div>

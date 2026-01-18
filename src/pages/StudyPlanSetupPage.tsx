@@ -7,6 +7,22 @@ import { ArrowRight, ArrowLeft } from 'lucide-react';
 
 const questions = [
   {
+    id: 'university',
+    question: 'Qual universidade você deseja ingressar?',
+    options: ['UEM (Univ. Eduardo Mondlane)', 'UP (Univ. Pedagógica)', 'UniZambeze', 'UEM + UP']
+  },
+  {
+    id: 'courseGroup',
+    question: 'Qual é o grupo de disciplinas do seu exame?',
+    options: [
+      'Matemática e Física (Engenharias)',
+      'Biologia e Química (Medicina/Saúde)',
+      'Português e História (Direito/Letras)',
+      'Desenho e Geometria (Arquitetura)',
+      'Geografia e Matemática (Economia)'
+    ]
+  },
+  {
     id: 'daysPerWeek',
     question: 'Quantos dias por semana você pode estudar?',
     options: ['1-2 dias', '3-4 dias', '5-6 dias', 'Todos os dias']
@@ -17,44 +33,14 @@ const questions = [
     options: ['30 minutos', '1 hora', '2 horas', 'Mais de 2 horas']
   },
   {
-    id: 'goal',
-    question: 'Qual é o seu principal objetivo?',
-    options: ['Passar no Exame de Admissão', 'Melhorar notas escolares', 'Aprender por curiosidade', 'Desafio pessoal']
-  },
-  {
     id: 'weakSubject',
-    question: 'Qual disciplina você considera mais difícil?',
-    options: ['Matemática', 'Física', 'Português', 'Inglês', 'História', 'Geografia', 'Biologia', 'Química']
-  },
-  {
-    id: 'strongSubject',
-    question: 'Qual disciplina você considera mais fácil?',
-    options: ['Matemática', 'Física', 'Português', 'Inglês', 'História', 'Geografia', 'Biologia', 'Química']
-  },
-  {
-    id: 'learningStyle',
-    question: 'Como você prefere aprender?',
-    options: ['Lendo teoria', 'Resolvendo exercícios', 'Vídeos explicativos', 'Mistura de tudo']
+    question: 'Em qual disciplina você sente maior dificuldade?',
+    options: ['Matemática', 'Física', 'Português', 'Biologia', 'Química', 'História', 'Geografia']
   },
   {
     id: 'examDate',
     question: 'Quando será o seu exame?',
     options: ['Em menos de 1 mês', 'Em 1-3 meses', 'Em 3-6 meses', 'Mais de 6 meses']
-  },
-  {
-    id: 'currentLevel',
-    question: 'Como você avalia seu conhecimento atual?',
-    options: ['Iniciante', 'Intermediário', 'Avançado']
-  },
-  {
-    id: 'reminders',
-    question: 'Você gostaria de receber lembretes diários?',
-    options: ['Sim, por favor', 'Não, obrigado']
-  },
-  {
-    id: 'commitment',
-    question: 'Você está pronto para se comprometer com este plano?',
-    options: ['Sim, estou pronto!', 'Vou tentar meu melhor']
   }
 ];
 
@@ -78,10 +64,19 @@ const StudyPlanSetupPage = () => {
   const generatePlan = async (finalAnswers: Record<string, string>) => {
     setLoading(true);
     
-    // Logic remains same, just Supabase storage
+    const university = finalAnswers['university'];
+    const courseGroup = finalAnswers['courseGroup'];
     const timeOption = finalAnswers['timePerDay'];
     const examDateOption = finalAnswers['examDate'];
     
+    // Mapeamento de disciplinas baseado no grupo
+    let subjects: string[] = [];
+    if (courseGroup.includes('Matemática e Física')) subjects = ['math', 'physics'];
+    else if (courseGroup.includes('Biologia e Química')) subjects = ['biology', 'chemistry'];
+    else if (courseGroup.includes('Português e História')) subjects = ['portuguese', 'history'];
+    else if (courseGroup.includes('Desenho e Geometria')) subjects = ['drawing', 'geometry'];
+    else if (courseGroup.includes('Geografia e Matemática')) subjects = ['geography', 'math'];
+
     let baseDailyGoal = 10;
     if (timeOption === '1 hora') baseDailyGoal = 20;
     if (timeOption === '2 horas') baseDailyGoal = 35;
@@ -95,7 +90,6 @@ const StudyPlanSetupPage = () => {
 
     const daysOption = finalAnswers['daysPerWeek'];
     const weakSubject = finalAnswers['weakSubject'];
-    const strongSubject = finalAnswers['strongSubject'];
     
     let availableDays: string[] = [];
     if (daysOption === '1-2 dias') availableDays = ['Sábado', 'Domingo'];
@@ -104,9 +98,13 @@ const StudyPlanSetupPage = () => {
     else availableDays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
 
     const newPlan: StudyPlan = {
+      targetUniversity: university,
+      targetCourse: courseGroup.split('(')[1]?.replace(')', '') || courseGroup,
+      subjects: subjects,
       weeklySchedule: availableDays,
-      weakTopics: [weakSubject, 'Revisão Geral', strongSubject],
+      weakTopics: [weakSubject, 'Revisão Geral'],
       dailyGoal: dailyGoal,
+      startDate: new Date().toISOString(),
       createdAt: new Date()
     };
 

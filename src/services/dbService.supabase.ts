@@ -15,9 +15,8 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
       .select(`
         *,
         user_badges(badge_name, earned_at),
-        user_activities(activity_type, title, xp_earned, timestamp)
-      `)
-      .order('xp', { ascending: false });
+        user_activities(activity_type, title, timestamp)
+      `);
 
     if (error) throw error;
 
@@ -29,13 +28,10 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
       photoURL: user.photo_url || '',
       role: user.role as 'user' | 'admin',
       isPremium: user.is_premium,
-      level: user.level,
-      xp: user.xp,
       streak: user.streak,
       examsCompleted: user.exams_completed || 0,
       challengesCompleted: user.challenges_completed || 0,
       averageGrade: user.average_grade || 0,
-      score: user.score || 0,
       dailyExercisesCount: user.daily_exercises_count || 0,
       lastActive: user.last_active ? new Date(user.last_active) : undefined,
       lastStudyDate: user.last_study_date ? new Date(user.last_study_date) : null,
@@ -45,7 +41,6 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
       recentActivity: user.user_activities?.map((a: any) => ({
         type: a.activity_type,
         title: a.title,
-        xpEarned: a.xp_earned,
         timestamp: new Date(a.timestamp)
       })) || []
     }));
@@ -64,7 +59,7 @@ export const getUserById = async (userId: string): Promise<UserProfile | null> =
     
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('*')
+      .select('*, user_badges(badge_name, earned_at), user_activities(activity_type, title, timestamp)')
       .eq('id', userId)
       .maybeSingle();
 
@@ -88,20 +83,22 @@ export const getUserById = async (userId: string): Promise<UserProfile | null> =
       photoURL: data.photo_url || '',
       role: data.role as 'user' | 'admin',
       isPremium: data.is_premium,
-      level: data.level,
-      xp: data.xp,
       streak: data.streak,
       examsCompleted: data.exams_completed || 0,
       challengesCompleted: data.challenges_completed || 0,
       averageGrade: data.average_grade || 0,
-      score: data.score || 0,
       dailyExercisesCount: data.daily_exercises_count || 0,
       lastActive: data.last_active ? new Date(data.last_active) : undefined,
       lastStudyDate: data.last_study_date ? new Date(data.last_study_date) : null,
       lastExamDate: data.last_exam_date ? new Date(data.last_exam_date) : null,
       lastChallengeDate: data.last_challenge_date ? new Date(data.last_challenge_date) : null,
-      badges: [], // Removido joins temporariamente para depuração
-      recentActivity: []
+      studyPlan: data.study_plan,
+      badges: data.user_badges?.map((b: any) => b.badge_name) || [],
+      recentActivity: data.user_activities?.map((a: any) => ({
+        type: a.activity_type,
+        title: a.title,
+        timestamp: new Date(a.timestamp)
+      })) || []
     };
   } catch (error) {
     console.error('Error in getUserById:', error);
@@ -147,8 +144,6 @@ export const updateUser = async (userId: string, updates: Partial<UserProfile>):
    if (updates.displayName !== undefined) mappedUpdates.display_name = updates.displayName;
    if (updates.photoURL !== undefined) mappedUpdates.photo_url = updates.photoURL;
    if (updates.isPremium !== undefined) mappedUpdates.is_premium = updates.isPremium;
-   if (updates.xp !== undefined) mappedUpdates.xp = updates.xp;
-   if (updates.level !== undefined) mappedUpdates.level = updates.level;
    
    await updateUserProfile(userId, mappedUpdates);
 };
@@ -196,9 +191,7 @@ export const addUserActivity = async (
       .insert({
         user_id: userId,
         activity_type: activity.type,
-        title: activity.title,
-        xp_earned: activity.xpEarned,
-        score: activity.score || 0
+        title: activity.title
       });
 
     if (error) throw error;
@@ -207,26 +200,7 @@ export const addUserActivity = async (
   }
 };
 
-/**
- * Adicionar XP ao usuário
- */
-export const addUserXP = async (userId: string, xpAmount: number): Promise<void> => {
-  try {
-    const { data: user } = await supabase.from('user_profiles').select('xp').eq('id', userId).single();
-    if (!user) return;
 
-    const newXp = (user.xp || 0) + xpAmount;
-    const newLevel = Math.floor(newXp / 100) + 1;
-
-    await supabase.from('user_profiles').update({
-      xp: newXp,
-      level: newLevel,
-      updated_at: new Date().toISOString()
-    }).eq('id', userId);
-  } catch (error) {
-    console.error('Error in addUserXP:', error);
-  }
-};
 
 /**
  * Adicionar badge ao usuário

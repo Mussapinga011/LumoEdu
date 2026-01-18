@@ -114,18 +114,15 @@ const ChallengePage = () => {
     });
 
     const accuracy = correctCount / questions.length;
-    const xpEarned = 100 + Math.round(accuracy * 50);
     const finalScore = Math.round(accuracy * 20);
     setScore(finalScore);
 
     const updates = {
-      xp: (user.xp || 0) + xpEarned,
       challengesCompleted: (user.challengesCompleted || 0) + 1,
       lastChallengeDate: new Date()
     };
 
     await updateUserProfile(user.id, {
-      xp: updates.xp,
       challenges_completed: updates.challengesCompleted,
       last_challenge_date: updates.lastChallengeDate.toISOString()
     });
@@ -134,8 +131,7 @@ const ChallengePage = () => {
     await addUserActivity(user.id, {
       type: 'challenge',
       title: `Desafio: ${exam.name}`,
-      score: finalScore,
-      xpEarned: xpEarned
+      score: finalScore
     });
 
     updateUser(updates as any);
@@ -187,7 +183,7 @@ const ChallengePage = () => {
            </div>
 
            <div className="bg-white p-6 rounded-3xl shadow-xl flex flex-col md:flex-row gap-4">
-              <button onClick={() => navigate('/ranking')} className="flex-1 py-4 bg-yellow-500 text-white rounded-2xl font-black text-lg shadow-lg active:translate-y-1">🏆 VER RANKING</button>
+              <button onClick={() => navigate('/learning')} className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg shadow-lg active:translate-y-1">🎯 MINHA JORNADA</button>
               <button onClick={() => navigate('/challenge')} className="flex-1 py-4 bg-primary text-white rounded-2xl font-black text-lg shadow-lg active:translate-y-1">🏠 INÍCIO</button>
            </div>
         </div>

@@ -1,7 +1,6 @@
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { 
   BookOpen, 
-  Trophy, 
   User, 
   LogOut, 
   Download,
@@ -28,7 +27,6 @@ const Layout = () => {
     { name: 'Desafio', path: '/challenge', icon: Zap },
     { name: 'Simulados', path: '/simulation/config', icon: Target },
     { name: 'Grupos', path: '/groups', icon: Users },
-    { name: 'Ranking', path: '/ranking', icon: Trophy },
     { name: 'Downloads', path: '/downloads', icon: Download },
     { name: 'Perfil', path: '/profile', icon: User },
   ];

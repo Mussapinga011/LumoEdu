@@ -38,13 +38,17 @@ export const getExam = async (id: string) => {
 export const getExamsByDiscipline = async (disciplineId: string) => {
   const { data, error } = await supabase
     .from('exams')
-    .select('*')
+    .select('*, exam_questions(count)')
     .eq('discipline_id', disciplineId)
     .eq('is_active', true)
     .order('year', { ascending: false });
 
   if (error) throw error;
-  return data;
+  
+  return data.map((exam: any) => ({
+    ...exam,
+    questions_count: exam.exam_questions?.[0]?.count || 0
+  }));
 };
 
 /**
@@ -154,7 +158,7 @@ export const bulkImportQuestions = async (examId: string, questions: any[]) => {
       : (['A', 'B', 'C', 'D', 'E'].indexOf(q.correctOption)),
     explanation: q.explanation,
     order_index: q.order,
-    discipline_id: q.disciplineId
+    question_number: q.order
   }));
 
   const { error } = await supabase

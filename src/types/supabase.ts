@@ -76,6 +76,7 @@ export interface Database {
           last_study_date: string | null;
           last_exam_date: string | null;
           last_challenge_date: string | null;
+          study_plan: any | null; // JSON column
           created_at: string;
           updated_at: string;
         };
@@ -97,6 +98,7 @@ export interface Database {
           last_study_date?: string | null;
           last_exam_date?: string | null;
           last_challenge_date?: string | null;
+          study_plan?: any | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -118,6 +120,7 @@ export interface Database {
           last_study_date?: string | null;
           last_exam_date?: string | null;
           last_challenge_date?: string | null;
+          study_plan?: any | null;
           created_at?: string;
           updated_at?: string;
         };

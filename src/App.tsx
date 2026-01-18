@@ -23,7 +23,6 @@ const StudyPage = lazy(() => import('./pages/StudyPage'));
 const ChallengeSelectDisciplinePage = lazy(() => import('./pages/ChallengeSelectDisciplinePage'));
 const ChallengePage = lazy(() => import('./pages/ChallengePage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
-const RankingPage = lazy(() => import('./pages/RankingPage'));
 const DownloadsPage = lazy(() => import('./pages/DownloadsPage'));
 const StudyPlanSetupPage = lazy(() => import('./pages/StudyPlanSetupPage'));
 const SimulationConfigPage = lazy(() => import('./pages/SimulationConfigPage'));
@@ -176,11 +175,7 @@ function App() {
             </ProtectedRoute>
           } />
           
-          <Route path="/ranking" element={
-            <ProtectedRoute>
-              <RankingPage />
-            </ProtectedRoute>
-          } />
+
           
           <Route path="/practice/:disciplineId" element={
             <ProtectedRoute>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getSessionsBySection, saveSession, deleteSession } from '../../services/practiceService.supabase';
-import { Plus, Edit2, Trash2, ArrowLeft, Layout, Target, X, PlayCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, ArrowLeft, Layout, X, PlayCircle } from 'lucide-react';
 
 const AdminLearningSessionsPage = () => {
   const { disciplineId, sectionId } = useParams<{ disciplineId: string, sectionId: string }>();
@@ -91,7 +91,6 @@ const AdminLearningSessionsPage = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="bg-yellow-50 text-yellow-600 px-3 py-1 rounded-lg font-black text-[10px] uppercase mr-4">{s.reward_xp || 15} XP</div>
                 <button onClick={() => { setEditingSession(s); setIsModalOpen(true); }} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all"><Edit2 size={18} /></button>
                 <button onClick={() => handleDelete(s.id)} className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all"><Trash2 size={18} /></button>
               </div>
@@ -115,10 +114,6 @@ const AdminLearningSessionsPage = () => {
               <div>
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Resumo/Dica</label>
                 <textarea name="description" required defaultValue={editingSession?.description} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary outline-none font-bold h-24" placeholder="O que o aluno vai aprender aqui?" />
-              </div>
-              <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Recompensa (XP)</label>
-                <input name="rewardXp" type="number" required defaultValue={editingSession?.reward_xp || 15} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary outline-none font-bold" />
               </div>
               <div className="flex gap-4 pt-4">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 font-black text-gray-400 uppercase">Cancelar</button>

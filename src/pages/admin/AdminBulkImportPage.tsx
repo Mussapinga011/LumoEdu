@@ -22,14 +22,27 @@ const normalizeLaTeX = (text: string): string => {
 
 const PROMPT_TEXT = `Atue como um especialista em OCR e estruturação de dados.
 Analise as imagens fornecidas e extraia as questões deste exame de admissão.
-Retorne um JSON válido (array de objetos) seguindo EXATAMENTE este formato:
+Retorne APENAS um JSON válido (array de objetos) seguindo EXATAMENTE este formato.
 
+IMPORTANTE:
+1. No campo "options", extraia APENAS o texto da alternativa, SEM incluir a letra indicativa (A, B, C, etc) e sem parênteses.
+2. O campo "correctOption" deve conter apenas a LETRA da alternativa correta (A, B, C, D ou E).
+3. Se houver fórmulas matemáticas, mantenha em formato LaTeX entre cifras ($...$).
+4. Ignore cabeçalhos repetitivos de páginas.
+
+Exemplo de formato esperado:
 [
   {
-    "statement": "Texto completo do enunciado.",
-    "options": ["A", "B", "C", "D"],
+    "statement": "Qual é a capital de Moçambique?",
+    "options": ["Maputo", "Beira", "Nampula", "Inhambane"],
     "correctOption": "A",
-    "explanation": "..."
+    "explanation": "Maputo é a capital e maior cidade..."
+  },
+  {
+    "statement": "Calcule: $2 + 2$",
+    "options": ["3", "4", "5", "6"],
+    "correctOption": "B",
+    "explanation": "A soma de 2 e 2 é 4."
   }
 ]`;
 
@@ -44,7 +57,6 @@ const AdminBulkImportPage = () => {
   const [selectedDiscipline, setSelectedDiscipline] = useState('');
   const [examName, setExamName] = useState('');
   const [examYear] = useState(new Date().getFullYear());
-  const [examSeason] = useState('1ª época');
   const [jsonInput, setJsonInput] = useState('');
   const [processedQuestions, setProcessedQuestions] = useState<ProcessedQuestion[]>([]);
   const [step, setStep] = useState(1);
@@ -100,17 +112,12 @@ const AdminBulkImportPage = () => {
         university_id: selectedUniversityId,
         title: examName,
         year: examYear,
-        season: examSeason,
-        questions_count: processedQuestions.length,
         is_active: true
       };
       
       const newExam = await createExam(examData);
 
-      const questionsToImport = processedQuestions.map(pq => ({
-        ...pq,
-        disciplineId: selectedDiscipline
-      }));
+      const questionsToImport = processedQuestions;
 
       await bulkImportQuestions(newExam.id, questionsToImport);
 

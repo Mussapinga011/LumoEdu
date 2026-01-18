@@ -14,7 +14,7 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
       .from('user_profiles')
       .select(`
         *,
-        user_badges(badge_name, earned_at),
+        user_milestones(milestone_id, earned_at),
         user_activities(activity_type, title, timestamp)
       `);
 
@@ -37,7 +37,7 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
       lastStudyDate: user.last_study_date ? new Date(user.last_study_date) : null,
       lastExamDate: user.last_exam_date ? new Date(user.last_exam_date) : null,
       lastChallengeDate: user.last_challenge_date ? new Date(user.last_challenge_date) : null,
-      badges: user.user_badges?.map((b: any) => b.badge_name) || [],
+      milestones: user.user_milestones?.map((b: any) => b.milestone_id) || [],
       recentActivity: user.user_activities?.map((a: any) => ({
         type: a.activity_type,
         title: a.title,
@@ -59,7 +59,7 @@ export const getUserById = async (userId: string): Promise<UserProfile | null> =
     
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('*, user_badges(badge_name, earned_at), user_activities(activity_type, title, timestamp)')
+      .select('*, user_milestones(milestone_id, earned_at), user_activities(activity_type, title, timestamp)')
       .eq('id', userId)
       .maybeSingle();
 
@@ -93,7 +93,7 @@ export const getUserById = async (userId: string): Promise<UserProfile | null> =
       lastExamDate: data.last_exam_date ? new Date(data.last_exam_date) : null,
       lastChallengeDate: data.last_challenge_date ? new Date(data.last_challenge_date) : null,
       studyPlan: data.study_plan,
-      badges: data.user_badges?.map((b: any) => b.badge_name) || [],
+      milestones: data.user_milestones?.map((b: any) => b.milestone_id) || [],
       recentActivity: data.user_activities?.map((a: any) => ({
         type: a.activity_type,
         title: a.title,
@@ -181,7 +181,6 @@ export const addUserActivity = async (
   activity: {
     type: string;
     title: string;
-    xpEarned: number;
     score?: number;
   }
 ): Promise<void> => {
@@ -203,12 +202,12 @@ export const addUserActivity = async (
 
 
 /**
- * Adicionar badge ao usuário
+ * Adicionar milestone ao usuário
  */
-export const addUserBadge = async (userId: string, badgeName: string): Promise<void> => {
+export const addUserMilestone = async (userId: string, milestoneId: string): Promise<void> => {
   const { error } = await supabase
-    .from('user_badges')
-    .insert({ user_id: userId, badge_name: badgeName });
+    .from('user_milestones')
+    .insert({ user_id: userId, milestone_id: milestoneId });
   if (error && error.code !== '23505') throw error; 
 };
 

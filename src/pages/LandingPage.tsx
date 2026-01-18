@@ -34,7 +34,7 @@ const LandingPage = () => {
                  className="w-4/5 h-4/5 object-contain"
                />
             </div>
-            {/* Success badges surrounding mascot */}
+            {/* Preparation milestones surrounding mascot */}
             <div className="absolute -top-4 -right-4 bg-yellow-400 p-4 rounded-2xl shadow-lg -rotate-12 animate-bounce">
                <Zap size={32} className="text-white" />
             </div>
@@ -71,12 +71,12 @@ const LandingPage = () => {
           <div className="flex flex-col items-center gap-4">
             <CheckCircle className="text-secondary" size={48} />
             <h3 className="text-xl font-bold text-gray-700">Aprendizagem Eficaz</h3>
-            <p className="text-gray-500">Lições gamificadas que ajudam a reter informação.</p>
+            <p className="text-gray-500">Módulos interativos que facilitam a retenção de informação.</p>
           </div>
           <div className="flex flex-col items-center gap-4">
             <Zap className="text-accent" size={48} />
-            <h3 className="text-xl font-bold text-gray-700">Mantenha-se Motivado</h3>
-            <p className="text-gray-500">Ganhe pontos, sequências e suba no ranking.</p>
+            <h3 className="text-xl font-bold text-gray-700">Mantenha o Foco</h3>
+            <p className="text-gray-500">Conclua desafios, mantenha sequências e valide marcos.</p>
           </div>
           <div className="flex flex-col items-center gap-4">
             <Shield className="text-danger" size={48} />

@@ -64,13 +64,10 @@ export interface Database {
           photo_url: string | null;
           role: 'user' | 'admin';
           is_premium: boolean;
-          level: number;
-          xp: number;
           streak: number;
           exams_completed: number;
           challenges_completed: number;
           average_grade: number;
-          score: number;
           daily_exercises_count: number;
           last_active: string;
           last_study_date: string | null;
@@ -86,13 +83,10 @@ export interface Database {
           photo_url?: string | null;
           role?: 'user' | 'admin';
           is_premium?: boolean;
-          level?: number;
-          xp?: number;
           streak?: number;
           exams_completed?: number;
           challenges_completed?: number;
           average_grade?: number;
-          score?: number;
           daily_exercises_count?: number;
           last_active?: string;
           last_study_date?: string | null;
@@ -108,13 +102,10 @@ export interface Database {
           photo_url?: string | null;
           role?: 'user' | 'admin';
           is_premium?: boolean;
-          level?: number;
-          xp?: number;
           streak?: number;
           exams_completed?: number;
           challenges_completed?: number;
           average_grade?: number;
-          score?: number;
           daily_exercises_count?: number;
           last_active?: string;
           last_study_date?: string | null;
@@ -165,8 +156,6 @@ export interface Database {
           title: string;
           description: string | null;
           order_index: number;
-          level: number;
-          xp_reward: number;
           type: 'quiz' | 'review' | 'challenge';
           created_at: string;
           updated_at: string;
@@ -178,8 +167,6 @@ export interface Database {
           title: string;
           description?: string | null;
           order_index: number;
-          level?: number;
-          xp_reward?: number;
           type?: 'quiz' | 'review' | 'challenge';
           created_at?: string;
           updated_at?: string;
@@ -191,8 +178,6 @@ export interface Database {
           title?: string;
           description?: string | null;
           order_index?: number;
-          level?: number;
-          xp_reward?: number;
           type?: 'quiz' | 'review' | 'challenge';
           created_at?: string;
           updated_at?: string;
@@ -206,7 +191,6 @@ export interface Database {
           options: string[];
           correct_answer: string;
           explanation: string | null;
-          xp: number;
           type: 'multiple_choice' | 'boolean';
           created_at: string;
         };
@@ -217,7 +201,6 @@ export interface Database {
           options: string[];
           correct_answer: string;
           explanation?: string | null;
-          xp?: number;
           type?: 'multiple_choice' | 'boolean';
           created_at?: string;
         };
@@ -228,7 +211,6 @@ export interface Database {
           options?: string[];
           correct_answer?: string;
           explanation?: string | null;
-          xp?: number;
           type?: 'multiple_choice' | 'boolean';
           created_at?: string;
         };
@@ -242,7 +224,6 @@ export interface Database {
           discipline_id: string;
           completed: boolean;
           score: number | null;
-          xp_earned: number | null;
           streak: number;
           last_active: string;
           created_at: string;
@@ -255,7 +236,6 @@ export interface Database {
           discipline_id: string;
           completed?: boolean;
           score?: number | null;
-          xp_earned?: number | null;
           streak?: number;
           last_active?: string;
           created_at?: string;
@@ -268,7 +248,6 @@ export interface Database {
           discipline_id?: string;
           completed?: boolean;
           score?: number | null;
-          xp_earned?: number | null;
           streak?: number;
           last_active?: string;
           created_at?: string;
@@ -310,6 +289,23 @@ export interface Database {
           is_private?: boolean;
           created_at?: string;
           updated_at?: string;
+        };
+      };
+      user_milestones: {
+        Row: {
+          user_id: string;
+          milestone_id: string;
+          earned_at: string;
+        };
+        Insert: {
+          user_id: string;
+          milestone_id: string;
+          earned_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          milestone_id?: string;
+          earned_at?: string;
         };
       };
     };

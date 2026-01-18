@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { PREPARATION_MILESTONES, PreparationMilestone, UserMilestone } from '../types/milestone';
+import { PREPARATION_MILESTONES, PreparationMilestone } from '../types/milestone';
 import { translateDiscipline } from '../utils/formatters';
 
 /**
@@ -23,14 +23,14 @@ interface UserStats {
  */
 export const checkAndUpdateMilestones = async (userId: string, currentStats: UserStats): Promise<PreparationMilestone[]> => {
   try {
-    const { data: existingBadges, error } = await supabase
-      .from('user_badges')
-      .select('badge_name')
+    const { data: existingMilestones, error } = await supabase
+      .from('user_milestones')
+      .select('milestone_id')
       .eq('user_id', userId);
 
     if (error) throw error;
 
-    const achievedIds = new Set(existingBadges?.map((b: any) => b.badge_name) || []);
+    const achievedIds = new Set(existingMilestones?.map((m: any) => m.milestone_id) || []);
     const newMilestones: PreparationMilestone[] = [];
 
     for (const milestone of PREPARATION_MILESTONES) {
@@ -146,13 +146,13 @@ const evaluateRequirement = (milestone: PreparationMilestone, stats: UserStats):
  * Persiste o marco no banco de dados
  */
 const saveMilestone = async (userId: string, milestoneId: string) => {
-  // Usamos 'user_badges' para não quebrar o banco existente,
+  // Usamos 'user_milestones' para no quebrar o banco existente,
   // mas logicamente estamos salvando um milestone.
   const { error } = await supabase
-    .from('user_badges')
+    .from('user_milestones')
     .insert({
       user_id: userId,
-      badge_name: milestoneId,
+      milestone_id: milestoneId,
       earned_at: new Date().toISOString()
     });
 

@@ -29,7 +29,6 @@ export interface PracticeQuestion {
   correctAnswer?: number; // Alias for correctOption
   explanation?: string;
   orderIndex: number;
-  xp?: number;
   createdAt?: any;
 }
 

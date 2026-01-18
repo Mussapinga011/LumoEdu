@@ -74,7 +74,6 @@ export const saveSessionProgress = async (userId: string, progress: any) => {
         discipline_id: progress.disciplineId,
         completed: progress.completed,
         score: progress.score,
-        xp_earned: progress.xpEarned,
         streak: progress.streak,
         last_active: new Date().toISOString()
       }, {
@@ -98,7 +97,7 @@ export const getUserProgressByDiscipline = async (userId: string, disciplineId: 
   try {
     const { data, error } = await supabase
       .from('user_progress')
-      .select('step_id, completed, score, xp_earned, streak')
+      .select('step_id, completed, score, streak')
       .eq('user_id', userId)
       .eq('discipline_id', disciplineId);
 
@@ -110,7 +109,6 @@ export const getUserProgressByDiscipline = async (userId: string, disciplineId: 
       progressMap[item.step_id] = {
         completed: item.completed,
         score: item.score,
-        xpEarned: item.xp_earned,
         streak: item.streak
       };
     });

@@ -9,7 +9,7 @@ export interface UserProfile {
   role: 'user' | 'admin';
   streak: number;
   createdAt?: any;
-  badges?: string[];
+  milestones?: string[];
   
   // Premium System
   isPremium: boolean;

@@ -100,7 +100,7 @@ const ProfilePage = () => {
             return PREPARATION_MILESTONES
               .filter(m => !isMilestoneIrrelevant(m, stats))
               .map((milestone) => {
-                const isAchieved = user.badges?.includes(milestone.id);
+                const isAchieved = user.milestones?.includes(milestone.id);
                 const { name, description } = getMilestoneDisplayData(milestone, stats);
                 
                 return (

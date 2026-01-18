@@ -84,15 +84,12 @@ const SimulationPage = () => {
         timeSpent
       }));
 
-      const xpEarned = 30 + (correctCount * 2);
-      
       await Promise.all([
          updateUserScore(user.id),
          addUserActivity(user.id, {
             type: 'exam',
             title: `Simulado: ${getModeName(config.mode || 'random')}`,
-            score: score,
-            xpEarned: xpEarned
+            score: score
          })
       ]);
 

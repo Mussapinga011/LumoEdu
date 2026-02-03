@@ -14,7 +14,7 @@ import { useContentStore } from '../../stores/useContentStore';
 import { 
   ArrowLeft, Trash2, Check, Edit, 
   GripVertical, ChevronUp, ChevronDown, 
-  Save, HelpCircle, ExternalLink,
+  Save, HelpCircle,
   CheckCircle2
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -37,7 +37,7 @@ const AdminExamEditorPage = () => {
   const { modalState, showConfirm, closeModal } = useModal();
   const { toastState, showSuccess, showError, showWarning, closeToast } = useToast();
 
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [examData, setExamData] = useState<any>({
     name: '',
     disciplineId: '',

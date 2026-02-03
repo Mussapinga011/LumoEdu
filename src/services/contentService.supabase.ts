@@ -179,7 +179,7 @@ export const deleteDiscipline = async (id: string): Promise<void> => {
  */
 export const getLearningSessionsByDiscipline = async (disciplineId: string) => {
   const { data, error } = await supabase
-    .from('learning_sessions')
+    .from('learning_steps')
     .select('*')
     .eq('discipline_id', disciplineId)
     .order('order_index');
@@ -189,10 +189,11 @@ export const getLearningSessionsByDiscipline = async (disciplineId: string) => {
 
 export const saveLearningSession = async (session: any) => {
   const { error } = await supabase
-    .from('learning_sessions')
+    .from('learning_steps')
     .upsert({
       id: session.id,
       discipline_id: session.disciplineId,
+      topic_id: session.topicId, // Novo campo!
       title: session.title,
       description: session.description,
       order_index: session.orderIndex,
@@ -204,7 +205,7 @@ export const saveLearningSession = async (session: any) => {
 };
 
 export const deleteLearningSession = async (id: string) => {
-  const { error } = await supabase.from('learning_sessions').delete().eq('id', id);
+  const { error } = await supabase.from('learning_steps').delete().eq('id', id);
   if (error) throw error;
 };
 

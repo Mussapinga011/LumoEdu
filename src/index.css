@@ -79,22 +79,34 @@
 }
 
 /* KaTeX Formula Spacing - Prevent Cutoff */
+/* KaTeX Formula Spacing - Prevent Cutoff */
 .katex-display {
   max-width: 100%;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: hidden; /* Prevent vertical Scroll on formulas */
+  padding: 0.5rem 0; /* Add safety padding */
+  text-align: center;
 }
 
 .katex {
-  white-space: normal !important;
+  font-size: 0.95em !important; /* Slightly reduce scale as requested */
+  white-space: nowrap !important; /* Force no-wrap for integrity */
+  text-rendering: optimizeLegibility;
 }
 
-.katex-display > .katex {
-  white-space: nowrap;
+/* Scrollbar styling for formulas */
+.katex-display::-webkit-scrollbar {
+  height: 4px;
 }
-
+.katex-display::-webkit-scrollbar-track {
+  background: transparent;
+}
+.katex-display::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
 
 /* Ensure formulas have proper spacing in scrollable containers */
 .katex-html {
-  padding: 0 0.25rem;
+  padding: 0 0.1rem;
 }

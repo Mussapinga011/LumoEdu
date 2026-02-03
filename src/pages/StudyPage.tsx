@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { getExam, getQuestionsByExam } from '../services/examService.supabase';
-import { updateUserProfile, updateUserScore, addUserActivity } from '../services/dbService.supabase';
+import { updateUserProfile, updateUserScore } from '../services/dbService.supabase';
 import { Exam, Question } from '../types/exam';
 import { ArrowLeft, Check, X } from 'lucide-react';
 import clsx from 'clsx';

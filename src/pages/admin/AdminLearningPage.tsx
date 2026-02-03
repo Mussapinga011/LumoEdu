@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContentStore } from '../../stores/useContentStore';
-import { BookOpen, ArrowRight, Settings } from 'lucide-react';
+import { BookOpen, ArrowRight, Sparkles, GraduationCap } from 'lucide-react';
 
 const AdminLearningPage = () => {
   const navigate = useNavigate();
@@ -11,40 +11,74 @@ const AdminLearningPage = () => {
     fetchContent();
   }, [fetchContent]);
 
-  if (loading) return <div className="p-20 text-center font-black animate-pulse text-primary">MAPA DE CONHECIMENTO...</div>;
+  // FILTRO SIMPLES: Apenas disciplinas GERAIS (sem university_id)
+  const generalDisciplines = disciplines.filter(d => !d.universityId);
+
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+       <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="h-12 w-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-400 font-medium">Carregando mapa de conhecimento...</p>
+       </div>
+    </div>
+  );
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="bg-white p-10 rounded-[40px] border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-12">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-2 border-b border-gray-200">
         <div>
-          <h1 className="text-4xl font-black text-gray-800 tracking-tighter uppercase leading-none">Learning Hub</h1>
-          <p className="text-gray-400 font-medium mt-2">Selecione uma disciplina para gerenciar as trilhas de aprendizado.</p>
+           <div className="flex items-center gap-3 mb-2">
+             <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
+               <GraduationCap size={24} />
+             </div>
+             <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+               Modo Aprender
+             </h1>
+           </div>
+          <p className="text-gray-500 font-medium ml-1">
+             Gerencie as trilhas de aprendizado das disciplinas gerais.
+          </p>
         </div>
-        <div className="bg-primary/10 p-5 rounded-3xl text-primary"><BookOpen size={48} /></div>
       </div>
 
+      {/* Grid de Disciplinas GERAIS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {disciplines.map((d) => (
+        {generalDisciplines.map((d) => (
           <button
             key={d.id}
             onClick={() => navigate(`/admin/learning/${d.id}/sections`)}
-            className="group relative bg-white p-8 rounded-[32px] border-2 border-transparent hover:border-primary transition-all shadow-xl hover:shadow-2xl hover:-translate-y-2 text-left overflow-hidden"
+            className="group relative bg-white p-6 rounded-2xl border border-gray-100 hover:border-indigo-200 transition-all hover:shadow-lg text-left overflow-hidden"
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] -mr-8 -mt-8 grayscale group-hover:grayscale-0 transition-all" />
+            {/* Decorative Element */}
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-bl-full -mr-8 -mt-8 opacity-50 group-hover:opacity-100 transition-opacity" />
             
             <div className="relative z-10">
-              <div className="bg-primary/10 text-primary w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-all">
-                <Settings size={28} />
+              <div className="flex items-center justify-between mb-4">
+                 <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                   <BookOpen size={24} />
+                 </div>
+                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider bg-gray-50 px-2 py-1 rounded-lg">
+                    Geral
+                 </span>
               </div>
-              <h3 className="text-2xl font-black text-gray-800 uppercase tracking-tighter leading-none mb-2">{d.title}</h3>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{d.universityName || 'Geral'}</p>
               
-              <div className="mt-8 flex items-center gap-2 text-primary font-black uppercase text-xs tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0">
+              <h3 className="text-xl font-bold text-gray-800 mb-1">{d.title}</h3>
+              
+              <div className="mt-4 flex items-center gap-2 text-indigo-600 font-bold text-sm opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0">
                 Gerenciar Trilha <ArrowRight size={16} />
               </div>
             </div>
           </button>
         ))}
+
+        {generalDisciplines.length === 0 && (
+           <div className="col-span-full py-20 text-center text-gray-400">
+              <Sparkles size={40} className="mx-auto mb-4 text-gray-200" />
+              <p className="font-medium">Nenhuma disciplina geral cadastrada.</p>
+              <p className="text-sm text-gray-300 mt-2">Crie disciplinas sem universidade específica para usar no Modo Aprender.</p>
+           </div>
+        )}
       </div>
     </div>
   );

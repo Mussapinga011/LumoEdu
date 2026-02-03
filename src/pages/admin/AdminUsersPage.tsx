@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getAllUsers, updateUserProfile, deleteUser } from '../../services/dbService.supabase';
 import { UserProfile } from '../../types/user';
-import { Search, Edit, X, Trash2, Shield, User } from 'lucide-react';
+import { Search, Edit, X, Trash2, Shield, User, Sparkles } from 'lucide-react';
 import { useModal, useToast } from '../../hooks/useNotifications';
 import Modal from '../../components/Modal';
 import Toast from '../../components/Toast';
@@ -91,14 +91,15 @@ const AdminUsersPage = () => {
   };
 
   const handleRoleChange = async (userId: string, newRole: 'admin' | 'user') => {
+    const roleName = newRole === 'admin' ? 'Administrador' : 'Estudante';
     showConfirm(
       'Alterar Cargo',
-      `Mudar usuário para ${newRole === 'admin' ? 'Administrador' : 'Estudante'}?`,
+      `Mudar usuário para ${roleName}?`,
       async () => {
         try {
           await updateUserProfile(userId, { role: newRole });
           setUsers(users.map(u => (u.id === userId || u.uid === userId) ? { ...u, role: newRole } : u));
-          showSuccess(`Permissões de ${newRole} concedidas!`);
+          showSuccess(`Permissões de ${roleName} concedidas!`);
         } catch (error) {
           showError(getErrorMessage(error));
         }
@@ -131,39 +132,59 @@ const AdminUsersPage = () => {
     return matchesSearch && matchesTab;
   });
 
-  if (loading) return <div className="p-20 text-center font-black text-primary animate-pulse uppercase tracking-widest">Acessando Arquivos...</div>;
+  if (loading) return (
+     <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+           <div className="h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+           <p className="text-gray-400 font-medium">Carregando usuários...</p>
+        </div>
+     </div>
+  );
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-12">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-2 border-b border-gray-200">
         <div>
-          <h1 className="text-4xl font-black text-gray-800 tracking-tighter uppercase">Usuários</h1>
-          <p className="text-gray-400 font-medium">Gestão de {users.length} membros da LumoEdu.</p>
+           <div className="flex items-center gap-3 mb-2">
+             <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+               <User size={24} />
+             </div>
+             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-transparent">
+               Gerenciar Usuários
+             </h1>
+           </div>
+          <p className="text-gray-500 font-medium ml-1">
+             {users.length} membros cadastrados na plataforma.
+          </p>
         </div>
         
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={24} />
+        <div className="relative w-full md:w-80 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={20} />
           <input
             type="text"
-            placeholder="Pesquisar por nome ou email..."
+            placeholder="Buscar nome ou email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-6 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-primary focus:bg-white outline-none font-bold transition-all"
+            className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"
           />
         </div>
       </div>
 
-      <div className="flex bg-gray-100 p-1.5 rounded-2xl w-fit">
+      {/* Tabs & Controls */}
+      <div className="flex gap-2 p-1 bg-gray-100/80 rounded-xl w-fit">
         {[
           { id: 'users', label: 'Estudantes', icon: User },
-          { id: 'admins', label: 'Admins', icon: Shield }
+          { id: 'admins', label: 'Administradores', icon: Shield }
         ].map(tab => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
+            onClick={() => setActiveTab(tab.id as 'users' | 'admins')}
             className={clsx(
-              "flex items-center gap-2 px-8 py-3 rounded-xl font-black uppercase text-xs tracking-widest transition-all",
-              activeTab === tab.id ? "bg-white text-primary shadow-sm" : "text-gray-400 hover:text-gray-600"
+              "flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-300",
+              activeTab === tab.id 
+                 ? "bg-white text-blue-600 shadow-sm scale-[1.02]" 
+                 : "text-gray-500 hover:text-gray-700 hover:bg-gray-200/50"
             )}
           >
             <tab.icon size={16} />
@@ -172,72 +193,170 @@ const AdminUsersPage = () => {
         ))}
       </div>
 
-      <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50/50 border-b border-gray-100">
-              <th className="p-6 text-left font-black text-gray-400 uppercase text-[10px] tracking-widest">Identidade</th>
-              <th className="p-6 text-left font-black text-gray-400 uppercase text-[10px] tracking-widest">Plano</th>
-              <th className="p-6 text-left font-black text-gray-400 uppercase text-[10px] tracking-widest">Atividade</th>
-              <th className="p-6 text-right font-black text-gray-400 uppercase text-[10px] tracking-widest">Ações Rápidas</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {filteredUsers.map((u) => {
-              const userId = u.id || u.uid;
-              return (
-                <tr key={userId} className="hover:bg-blue-50/30 transition-colors group">
-                  <td className="p-6">
-                    <div className="flex items-center gap-4">
-                      <div className={clsx("w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-inner", u.role === 'admin' ? "bg-purple-100 text-purple-600" : "bg-blue-100 text-blue-600")}>
-                        {u.photoURL ? <img src={u.photoURL} className="w-full h-full rounded-2xl object-cover" /> : u.displayName?.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <div className="font-black text-gray-800 text-lg uppercase tracking-tighter leading-none">{u.displayName}</div>
-                        <div className="text-sm text-gray-400 font-medium lowercase tracking-tight">{u.email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-6">
-                    <button onClick={() => handlePremiumToggle(userId, u.isPremium)} className={clsx("px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border-2", u.isPremium ? "bg-yellow-50 text-yellow-600 border-yellow-100" : "bg-gray-50 text-gray-400 border-gray-100 hover:border-yellow-200")}>
-                      {u.isPremium ? '🌟 Premium' : '⚪ Free'}
-                    </button>
-                  </td>
-                  <td className="p-6">
-                    <div className="text-xs font-black text-gray-700 uppercase">{u.dailyExercisesCount || 0} resolvidos</div>
-                    <div className="text-[10px] text-gray-400 font-bold uppercase">Questões no total</div>
-                  </td>
-                  <td className="p-6 text-right">
-                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => handleEditUser(u)} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all"><Edit size={18} /></button>
-                      <button onClick={() => handleRoleChange(userId, u.role === 'admin' ? 'user' : 'admin')} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-purple-600 hover:text-white transition-all"><Shield size={18} /></button>
-                      <button onClick={() => handleDeleteUser(userId)} className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all"><Trash2 size={18} /></button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      {/* Modern Table */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+           <table className="w-full">
+             <thead>
+               <tr className="bg-gray-50/50 border-b border-gray-100">
+                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Usuário</th>
+                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Atividade</th>
+                 <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Ações</th>
+               </tr>
+             </thead>
+             <tbody className="divide-y divide-gray-50">
+               {filteredUsers.length === 0 ? (
+                  <tr>
+                     <td colSpan={4} className="p-12 text-center text-gray-400">
+                        <div className="flex flex-col items-center gap-3">
+                           <Search size={40} className="text-gray-200" />
+                           <p>Nenhum usuário encontrado com esses filtros.</p>
+                        </div>
+                     </td>
+                  </tr>
+               ) : filteredUsers.map((u) => {
+                 const userId = u.id || u.uid;
+                 const isAdmin = u.role === 'admin';
+                 
+                 return (
+                   <tr key={userId} className="hover:bg-blue-50/30 transition-colors group">
+                     {/* User Identity Column */}
+                     <td className="px-6 py-4">
+                       <div className="flex items-center gap-4">
+                         <div className={clsx(
+                            "relative w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shadow-sm border-2",
+                            isAdmin ? "bg-purple-100 text-purple-600 border-purple-200" : "bg-blue-50 text-blue-600 border-blue-100"
+                         )}>
+                           {u.photoURL ? (
+                              <img src={u.photoURL} alt={u.displayName} className="w-full h-full rounded-full object-cover" />
+                           ) : (
+                              u.displayName?.charAt(0).toUpperCase()
+                           )}
+                           {/* Online indicator placeholder (if needed in future) */}
+                           {/* <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 border-2 border-white rounded-full"></div> */}
+                         </div>
+                         <div>
+                           <div className="font-semibold text-gray-900">{u.displayName}</div>
+                           <div className="text-xs text-gray-500">{u.email}</div>
+                         </div>
+                       </div>
+                     </td>
+
+                     {/* Status Column */}
+                     <td className="px-6 py-4">
+                       <div className="flex flex-col gap-2 items-start">
+                          {/* Role Badge */}
+                          {isAdmin && (
+                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 border border-purple-200">
+                                <Shield size={12} /> Admin
+                             </span>
+                          )}
+                          
+                          {/* Premium Toggle */}
+                          <button 
+                             onClick={() => handlePremiumToggle(userId, u.isPremium)}
+                             className={clsx(
+                                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all hover:scale-105 active:scale-95",
+                                u.isPremium 
+                                   ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100" 
+                                   : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                             )}
+                          >
+                             {u.isPremium ? <Sparkles size={12} className="text-amber-500" fill="currentColor" /> : <User size={12} />}
+                             {u.isPremium ? 'Premium' : 'Básico'}
+                          </button>
+                       </div>
+                     </td>
+
+                     {/* Activity Column */}
+                     <td className="px-6 py-4">
+                       <div className="flex flex-col gap-1">
+                          <span className="text-sm font-medium text-gray-700">
+                             {u.dailyExercisesCount || 0} questões
+                          </span>
+                          <span className="text-xs text-gray-400">Resolvidas hoje</span>
+                       </div>
+                     </td>
+
+                     {/* Actions Column */}
+                     <td className="px-6 py-4 text-right">
+                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
+                         <button 
+                           onClick={() => handleEditUser(u)} 
+                           className="p-2 text-gray-400 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors"
+                           title="Editar perfil"
+                         >
+                           <Edit size={18} />
+                         </button>
+                         <button 
+                           onClick={() => handleRoleChange(userId, isAdmin ? 'user' : 'admin')} 
+                           className={clsx(
+                              "p-2 rounded-lg transition-colors",
+                              isAdmin ? "text-purple-600 bg-purple-50 hover:bg-purple-100" : "text-gray-400 hover:bg-purple-50 hover:text-purple-600"
+                           )}
+                           title={isAdmin ? "Remover admin" : "Promover a admin"}
+                         >
+                           <Shield size={18} />
+                         </button>
+                         <button 
+                           onClick={() => handleDeleteUser(userId)} 
+                           className="p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                           title="Excluir usuário"
+                         >
+                           <Trash2 size={18} />
+                         </button>
+                       </div>
+                     </td>
+                   </tr>
+                 );
+               })}
+             </tbody>
+           </table>
+        </div>
       </div>
 
+      {/* Edit User Modal */}
       {editingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl border-4 border-white animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between mb-8">
-              <h3 className="text-3xl font-black text-gray-800 uppercase tracking-tighter">Ajustar Perfil</h3>
-              <button onClick={() => setEditingUser(null)} className="text-gray-400"><X size={28} /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl p-6 md:p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-800">Editar Usuário</h3>
+              <button 
+                 onClick={() => setEditingUser(null)} 
+                 className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                 <X size={24} />
+              </button>
             </div>
 
             <div className="space-y-6">
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Nome de Exibição</label>
-                <input type="text" value={editingUser.displayName} onChange={(e) => setEditingUser({ ...editingUser, displayName: e.target.value })} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-white outline-none font-bold" />
+                <label className="text-sm font-medium text-gray-500 uppercase tracking-wide block mb-2">
+                   Nome de Exibição
+                </label>
+                <input 
+                   type="text" 
+                   value={editingUser.displayName} 
+                   onChange={(e) => setEditingUser({ ...editingUser, displayName: e.target.value })} 
+                   className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none font-medium transition-all"
+                   placeholder="Nome completo"
+                />
               </div>
               
-              <div className="flex gap-4 pt-4">
-                <button onClick={() => setEditingUser(null)} className="flex-1 font-black text-gray-400 uppercase">Cancelar</button>
-                <button onClick={handleSaveEdit} className="flex-1 bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 active:translate-y-1">SALVAR 💾</button>
+              <div className="flex gap-4 pt-2">
+                <button 
+                   onClick={() => setEditingUser(null)} 
+                   className="flex-1 py-3 text-gray-500 font-medium hover:bg-gray-50 rounded-xl transition-colors"
+                >
+                   Cancelar
+                </button>
+                <button 
+                   onClick={handleSaveEdit} 
+                   className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all"
+                >
+                   Salvar Alterações
+                </button>
               </div>
             </div>
           </div>

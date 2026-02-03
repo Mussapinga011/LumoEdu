@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Book, FileText } from 'lucide-react';
+import { 
+  Users, 
+  Book, 
+  FileText, 
+  Download, 
+  MessageCircle, 
+  School, 
+  BookMarked,
+  Activity,
+  ArrowRight,
+  Sparkles
+} from 'lucide-react';
 import { getAllUsers, getAllExams, getAllUniversities } from '../services/dbService.supabase';
 import { useToast } from '../hooks/useNotifications';
 import Toast from '../components/Toast';
@@ -65,123 +76,223 @@ const AdminDashboard = () => {
     }
   };
 
-  return (
-    <div className="space-y-8">
-      <h1 className="text-3xl font-bold text-gray-800">Painel Administrativo</h1>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6">
-        {/* Online Users */}
-        <div className="bg-emerald-500 rounded-lg shadow-lg p-4 text-white relative overflow-hidden group">
-          <div className="relative z-10">
-            <h3 className="text-4xl font-bold mb-2">{loading ? '...' : stats.onlineUsers}</h3>
-            <p className="text-emerald-100 font-medium uppercase tracking-wide text-sm">Usuários Online</p>
+  const StatCard = ({ title, value, icon: Icon, gradient, subtext, onClick, large = false }: any) => (
+    <div 
+      onClick={onClick}
+      className={`relative overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 ease-out cursor-pointer group hover:scale-[1.02] ${large ? 'md:col-span-2' : ''} bg-gradient-to-br ${gradient}`}
+    >
+      <div className="relative z-10 p-6 md:p-8">
+        <div className="flex justify-between items-start">
+          <div>
+            <p className="text-white/80 font-medium uppercase tracking-wider text-xs md:text-sm mb-1">{title}</p>
+            {loading ? (
+              <div className="h-10 md:h-14 w-24 bg-white/20 rounded-lg animate-pulse my-2"></div>
+            ) : (
+              <h3 className={`font-bold text-white ${large ? 'text-5xl md:text-6xl' : 'text-4xl'}`}>
+                {value}
+              </h3>
+            )}
           </div>
-          <div className="absolute -right-4 -bottom-4 text-emerald-600 opacity-30 group-hover:scale-110 transition-transform">
-            <div className="relative">
-              <Users size={100} />
-              <div className="absolute top-2 right-2 w-6 h-6 bg-green-400 rounded-full border-4 border-emerald-500 animate-pulse"></div>
-            </div>
-          </div>
-          <div className="mt-4 pt-2 border-t border-emerald-400/30 flex items-center justify-between text-sm text-emerald-100 cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/admin/users')}>
-            <span>Ativos nos últimos 5min</span>
-            <span>→</span>
+          <div className="p-3 bg-white/10 rounded-xl backdrop-blur-sm group-hover:bg-white/20 transition-colors">
+            <Icon size={large ? 32 : 24} className="text-white" />
           </div>
         </div>
         
-        {/* Total Users */}
-        <div className="bg-blue-500 rounded-lg shadow-lg p-4 text-white relative overflow-hidden group">
-          <div className="relative z-10">
-            <h3 className="text-4xl font-bold mb-2">{loading ? '...' : stats.totalUsers}</h3>
-            <p className="text-blue-100 font-medium uppercase tracking-wide text-sm">Total de Usuários</p>
+        {subtext && (
+          <div className="mt-4 flex items-center gap-2 text-white/70 text-sm group-hover:text-white transition-colors">
+             <span>{subtext}</span>
+             <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
           </div>
-          <div className="absolute -right-4 -bottom-4 text-blue-600 opacity-30 group-hover:scale-110 transition-transform">
-            <Users size={100} />
-          </div>
-          <div className="mt-4 pt-2 border-t border-blue-400/30 flex items-center justify-between text-sm text-blue-100 cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/admin/users')}>
-            <span>Mais informações</span>
-            <span>→</span>
-          </div>
-        </div>
+        )}
+      </div>
+      
+      {/* Decorative background icon */}
+      <div className="absolute -right-6 -bottom-6 text-white opacity-10 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+        <Icon size={160} />
+      </div>
+      
+      {/* Texture overlay */}
+      <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-5 transition-opacity" />
+    </div>
+  );
 
-        {/* Premium Users */}
-        <div className="bg-yellow-500 rounded-lg shadow-lg p-4 text-white relative overflow-hidden group">
-          <div className="relative z-10">
-            <h3 className="text-4xl font-bold mb-2">{loading ? '...' : stats.premiumUsers}</h3>
-            <p className="text-yellow-100 font-medium uppercase tracking-wide text-sm">Usuários Premium</p>
-          </div>
-          <div className="absolute -right-4 -bottom-4 text-yellow-600 opacity-30 group-hover:scale-110 transition-transform">
-            <Book size={100} />
-          </div>
-          <div className="mt-4 pt-2 border-t border-yellow-400/30 flex items-center justify-between text-sm text-yellow-100 cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/admin/users')}>
-            <span>Mais informações</span>
-            <span>→</span>
-          </div>
+  const ActionCard = ({ title, description, icon: Icon, color, path, badge }: any) => (
+    <button
+      onClick={() => navigate(path)}
+      className="relative flex flex-col items-start p-6 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group overflow-hidden w-full text-left"
+    >
+      <div className={`absolute top-0 left-0 w-1 h-full bg-${color}-500`} />
+      
+      <div className="flex justify-between w-full mb-4">
+        <div className={`p-3 rounded-xl bg-${color}-50 text-${color}-600 group-hover:scale-110 transition-transform duration-300`}>
+          <Icon size={28} />
         </div>
+        {badge && (
+          <span className={`px-2 py-1 bg-${color}-50 text-${color}-700 text-xs font-bold rounded-full h-fit`}>
+            {badge}
+          </span>
+        )}
+      </div>
+      
+      <h3 className="text-lg font-bold text-gray-800 mb-1 group-hover:text-blue-600 transition-colors">{title}</h3>
+      <p className="text-sm text-gray-500 leading-relaxed">{description}</p>
+      
+      <div className="absolute right-4 bottom-4 opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0">
+        <ArrowRight size={20} className={`text-${color}-500`} />
+      </div>
+    </button>
+  );
 
-        {/* Total Exams */}
-        <div className="bg-green-500 rounded-lg shadow-lg p-4 text-white relative overflow-hidden group">
-          <div className="relative z-10">
-            <h3 className="text-4xl font-bold mb-2">{loading ? '...' : stats.totalExams}</h3>
-            <p className="text-green-100 font-medium uppercase tracking-wide text-sm">Total de Exames</p>
-          </div>
-          <div className="absolute -right-4 -bottom-4 text-green-600 opacity-30 group-hover:scale-110 transition-transform">
-            <Book size={100} />
-          </div>
-          <div className="mt-4 pt-2 border-t border-green-400/30 flex items-center justify-between text-sm text-green-100 cursor-pointer hover:text-white transition-colors" onClick={() => navigate('/admin/exams')}>
-            <span>Mais informações</span>
-            <span>→</span>
-          </div>
-        </div>
-
-        {/* New Registrations */}
-        <div className="bg-red-500 rounded-lg shadow-lg p-4 text-white relative overflow-hidden group">
-          <div className="relative z-10">
-            <h3 className="text-4xl font-bold mb-2">{loading ? '...' : stats.newUsers}</h3>
-            <p className="text-red-100 font-medium uppercase tracking-wide text-sm">Novos Usuários (30d)</p>
-          </div>
-          <div className="absolute -right-4 -bottom-4 text-red-600 opacity-30 group-hover:scale-110 transition-transform">
-            <FileText size={100} />
-          </div>
-          <div className="mt-4 pt-2 border-t border-red-400/30 flex items-center justify-between text-sm text-red-100 cursor-pointer hover:text-white transition-colors">
-            <span>Mais informações</span>
-            <span>→</span>
-          </div>
-        </div>
+  return (
+    <div className="space-y-10 pb-12">
+      <div className="pt-2 border-b border-gray-200 pb-6">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent inline-flex items-center gap-3">
+          Painel Administrativo <Sparkles className="text-amber-400" size={24} />
+        </h1>
+        <p className="text-gray-500 mt-2 text-lg">Visão geral e gestão do sistema</p>
       </div>
 
-      {/* Main Content Info */}
       {isDbEmpty && (
-        <div className="bg-amber-50 border-2 border-amber-200 p-6 rounded-2xl">
-          <h3 className="font-bold text-amber-900">Banco de Dados Inicializado</h3>
-          <p className="text-amber-700">O conteúdo está sendo carregado via Supabase.</p>
+        <div className="bg-amber-50 border-l-4 border-amber-400 p-6 rounded-r-xl shadow-sm">
+          <div className="flex items-center gap-3">
+            <Activity className="text-amber-500" />
+            <h3 className="font-bold text-amber-900 text-lg">Banco de Dados Inicializado</h3>
+          </div>
+          <p className="text-amber-700 mt-1 ml-9">O conteúdo está sendo carregado via Supabase.</p>
         </div>
       )}
 
-      {/* Quick Actions */}
-      <h2 className="text-xl font-bold text-gray-800">Gestão</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        <button
-          onClick={() => navigate('/admin/exams')}
-          className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all text-left group"
-        >
-          <div className="p-4 bg-purple-100 text-purple-600 rounded-xl w-fit mb-4 group-hover:scale-110 transition-transform">
-            <FileText size={32} />
-          </div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">Gerenciar Exames</h3>
-          <p className="text-gray-500">Criar, editar e excluir exames e questões.</p>
-        </button>
-
-        <button
+      {/* Stats Grid - Priority Focused */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Highest Priority: New Users & Exams */}
+        <StatCard 
+          title="Novos Usuários (30d)" 
+          value={stats.newUsers} 
+          icon={Users} 
+          gradient="from-orange-500 to-rose-600"
+          subtext="Ver lista completa"
           onClick={() => navigate('/admin/users')}
-          className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all text-left group"
-        >
-          <div className="p-4 bg-blue-100 text-blue-600 rounded-xl w-fit mb-4 group-hover:scale-110 transition-transform">
-            <Users size={32} />
+          large={true}
+        />
+        
+        <StatCard 
+          title="Total de Exames" 
+          value={stats.totalExams} 
+          icon={FileText} 
+          gradient="from-teal-500 to-cyan-600"
+          subtext="Gerenciar conteúdo"
+          onClick={() => navigate('/admin/exams')}
+          large={true}
+        />
+
+        {/* Secondary Stats */}
+        <StatCard 
+          title="Total de Usuários" 
+          value={stats.totalUsers} 
+          icon={Users} 
+          gradient="from-blue-600 to-indigo-700"
+          onClick={() => navigate('/admin/users')}
+        />
+
+        <StatCard 
+          title="Usuários Premium" 
+          value={stats.premiumUsers} 
+          icon={Book} 
+          gradient="from-amber-500 to-yellow-600"
+          onClick={() => navigate('/admin/users')}
+        />
+
+        <StatCard 
+          title="Usuários Online" 
+          value={stats.onlineUsers} 
+          icon={Activity} 
+          gradient="from-emerald-500 to-green-600"
+          subtext="Ativos em 5min"
+          onClick={() => navigate('/admin/users')}
+        />
+        
+        {/* Placeholder for symmetry or extra stat */}
+        <div className="hidden lg:block bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-400 font-medium p-6">
+            <span className="text-sm">Mais métricas em breve</span>
+        </div>
+      </div>
+
+      {/* Quick Actions Sections */}
+      <div className="space-y-8">
+        
+        {/* Gestão de Conteúdo */}
+        <section>
+          <div className="flex items-center gap-2 mb-4 px-1">
+            <BookMarked className="text-gray-400" size={20} />
+            <h2 className="text-xl font-bold text-gray-700 uppercase tracking-wide text-sm">Gestão de Conteúdo</h2>
           </div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">Gerenciar Usuários</h3>
-          <p className="text-gray-500">Ver usuários, gerenciar papéis e permissões.</p>
-        </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <ActionCard 
+              title="Exames e Questões" 
+              description="Gerenciar banco de questões e provas completas." 
+              icon={FileText} 
+              color="teal" 
+              path="/admin/exams"
+              badge={`${stats.totalExams} exames`}
+            />
+            <ActionCard 
+              title="Disciplinas" 
+              description="Configurar matérias e áreas de conhecimento." 
+              icon={BookMarked} 
+              color="violet" 
+              path="/admin/disciplines"
+            />
+            <ActionCard 
+              title="Conteúdo Aprender" 
+              description="Seções e aulas do modo de aprendizado." 
+              icon={School} 
+              color="emerald" 
+              path="/admin/learning"
+            />
+          </div>
+        </section>
+
+        {/* Gestão de Usuários & Grupos */}
+        <section>
+          <div className="flex items-center gap-2 mb-4 px-1">
+            <Users className="text-gray-400" size={20} />
+            <h2 className="text-xl font-bold text-gray-700 uppercase tracking-wide text-sm">Comunidade</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <ActionCard 
+              title="Usuários" 
+              description="Gerenciar contas, permissões e planos." 
+              icon={Users} 
+              color="blue" 
+              path="/admin/users"
+              badge={`${stats.totalUsers} total`}
+            />
+            <ActionCard 
+              title="Grupos de Estudo" 
+              description="Monitorar e moderar grupos de alunos." 
+              icon={MessageCircle} 
+              color="pink" 
+              path="/admin/groups"
+            />
+          </div>
+        </section>
+
+        {/* Recursos e Sistema */}
+        <section>
+          <div className="flex items-center gap-2 mb-4 px-1">
+            <Download className="text-gray-400" size={20} />
+            <h2 className="text-xl font-bold text-gray-700 uppercase tracking-wide text-sm">Recursos</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <ActionCard 
+              title="Downloads" 
+              description="Gerenciar arquivos e materiais para baixar." 
+              icon={Download} 
+              color="indigo" 
+              path="/admin/downloads"
+            />
+          </div>
+        </section>
       </div>
 
       {/* Toast notifications */}

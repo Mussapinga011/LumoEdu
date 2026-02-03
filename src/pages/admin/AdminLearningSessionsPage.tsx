@@ -32,11 +32,9 @@ const AdminLearningSessionsPage = () => {
     const formData = new FormData(e.currentTarget as HTMLFormElement);
     const session = {
       id: editingSession?.id || crypto.randomUUID(),
-      section_id: sectionId, // Usando section_id correto
+      section_id: sectionId,
       title: formData.get('title'),
       description: formData.get('description'),
-      // reward_xp removido pois não existe na tabela por enquanto
-      // reward_xp: parseInt(formData.get('rewardXp') as string),
       order_index: editingSession?.order_index || sessions.length,
     };
 
@@ -52,72 +50,116 @@ const AdminLearningSessionsPage = () => {
     }
   };
 
-  if (loading) return <div className="p-20 text-center font-black animate-pulse text-primary">MAPA DA TRILHA...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+       <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="h-12 w-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-400 font-medium">Carregando aulas...</p>
+       </div>
+    </div>
+  );
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
-      <div className="flex items-center justify-between bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-        <div className="flex items-center gap-6">
-          <button onClick={() => navigate(`/admin/learning/${disciplineId}/sections`)} className="p-4 bg-gray-50 text-gray-400 rounded-2xl hover:bg-primary hover:text-white transition-all"><ArrowLeft size={24} /></button>
-          <div>
-            <h1 className="text-3xl font-black text-gray-800 tracking-tighter uppercase">Aulas & Sessões</h1>
-            <p className="text-gray-400 font-medium font-mono text-xs uppercase tracking-widest">Unidade ID: {sectionId?.split('-')[0]}</p>
-          </div>
+    <div className="space-y-8 animate-in fade-in duration-500 pb-12">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-2 border-b border-gray-200">
+        <div className="flex items-center gap-4">
+           <button 
+              onClick={() => navigate(`/admin/learning/${disciplineId}/sections`)} 
+              className="p-2 text-gray-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors"
+           >
+              <ArrowLeft size={24} />
+           </button>
+           <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-cyan-100 text-cyan-600 rounded-lg">
+                  <PlayCircle size={24} />
+                </div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                  Aulas & Sessões
+                </h1>
+              </div>
+             <p className="text-gray-500 font-medium ml-1">
+                Gerencie as aulas e conteúdos desta unidade.
+             </p>
+           </div>
         </div>
-        <button onClick={() => { setEditingSession(null); setIsModalOpen(true); }} className="flex items-center gap-2 bg-primary text-white px-8 py-4 rounded-2xl font-black hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:translate-y-1">
-          <Plus size={20} /> NOVA SESSÃO NO MAPA
+        
+        <button 
+           onClick={() => { setEditingSession(null); setIsModalOpen(true); }} 
+           className="flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-cyan-500/20 hover:shadow-xl hover:-translate-y-0.5 transition-all text-sm"
+        >
+          <Plus size={18} /> Nova Sessão
         </button>
       </div>
 
+      {/* Lista de Sessões */}
       <div className="grid gap-4">
         {sessions.length === 0 ? (
-          <div className="bg-gray-50 p-20 rounded-[40px] text-center border-4 border-dashed border-gray-100">
-             <PlayCircle className="mx-auto text-gray-200 mb-6" size={80} />
-             <p className="text-gray-400 font-black uppercase text-xs tracking-widest">Nenhuma aula cadastrada nesta unidade.</p>
+          <div className="py-20 text-center bg-white rounded-2xl border-2 border-dashed border-gray-200">
+             <PlayCircle className="mx-auto text-gray-200 mb-4" size={64} />
+             <p className="text-gray-400 font-medium">Nenhuma aula cadastrada nesta unidade.</p>
           </div>
         ) : (
           sessions.map((s, idx) => (
-            <div key={s.id} className="group bg-white p-6 rounded-3xl border-2 border-transparent hover:border-primary transition-all shadow-sm hover:shadow-xl flex items-center justify-between">
-              <div className="flex items-center gap-6 flex-1 cursor-pointer" onClick={() => navigate(`/admin/learning/${disciplineId}/sections/${sectionId}/sessions/${s.id}/questions`)}>
-                <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center font-black text-xl">{idx + 1}</div>
-                <div>
-                  <h3 className="text-xl font-black text-gray-800 uppercase tracking-tighter">{s.title}</h3>
-                  <p className="text-sm text-gray-400 font-medium">{s.description}</p>
-                  <div className="flex gap-4 mt-2">
-                     <span className="text-[10px] font-black uppercase text-primary tracking-widest bg-primary/5 px-2 py-1 rounded-lg flex items-center gap-1">
-                        <Layout size={12} /> Gerenciar Conteúdo da Aula
+            <div key={s.id} className="group bg-white p-6 rounded-2xl border border-gray-100 hover:border-cyan-200 transition-all hover:shadow-lg flex items-center justify-between">
+              <div className="flex items-center gap-4 flex-1 cursor-pointer" onClick={() => navigate(`/admin/learning/${disciplineId}/sections/${sectionId}/sessions/${s.id}/questions`)}>
+                <div className="w-12 h-12 bg-gradient-to-br from-cyan-50 to-blue-50 text-cyan-600 rounded-xl flex items-center justify-center font-black text-xl border border-cyan-100">
+                   {idx + 1}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-800">{s.title}</h3>
+                  <p className="text-sm text-gray-500">{s.description}</p>
+                  <div className="flex gap-2 mt-2">
+                     <span className="text-xs font-bold uppercase text-cyan-600 tracking-wider flex items-center gap-1">
+                        <Layout size={12} /> Gerenciar Conteúdo
                      </span>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => { setEditingSession(s); setIsModalOpen(true); }} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all"><Edit2 size={18} /></button>
-                <button onClick={() => handleDelete(s.id)} className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all"><Trash2 size={18} /></button>
+                <button onClick={() => { setEditingSession(s); setIsModalOpen(true); }} className="p-2 text-gray-400 hover:text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors">
+                   <Edit2 size={18} />
+                </button>
+                <button onClick={() => handleDelete(s.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                   <Trash2 size={18} />
+                </button>
               </div>
             </div>
           ))
         )}
       </div>
 
+      {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[40px] p-10 w-full max-w-md shadow-2xl border-4 border-white animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-black text-gray-800 uppercase tracking-tighter">{editingSession ? 'Editar Sessão' : 'Nova Sessão'}</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400"><X size={32} /></button>
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl p-6 md:p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95">
+            <div className="flex items-center justify-between mb-6">
+               <h2 className="text-2xl font-bold text-gray-800">
+                 {editingSession ? 'Editar Sessão' : 'Nova Sessão'}
+               </h2>
+               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                  <X size={24} />
+               </button>
             </div>
-            <form onSubmit={handleSave} className="space-y-6">
+            
+            <form onSubmit={handleSave} className="space-y-5">
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Título da Sessão</label>
-                <input name="title" required defaultValue={editingSession?.title} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-white outline-none font-bold transition-all text-lg" placeholder="Ex: Introdução à Cinemática" />
+                <label className="text-sm font-semibold text-gray-700 block mb-1.5">Título da Sessão</label>
+                <input name="title" required defaultValue={editingSession?.title} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10 outline-none font-bold transition-all" placeholder="Ex: Introdução à Cinemática" />
               </div>
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Resumo/Dica</label>
-                <textarea name="description" required defaultValue={editingSession?.description} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary outline-none font-bold h-24" placeholder="O que o aluno vai aprender aqui?" />
+                <label className="text-sm font-semibold text-gray-700 block mb-1.5">Resumo/Dica</label>
+                <textarea name="description" required defaultValue={editingSession?.description} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10 outline-none transition-all h-24 resize-none" placeholder="O que o aluno vai aprender aqui?" />
               </div>
-              <div className="flex gap-4 pt-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 font-black text-gray-400 uppercase">Cancelar</button>
-                <button type="submit" className="flex-1 bg-primary text-white py-4 rounded-2xl font-black shadow-lg shadow-primary/20 active:translate-y-1">SALVAR 🚀</button>
+              
+              <div className="flex gap-3 mt-8">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-colors">
+                  Cancelar
+                </button>
+                <button type="submit" className="flex-[2] bg-cyan-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-cyan-500/20 active:translate-y-0.5 hover:bg-cyan-700 transition-all">
+                  Salvar
+                </button>
               </div>
             </form>
           </div>

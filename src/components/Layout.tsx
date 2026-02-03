@@ -7,6 +7,7 @@ import {
   Zap,
   Target,
   Users,
+  LayoutDashboard,
   GraduationCap
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -22,6 +23,7 @@ const Layout = () => {
   useOnlinePresence();
 
   const navItems = [
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Aprender', path: '/learning', icon: GraduationCap },
     { name: 'Modo Prática', path: '/disciplines', icon: BookOpen },
     { name: 'Desafio', path: '/challenge', icon: Zap },

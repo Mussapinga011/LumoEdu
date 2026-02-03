@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAllUniversities, saveUniversity, deleteUniversity } from '../../services/contentService.supabase';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, School, X } from 'lucide-react';
 
 const AdminUniversitiesPage = () => {
   const [universities, setUniversities] = useState<any[]>([]);
@@ -38,55 +38,111 @@ const AdminUniversitiesPage = () => {
     fetchData();
   };
 
-  if (loading) return <div className="p-20 text-center font-black animate-pulse text-primary uppercase">MAPEANDO INSTITUIÇÕES...</div>;
+  if (loading) return (
+     <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+           <div className="h-12 w-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+           <p className="text-gray-400 font-medium">Mapeando instituições...</p>
+        </div>
+     </div>
+  );
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-top duration-500">
-      <div className="flex justify-between items-center bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-12">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-2 border-b border-gray-200">
         <div>
-          <h1 className="text-4xl font-black text-gray-800 tracking-tighter uppercase leading-none">Universidades</h1>
-          <p className="text-gray-400 font-medium mt-1">Gestão das {universities.length} instituições parceiras.</p>
+           <div className="flex items-center gap-3 mb-2">
+             <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+               <School size={24} />
+             </div>
+             <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+               Universidades
+             </h1>
+           </div>
+          <p className="text-gray-500 font-medium ml-1">
+             Gestão das {universities.length} instituições parceiras.
+          </p>
         </div>
-        <button onClick={() => { setEditingItem(null); setIsModalOpen(true); }} className="flex items-center gap-2 bg-primary text-white px-8 py-4 rounded-2xl font-black hover:bg-primary/90 transition-all shadow-lg shadow-black/5 active:translate-y-1">
-          <Plus size={20} /> NOVA UNI
+        
+        <button 
+           onClick={() => { setEditingItem(null); setIsModalOpen(true); }} 
+           className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-emerald-500/20 hover:shadow-xl hover:-translate-y-0.5 transition-all text-sm"
+        >
+          <Plus size={18} /> Nova Universidade
         </button>
       </div>
 
+      {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {universities.map((u) => (
-          <div key={u.id} className="group bg-white p-10 rounded-[40px] border-2 border-transparent hover:border-primary transition-all shadow-xl text-center relative overflow-hidden">
-             <div className="absolute top-0 left-0 w-2 h-full bg-primary/20" />
-             <div className="bg-primary/10 text-primary w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 text-3xl font-black italic shadow-inner">{u.short_name?.slice(0, 2)}</div>
-             <h3 className="text-2xl font-black text-gray-800 uppercase tracking-tighter mb-1">{u.name}</h3>
-             <p className="text-primary font-black uppercase text-xs tracking-widest bg-primary/5 inline-block px-4 py-1.5 rounded-full">{u.short_name}</p>
+          <div key={u.id} className="group bg-white p-6 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-all hover:shadow-lg relative overflow-hidden flex flex-col items-center text-center">
              
-             <div className="mt-8 flex justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => { setEditingItem(u); setIsModalOpen(true); }} className="p-4 bg-gray-50 text-gray-400 rounded-2xl hover:bg-blue-600 hover:text-white transition-all"><Edit2 size={24} /></button>
-                <button onClick={async () => { if(confirm('Excluir instituição?')) { await deleteUniversity(u.id); fetchData(); } }} className="p-4 bg-red-50 text-red-400 rounded-2xl hover:bg-red-600 hover:text-white transition-all"><Trash2 size={24} /></button>
+             {/* Avatar / Logo Placeholder */}
+             <div className="w-20 h-20 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl flex items-center justify-center mb-4 shadow-inner text-emerald-600 font-black text-2xl tracking-tighter border border-emerald-100 group-hover:scale-105 transition-transform">
+                {u.short_name?.slice(0, 2) || <School />}
+             </div>
+
+             <h3 className="text-xl font-bold text-gray-800 mb-1">{u.name}</h3>
+             <span className="inline-block px-3 py-1 bg-gray-50 text-gray-400 text-xs font-bold uppercase tracking-wider rounded-lg mb-6">
+                {u.short_name || 'N/A'}
+             </span>
+             
+             {/* Action Bar (Hidden by default) */}
+             <div className="mt-auto w-full pt-4 border-t border-gray-50 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button 
+                   onClick={() => { setEditingItem(u); setIsModalOpen(true); }} 
+                   className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                >
+                   <Edit2 size={20} />
+                </button>
+                <button 
+                   onClick={async () => { if(confirm('Excluir instituição?')) { await deleteUniversity(u.id); fetchData(); } }} 
+                   className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                   <Trash2 size={20} />
+                </button>
              </div>
           </div>
         ))}
+
+        {universities.length === 0 && (
+           <div className="col-span-full py-20 text-center text-gray-400">
+              <School size={40} className="mx-auto mb-4 text-gray-200" />
+              <p>Nenhuma universidade cadastrada.</p>
+           </div>
+        )}
       </div>
 
+      {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[40px] p-10 w-full max-w-sm shadow-2xl border-4 border-white animate-in zoom-in-95">
-            <h2 className="text-3xl font-black mb-8 uppercase tracking-tighter leading-none">{editingItem ? 'Ajustar' : 'Nova'} Instituição</h2>
-            <form onSubmit={handleSave} className="space-y-6">
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl p-6 md:p-8 w-full max-w-sm shadow-2xl animate-in zoom-in-95 border border-gray-100">
+            <div className="flex items-center justify-between mb-8">
+               <h2 className="text-2xl font-bold text-gray-800">
+                 {editingItem ? 'Editar' : 'Nova'} Universidade
+               </h2>
+               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                  <X size={24} />
+               </button>
+            </div>
+
+            <form onSubmit={handleSave} className="space-y-5">
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Nome Completo</label>
-                <input name="name" required defaultValue={editingItem?.name} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary outline-none font-bold placeholder:text-gray-300" placeholder="Ex: Universidade Eduardo Mondlane" />
+                <label className="text-sm font-semibold text-gray-700 block mb-1.5">Nome da Instituição</label>
+                <input name="name" required defaultValue={editingItem?.name} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all placeholder:text-gray-300" placeholder="Ex: Universidade Eduardo Mondlane" />
               </div>
               <div>
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Sigla</label>
-                <input name="shortName" required defaultValue={editingItem?.short_name} className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary outline-none font-black text-center text-xl" placeholder="UEM" />
+                <label className="text-sm font-semibold text-gray-700 block mb-1.5">Sigla</label>
+                <input name="shortName" required defaultValue={editingItem?.short_name} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 outline-none font-bold text-center text-lg placeholder:text-gray-300 uppercase" placeholder="UEM" />
               </div>
-              <div className="flex gap-4 mt-6">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-gray-100 text-gray-400 rounded-3xl font-black hover:bg-gray-200 hover:text-gray-600 transition-colors">
-                  CANCELAR
+              
+              <div className="flex gap-3 mt-8">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-colors">
+                  Cancelar
                 </button>
-                <button type="submit" className="flex-[2] bg-primary text-white py-4 rounded-3xl font-black shadow-lg shadow-black/5 active:translate-y-1 hover:brightness-110 transition-all">
-                  SALVAR
+                <button type="submit" className="flex-[2] bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-emerald-500/20 active:translate-y-0.5 hover:bg-emerald-700 transition-all">
+                  Salvar
                 </button>
               </div>
             </form>

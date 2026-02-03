@@ -31,6 +31,7 @@ const SimulationResultPage = lazy(() => import('./pages/SimulationResultPage'));
 const SimulationHistoryPage = lazy(() => import('./pages/SimulationHistoryPage'));
 const GroupsPage = lazy(() => import('./pages/GroupsPage'));
 const GroupChatPage = lazy(() => import('./pages/GroupChatPage'));
+const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
 
 // Lazy load TODAS as páginas admin (raramente acessadas)
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -95,6 +96,11 @@ function App() {
             <Route path="/learning" element={
               <ProtectedRoute>
                 <LearningPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <StudentDashboard />
               </ProtectedRoute>
             } />
           <Route path="/disciplines/:disciplineId/exams" element={

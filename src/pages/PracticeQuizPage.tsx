@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { getQuestionsBySession, saveSessionProgress, getUserProgressByDiscipline } from '../services/practiceService.supabase';
-import { updateUserProfile, addUserActivity } from '../services/dbService.supabase';
+
 import { getLearningSectionsBySession } from '../services/contentService.supabase'; // Importe a função de teoria
 import { checkAndUpdateMilestones } from '../services/milestoneService';
+import { AcademicTrackingService } from '../services/academicTrackingService';
 import { getSyllabusCoverage } from '../services/syllabusService';
 import { PracticeQuestion } from '../types/practice';
 import { X, CheckCircle2, AlertCircle, BookOpen } from 'lucide-react';
@@ -40,7 +41,7 @@ const PracticeQuizPage = () => {
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isFinished, setIsFinished] = useState(false);
-  const [score, setScore] = useState(0);
+
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [startTime] = useState(Date.now());
 
@@ -170,6 +171,17 @@ const PracticeQuizPage = () => {
        studyPlanSubjects: user.studyPlan?.subjects || [],
        studyStreak: user.streak || 0,
        syllabusCoverage: coverageMap
+    });
+    
+    // 4. Registrar Sessão no Tracking Acadêmico
+    await AcademicTrackingService.recordStudySession(user.id, disciplineId, {
+      score: finalScore,
+      questionsAnswered: totalQuestions,
+      correctAnswers: correctAnswers,
+      timeSpent: Math.round((Date.now() - startTime) / 60000) || 1, // Mínimo 1 min
+      topicsStudied: steps
+        .filter(s => s.type === 'question')
+        .map(s => (s.data as PracticeQuestion).id) // Passando IDs das questões por enquanto, service pode tratar
     });
   };
 

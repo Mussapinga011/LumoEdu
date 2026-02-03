@@ -1,8 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 
 // Configuração manual - Substitua se necessário, mas estou usando os dados do .env.local que li anteriormente
-const SUPABASE_URL = 'https://kscyzmuxlpmdaacyerob.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtzY3l6bXV4bHBtZGFhY3llcm9iIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Nzk2OTI0MywiZXhwIjoyMDgzNTQ1MjQzfQ.xjRyD27u_jb7fJkEV3teIkYuXnkFSWgn8N141SZP3U8'; // CUIDADO: Usando Service Role para permitir writes sem RLS blocking se necessario. Se falhar, usar Anon Key.
+
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 

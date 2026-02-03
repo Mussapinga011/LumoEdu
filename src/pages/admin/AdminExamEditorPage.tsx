@@ -57,7 +57,6 @@ const AdminExamEditorPage = () => {
     explanation: ''
   });
 
-  // Auto-resize textareas when content changes
   // Auto-resize textareas when content changes (only for elements with auto-expand class)
   useEffect(() => {
     const textareas = document.querySelectorAll('textarea.auto-expand');

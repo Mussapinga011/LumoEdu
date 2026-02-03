@@ -2,12 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllExams, deleteExam } from '../../services/examService.supabase';
 import { Exam } from '../../types/exam';
-import { Plus, Edit, Trash2, Search, Upload } from 'lucide-react';
+import { 
+  Plus, Edit2, Trash2, Search, Upload, 
+  FileText, Calendar, CheckCircle, 
+  Filter, GraduationCap, List
+} from 'lucide-react';
 import { useContentStore } from '../../stores/useContentStore';
 import { useModal, useToast } from '../../hooks/useNotifications';
 import Modal from '../../components/Modal';
 import Toast from '../../components/Toast';
 import { getErrorMessage } from '../../utils/errorMessages';
+import clsx from 'clsx';
 
 const AdminExamsPage = () => {
   const [exams, setExams] = useState<Exam[]>([]);
@@ -15,6 +20,7 @@ const AdminExamsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDiscipline, setSelectedDiscipline] = useState<string>('all');
   const [selectedUniversity, setSelectedUniversity] = useState<string>('all');
+  
   const navigate = useNavigate();
   const { disciplines, universities, fetchContent, loading: contentLoading } = useContentStore();
   const { modalState, showConfirm, closeModal } = useModal();
@@ -29,7 +35,6 @@ const AdminExamsPage = () => {
     setLoading(true);
     try {
       const data = await getAllExams();
-      // Mapear campos do Supabase
       const mappedExams: Exam[] = (data as any[]).map(e => ({
         id: e.id,
         name: e.title,
@@ -54,9 +59,9 @@ const AdminExamsPage = () => {
   const handleDeleteClick = (id: string) => {
     showConfirm(
       'Excluir Exame',
-      'Tem certeza que deseja excluir este exame? Esta ação não pode ser desfeita.',
+      'Tem certeza que deseja excluir este exame? Esta ação removerá permanentemente o exame e todas as suas questões.',
       () => handleDeleteConfirm(id),
-      'Excluir',
+      'Excluir permanentemente',
       'Cancelar'
     );
   };
@@ -65,9 +70,8 @@ const AdminExamsPage = () => {
     try {
       await deleteExam(id);
       setExams(exams.filter(e => e.id !== id));
-      showSuccess('Exame excluído com sucesso!');
+      showSuccess('Exame removido com sucesso');
     } catch (error) {
-      console.error("Error deleting exam:", error);
       showError(getErrorMessage(error));
     }
   };
@@ -76,138 +80,168 @@ const AdminExamsPage = () => {
     const matchesSearch = exam.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDiscipline = selectedDiscipline === 'all' || exam.disciplineId === selectedDiscipline;
     const matchesUniversity = selectedUniversity === 'all' || exam.universityId === selectedUniversity;
-    
     return matchesSearch && matchesDiscipline && matchesUniversity;
   });
 
+  const stats = {
+    total: exams.length,
+    active: exams.filter(e => e.isActive).length,
+    disciplines: new Set(exams.map(e => e.disciplineId)).size
+  };
+
   if (loading || (contentLoading && universities.length === 0)) {
     return (
-       <div className="flex justify-center p-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
-       </div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-gray-400 font-medium animate-pulse">Carregando exames...</p>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h1 className="text-2xl font-bold text-gray-800">Gerenciar Exames</h1>
-        <div className="flex gap-2">
+    <div className="max-w-7xl mx-auto space-y-8 pb-20 px-4">
+      {/* HEADER & STATS */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+        <div>
+          <h1 className="text-4xl font-black text-gray-800 tracking-tight mb-2">Editor de Exames</h1>
+          <p className="text-gray-500 font-medium">Gerencie e publique exames oficiais das universidades.</p>
+        </div>
+        
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={() => navigate('/admin/exams/bulk-import')}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+            className="flex items-center gap-2 bg-white text-gray-700 border border-gray-200 px-5 py-3 rounded-2xl font-bold hover:bg-gray-50 transition-all shadow-sm active:scale-95"
           >
-            <Upload size={20} />
+            <Upload size={20} className="text-green-500" />
             Importação em Massa
           </button>
           <button
             onClick={() => navigate('/admin/exams/create')}
-            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+            className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all active:translate-y-0"
           >
-            <Plus size={20} />
-            Criar Novo Exame
+            <Plus size={22} />
+            Novo Exame
           </button>
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Buscar exames..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
-        <select
-          value={selectedUniversity}
-          onChange={(e) => {
-            setSelectedUniversity(e.target.value);
-            setSelectedDiscipline('all');
-          }}
-          className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <option value="all">Todas as Universidades</option>
-          {universities.map(u => (
-            <option key={u.id} value={u.id}>{u.name} ({u.shortName})</option>
-          ))}
-        </select>
-        <select
-          value={selectedDiscipline}
-          onChange={(e) => setSelectedDiscipline(e.target.value)}
-          className="p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <option value="all">Todas as Disciplinas</option>
-          {disciplines
-            .filter(d => selectedUniversity === 'all' || d.universityId === selectedUniversity)
-            .map(d => (
-              <option key={d.id} value={d.id}>{d.title}</option>
-            ))}
-        </select>
+      {/* QUICK STATS CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[
+          { label: 'Total de Exames', value: stats.total, icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Exames Ativos', value: stats.active, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
+          { label: 'Disciplinas Atendidas', value: stats.disciplines, icon: GraduationCap, color: 'text-purple-600', bg: 'bg-purple-50' }
+        ].map((s, i) => (
+          <div key={i} className={clsx("p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-5", s.bg)}>
+            <div className={clsx("p-3 rounded-2xl bg-white shadow-sm", s.color)}>
+              <s.icon size={24} />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest leading-none mb-1">{s.label}</p>
+              <p className="text-2xl font-black text-gray-800">{s.value}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      {/* SEARCH AND FILTERS */}
+      <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+        <div className="flex-1 relative w-full group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={20} />
+          <input
+            type="text"
+            placeholder="Pesquisar por nome do exame..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-4 py-3.5 bg-gray-50/50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-medium"
+          />
+        </div>
+        
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="relative flex-1 md:w-56">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+            <select
+              value={selectedUniversity}
+              onChange={(e) => {
+                setSelectedUniversity(e.target.value);
+                setSelectedDiscipline('all');
+              }}
+              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-2xl outline-none focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm appearance-none"
+            >
+              <option value="all">Todas Universidades</option>
+              {universities.map(u => (
+                <option key={u.id} value={u.id}>{u.shortName}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="relative flex-1 md:w-56">
+            <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+            <select
+              value={selectedDiscipline}
+              onChange={(e) => setSelectedDiscipline(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-2xl outline-none focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm appearance-none"
+            >
+              <option value="all">Todas Disciplinas</option>
+              {disciplines
+                .filter(d => selectedUniversity === 'all' || d.universityId === selectedUniversity)
+                .map(d => (
+                  <option key={d.id} value={d.id}>{d.title}</option>
+                ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* LIST VIEW */}
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="p-4 font-semibold text-gray-600">Nome</th>
-                <th className="p-4 font-semibold text-gray-600">Disciplina</th>
-                <th className="p-4 font-semibold text-gray-600">Universidade</th>
-                <th className="p-4 font-semibold text-gray-600">Status</th>
-                <th className="p-4 font-semibold text-gray-600">Ano/Época</th>
-                <th className="p-4 font-semibold text-gray-600 text-right">Ações</th>
+            <thead>
+              <tr className="bg-gray-50/50 border-b border-gray-100">
+                <th className="p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest">Exame / Disciplina</th>
+                <th className="p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest">Instituição</th>
+                <th className="p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest text-center">Ano</th>
+                <th className="p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest text-center">Status</th>
+                <th className="p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest text-right">Ações</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-50">
               {filteredExams.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">
-                    Nenhum exame encontrado.
-                  </td>
+                  <td colSpan={5} className="p-20 text-center text-gray-400 font-bold">Nenhum exame encontrado</td>
                 </tr>
               ) : (
                 filteredExams.map((exam) => {
                   const discipline = disciplines.find(d => d.id === exam.disciplineId);
                   const university = universities.find(u => u.id === exam.universityId);
                   return (
-                    <tr key={exam.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="p-4 font-medium text-gray-800">{exam.name}</td>
-                      <td className="p-4 text-gray-600">
-                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700">
-                          {discipline?.title || 'N/A'}
+                    <tr key={exam.id} className="hover:bg-gray-50/50 transition-colors group">
+                      <td className="p-6">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-gray-800 group-hover:text-primary transition-colors">{exam.name}</span>
+                          <span className="text-xs text-gray-400 font-medium">{discipline?.title || 'N/A'}</span>
+                        </div>
+                      </td>
+                      <td className="p-6">
+                        <span className="px-2.5 py-1 bg-purple-50 text-purple-600 rounded-lg text-[10px] font-black uppercase">
+                          {university?.shortName || exam.universityId}
                         </span>
                       </td>
-                      <td className="p-4 text-gray-600">
-                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700">
-                          {university?.shortName || exam.universityId || 'N/A'}
-                        </span>
+                      <td className="p-6 text-center text-gray-600 font-black text-sm">
+                        {exam.year}
                       </td>
-                      <td className="p-4 text-gray-600">
-                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                          exam.isActive
-                            ? 'bg-green-100 text-green-700 border border-green-200'
-                            : 'bg-gray-100 text-gray-500 border border-gray-200'
-                        }`}>
-                          {exam.isActive ? 'Ativo' : 'Inativo'}
-                        </span>
+                      <td className="p-6 flex justify-center items-center">
+                        <div className={clsx(
+                          "w-2.5 h-2.5 rounded-full",
+                          exam.isActive ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "bg-gray-300"
+                        )} />
                       </td>
-                      <td className="p-4 text-gray-600">{exam.year} - {exam.season}</td>
-                      <td className="p-4 text-right space-x-2">
-                        <button
-                          onClick={() => navigate(`/admin/exams/${exam.id}/edit`)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(exam.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                      <td className="p-6 text-right">
+                         <div className="flex justify-end gap-2 text-gray-400 opacity-50 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => navigate(`/admin/exams/${exam.id}/edit`)} className="p-2 hover:text-primary hover:bg-gray-100 rounded-lg transition-all" title="Editar"><Edit2 size={18} /></button>
+                            <button onClick={() => handleDeleteClick(exam.id)} className="p-2 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Excluir"><Trash2 size={18} /></button>
+                         </div>
                       </td>
                     </tr>
                   );
@@ -218,6 +252,7 @@ const AdminExamsPage = () => {
         </div>
       </div>
 
+      {/* COMPONENTES GLOBAIS */}
       <Modal
         isOpen={modalState.isOpen}
         onClose={closeModal}

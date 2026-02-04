@@ -1,19 +1,33 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getSessionsBySection, saveSession, deleteSession } from '../../services/practiceService.supabase';
-import { Plus, Edit2, Trash2, ArrowLeft, Layout, X, PlayCircle } from 'lucide-react';
+import { getSessionsBySection, saveSession, deleteSession, getSyllabusTopicsByDiscipline } from '../../services/practiceService.supabase';
+import { Plus, Edit2, Trash2, ArrowLeft, Layout, X, PlayCircle, BookText } from 'lucide-react';
 
 const AdminLearningSessionsPage = () => {
   const { disciplineId, sectionId } = useParams<{ disciplineId: string, sectionId: string }>();
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<any[]>([]);
+  const [syllabusTopics, setSyllabusTopics] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<any | null>(null);
 
   useEffect(() => {
-    if (sectionId) fetchSessions();
-  }, [sectionId]);
+    if (sectionId) {
+      fetchSessions();
+      fetchSyllabusTopics();
+    }
+  }, [sectionId, disciplineId]);
+
+  const fetchSyllabusTopics = async () => {
+    if (!disciplineId) return;
+    try {
+      const data = await getSyllabusTopicsByDiscipline(disciplineId);
+      setSyllabusTopics(data || []);
+    } catch (err) {
+      console.error('Erro ao buscar tópicos:', err);
+    }
+  };
 
   const fetchSessions = async () => {
     setLoading(true);
@@ -33,6 +47,8 @@ const AdminLearningSessionsPage = () => {
     const session = {
       id: editingSession?.id || crypto.randomUUID(),
       section_id: sectionId,
+      discipline_id: disciplineId, // Importante para o tracking
+      topic_id: formData.get('topic_id') || null,
       title: formData.get('title'),
       description: formData.get('description'),
       order_index: editingSession?.order_index || sessions.length,
@@ -110,10 +126,15 @@ const AdminLearningSessionsPage = () => {
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-gray-800">{s.title}</h3>
                   <p className="text-sm text-gray-500">{s.description}</p>
-                  <div className="flex gap-2 mt-2">
+                  <div className="flex flex-wrap gap-2 mt-2">
                      <span className="text-xs font-bold uppercase text-cyan-600 tracking-wider flex items-center gap-1">
                         <Layout size={12} /> Gerenciar Conteúdo
                      </span>
+                     {s.topic_id && (
+                       <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-black border border-indigo-100 flex items-center gap-1">
+                          <BookText size={10} /> {syllabusTopics.find(t => t.id === s.topic_id)?.topic_name || 'Tópico Vinculado'}
+                       </span>
+                     )}
                   </div>
                 </div>
               </div>
@@ -151,6 +172,23 @@ const AdminLearningSessionsPage = () => {
               <div>
                 <label className="text-sm font-semibold text-gray-700 block mb-1.5">Resumo/Dica</label>
                 <textarea name="description" required defaultValue={editingSession?.description} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/10 outline-none transition-all h-24 resize-none" placeholder="O que o aluno vai aprender aqui?" />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-gray-700 block mb-1.5">Vincular ao Edital (Tópico)</label>
+                <select 
+                  name="topic_id" 
+                  defaultValue={editingSession?.topic_id || ''} 
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-cyan-500 outline-none font-bold"
+                >
+                  <option value="">Sem vínculo (Opcional)</option>
+                  {syllabusTopics.map(t => (
+                    <option key={t.id} value={t.id}>{t.topic_name}</option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-gray-400 mt-1 ml-1 italic">
+                  * Essencial para o gráfico de progresso e recomendações IA.
+                </p>
               </div>
               
               <div className="flex gap-3 mt-8">

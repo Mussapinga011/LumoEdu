@@ -123,9 +123,6 @@ const StudyPage = () => {
         });
         await updateUserScore(user.id);
         
-        // Removed Activity Feed for Study Mode
-        // await addUserActivity(user.id, { ... });
-
         // O store precisa de atualização também
         updateUser(updates);
       }

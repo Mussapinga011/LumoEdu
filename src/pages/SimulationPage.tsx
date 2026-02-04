@@ -6,7 +6,7 @@ import { saveSimulationResult } from '../services/simulationService.supabase';
 import { Timer, ChevronLeft, ChevronRight } from 'lucide-react';
 import RichTextRenderer from '../components/RichTextRenderer';
 import clsx from 'clsx';
-import { addUserActivity, updateUserScore } from '../services/dbService.supabase';
+import { updateUserScore } from '../services/dbService.supabase';
 
 const SimulationPage = () => {
   const navigate = useNavigate();
@@ -85,12 +85,7 @@ const SimulationPage = () => {
       }));
 
       await Promise.all([
-         updateUserScore(user.id),
-         addUserActivity(user.id, {
-            type: 'exam',
-            title: `Simulado: ${getModeName(config.mode || 'random')}`,
-            score: score
-         })
+         updateUserScore(user.id)
       ]);
 
       navigate('/simulation/result');
@@ -212,17 +207,6 @@ const SimulationPage = () => {
       </div>
     </div>
   );
-};
-
-const getModeName = (mode: string) => {
-  const modes: Record<string, string> = {
-    weaknesses: 'Foco em Fraquezas',
-    revision: 'Modo Revisão',
-    difficult: 'Questões Difíceis',
-    random: 'Aleatório',
-    custom: 'Personalizado'
-  };
-  return modes[mode] || 'Simulado';
 };
 
 export default SimulationPage;

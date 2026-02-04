@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getExam, getQuestionsByExam } from '../services/examService.supabase';
-import { addUserActivity, updateUserScore, updateUserProfile } from '../services/dbService.supabase';
+import { updateUserScore, updateUserProfile } from '../services/dbService.supabase';
 import { Exam, Question } from '../types/exam';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useAuth } from '../hooks/useAuth';
@@ -128,11 +128,6 @@ const ChallengePage = () => {
     });
 
     await updateUserScore(user.id);
-    await addUserActivity(user.id, {
-      type: 'challenge',
-      title: `Desafio: ${exam.name}`,
-      score: finalScore
-    });
 
     updateUser(updates as any);
   };

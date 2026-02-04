@@ -47,6 +47,7 @@ const AdminLearningSessionsPage = lazy(() => import('./pages/admin/AdminLearning
 const AdminLearningQuestionsPage = lazy(() => import('./pages/admin/AdminLearningQuestionsPage'));
 const AdminDisciplinesPage = lazy(() => import('./pages/admin/AdminDisciplinesPage'));
 const AdminBulkImportPage = lazy(() => import('./pages/admin/AdminBulkImportPage'));
+const AdminSyllabusPage = lazy(() => import('./pages/admin/AdminSyllabusPage'));
 
 // Loading component
 const PageLoader = () => (
@@ -283,6 +284,11 @@ function App() {
           <Route path="/admin/learning/:disciplineId/sections" element={
             <AdminRoute>
               <AdminLearningSectionsPage />
+            </AdminRoute>
+          } />
+          <Route path="/admin/learning/:disciplineId/syllabus" element={
+            <AdminRoute>
+              <AdminSyllabusPage />
             </AdminRoute>
           } />
            <Route path="/admin/learning/:disciplineId/sections/:sectionId/sessions" element={

@@ -154,3 +154,38 @@ export const deletePracticeQuestion = async (questionId: string) => {
   const { error } = await supabase.from('learning_questions').delete().eq('id', questionId);
   if (error) throw error;
 };
+
+/**
+ * Syllabus Topics CRUD (Edital)
+ */
+export const getSyllabusTopicsByDiscipline = async (disciplineId: string) => {
+  const { data, error } = await supabase
+    .from('syllabus_topics')
+    .select('*')
+    .eq('discipline_id', disciplineId)
+    .order('topic_name');
+  if (error) throw error;
+  return data;
+};
+
+export const saveSyllabusTopic = async (topic: any) => {
+  const { error } = await supabase
+    .from('syllabus_topics')
+    .upsert({
+      id: topic.id || crypto.randomUUID(),
+      discipline_id: topic.discipline_id,
+      topic_name: topic.topic_name,
+      importance: topic.importance || 3,
+      estimated_hours: topic.estimated_hours || 2,
+      updated_at: new Date().toISOString()
+    });
+  if (error) throw error;
+};
+
+export const deleteSyllabusTopic = async (id: string) => {
+  const { error } = await supabase
+    .from('syllabus_topics')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+};

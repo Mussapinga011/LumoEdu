@@ -7,7 +7,7 @@ export const getAllGroups = async () => {
   try {
     const { data, error } = await supabase
       .from('study_groups')
-      .select('*, group_members!left(count)')
+      .select('*, group_members(count)')
       .eq('is_private', false)
       .order('created_at', { ascending: false });
 
@@ -83,6 +83,24 @@ export const createGroup = async (userId: string, groupData: any) => {
 };
 
 /**
+ * Conta quantos grupos o usuário criou
+ */
+export const countUserCreatedGroups = async (userId: string) => {
+  try {
+    const { count, error } = await supabase
+      .from('study_groups')
+      .select('*', { count: 'exact', head: true })
+      .eq('created_by', userId);
+
+    if (error) throw error;
+    return count || 0;
+  } catch (error) {
+    console.error('Error in countUserCreatedGroups:', error);
+    return 0;
+  }
+};
+
+/**
  * Entrar em um grupo
  */
 export const joinGroup = async (groupId: string, userId: string) => {
@@ -115,6 +133,49 @@ export const leaveGroup = async (groupId: string, userId: string) => {
     if (error) throw error;
   } catch (error) {
     console.error('Error in leaveGroup:', error);
+    throw error;
+  }
+};
+
+/**
+ * Expulsar membro (Alias para delete em group_members)
+ */
+export const removeMember = async (groupId: string, userId: string) => {
+  return leaveGroup(groupId, userId);
+};
+
+/**
+ * Buscar membros de um grupo com detalhes do perfil
+ */
+export const getGroupMembers = async (groupId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('group_members')
+      .select(`
+        user_id,
+        role,
+        joined_at,
+        user:user_profiles (
+          id,
+          display_name,
+          photo_url,
+          email
+        )
+      `)
+      .eq('group_id', groupId);
+
+    if (error) throw error;
+
+    return data.map((m: any) => ({
+      userId: m.user_id,
+      role: m.role,
+      joinedAt: m.joined_at,
+      displayName: m.user?.display_name || 'Usuário',
+      photoURL: m.user?.photo_url,
+      email: m.user?.email
+    }));
+  } catch (error) {
+    console.error('Error in getGroupMembers:', error);
     throw error;
   }
 };

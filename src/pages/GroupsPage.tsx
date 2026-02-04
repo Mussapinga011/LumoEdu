@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/useAuthStore';
 import { StudyGroup } from '../types/group';
-import { getAllGroups, getUserGroups, joinGroup, createGroup, deleteGroup } from '../services/groupService.supabase';
+import { getAllGroups, getUserGroups, joinGroup, createGroup, deleteGroup, countUserCreatedGroups } from '../services/groupService.supabase';
 import { Users, Plus, Search, MessageCircle, Trash2, LogIn } from 'lucide-react';
 import { useContentStore } from '../stores/useContentStore';
 import clsx from 'clsx';
@@ -104,6 +104,14 @@ const GroupsPage = () => {
 
     setCreating(true);
     try {
+      // Regra: Estudante só pode criar 1 grupo
+      if (user.role !== 'admin') {
+        const createdCount = await countUserCreatedGroups(user.id);
+        if (createdCount >= 1) {
+          throw new Error('Você pode criar apenas um grupo de estudo. Apague o seu grupo atual antes de criar um novo.');
+        }
+      }
+
       const discipline = disciplines.find(d => d.id === newGroupDiscipline);
       const disciplineName = discipline ? discipline.title : 'Geral';
 

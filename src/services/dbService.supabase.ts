@@ -14,8 +14,7 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
       .from('user_profiles')
       .select(`
         *,
-        user_milestones(milestone_id, earned_at),
-        user_activities(activity_type, title, timestamp)
+        user_milestones(milestone_id, earned_at)
       `);
 
     if (error) throw error;
@@ -37,12 +36,7 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
       lastStudyDate: user.last_study_date ? new Date(user.last_study_date) : null,
       lastExamDate: user.last_exam_date ? new Date(user.last_exam_date) : null,
       lastChallengeDate: user.last_challenge_date ? new Date(user.last_challenge_date) : null,
-      milestones: user.user_milestones?.map((b: any) => b.milestone_id) || [],
-      recentActivity: user.user_activities?.map((a: any) => ({
-        type: a.activity_type,
-        title: a.title,
-        timestamp: new Date(a.timestamp)
-      })) || []
+      milestones: user.user_milestones?.map((b: any) => b.milestone_id) || []
     }));
   } catch (error) {
     console.error('Error in getAllUsers:', error);
@@ -59,7 +53,7 @@ export const getUserById = async (userId: string): Promise<UserProfile | null> =
     
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('*, user_milestones(milestone_id, earned_at), user_activities(activity_type, title, timestamp)')
+      .select('*, user_milestones(milestone_id, earned_at)')
       .eq('id', userId)
       .maybeSingle();
 
@@ -93,12 +87,7 @@ export const getUserById = async (userId: string): Promise<UserProfile | null> =
       lastExamDate: data.last_exam_date ? new Date(data.last_exam_date) : null,
       lastChallengeDate: data.last_challenge_date ? new Date(data.last_challenge_date) : null,
       studyPlan: data.study_plan,
-      milestones: data.user_milestones?.map((b: any) => b.milestone_id) || [],
-      recentActivity: data.user_activities?.map((a: any) => ({
-        type: a.activity_type,
-        title: a.title,
-        timestamp: new Date(a.timestamp)
-      })) || []
+      milestones: data.user_milestones?.map((b: any) => b.milestone_id) || []
     };
   } catch (error) {
     console.error('Error in getUserById:', error);
@@ -173,31 +162,7 @@ export const updateUserScore = async (userId: string) => {
   if (error) throw error;
 };
 
-/**
- * Adicionar atividade recente
- */
-export const addUserActivity = async (
-  userId: string,
-  activity: {
-    type: string;
-    title: string;
-    score?: number;
-  }
-): Promise<void> => {
-  try {
-    const { error } = await supabase
-      .from('user_activities')
-      .insert({
-        user_id: userId,
-        activity_type: activity.type,
-        title: activity.title
-      });
 
-    if (error) throw error;
-  } catch (error) {
-    console.error('Error in addUserActivity:', error);
-  }
-};
 
 
 

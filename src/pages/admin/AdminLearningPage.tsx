@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContentStore } from '../../stores/useContentStore';
-import { BookOpen, ArrowRight, Sparkles, GraduationCap } from 'lucide-react';
+import { BookOpen, ArrowRight, Sparkles, GraduationCap, BookText } from 'lucide-react';
 
 const AdminLearningPage = () => {
   const navigate = useNavigate();
@@ -45,9 +45,8 @@ const AdminLearningPage = () => {
       {/* Grid de Disciplinas GERAIS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {generalDisciplines.map((d) => (
-          <button
+          <div
             key={d.id}
-            onClick={() => navigate(`/admin/learning/${d.id}/sections`)}
             className="group relative bg-white p-6 rounded-2xl border border-gray-100 hover:border-indigo-200 transition-all hover:shadow-lg text-left overflow-hidden"
           >
             {/* Decorative Element */}
@@ -65,11 +64,25 @@ const AdminLearningPage = () => {
               
               <h3 className="text-xl font-bold text-gray-800 mb-1">{d.title}</h3>
               
-              <div className="mt-4 flex items-center gap-2 text-indigo-600 font-bold text-sm opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0">
-                Gerenciar Trilha <ArrowRight size={16} />
+              <div className="mt-6 flex flex-col gap-3">
+                <button 
+                  onClick={() => navigate(`/admin/learning/${d.id}/sections`)}
+                  className="w-full flex items-center justify-between p-3 bg-indigo-50 text-indigo-700 rounded-xl font-bold text-sm hover:bg-indigo-600 hover:text-white transition-all group/btn"
+                >
+                  Gerenciar Trilha
+                  <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
+                </button>
+                
+                <button 
+                  onClick={() => navigate(`/admin/learning/${d.id}/syllabus`)}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200"
+                >
+                  Regras do Edital (Topics)
+                  <BookText size={16} />
+                </button>
               </div>
             </div>
-          </button>
+          </div>
         ))}
 
         {generalDisciplines.length === 0 && (

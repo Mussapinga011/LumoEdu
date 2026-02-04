@@ -20,6 +20,7 @@ import {
   Zap
 } from 'lucide-react';
 import clsx from 'clsx';
+import AIInsightsPanel from '../components/ai/AIInsightsPanel';
 
 const StudentDashboard = () => {
   const { user } = useAuthStore();
@@ -127,6 +128,9 @@ const StudentDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* PAINEL DE IA - PROFESSOR INTELIGENTE */}
+      {user?.id && <AIInsightsPanel userId={user.id} />}
 
       {/* META DIÁRIA */}
       {dailyGoal && (

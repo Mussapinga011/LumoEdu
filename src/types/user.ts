@@ -27,7 +27,6 @@ export interface UserProfile {
   averageGrade: number;
   
   // Enhanced Profile Stats
-  recentActivity?: UserActivity[];
   disciplineScores?: Record<string, number>;
   studyPlan?: StudyPlan;
   
@@ -39,13 +38,6 @@ export interface UserProfile {
   isOnline?: boolean;
 }
 
-export interface UserActivity {
-  id: string;
-  type: 'exam' | 'challenge' | 'module' | 'consistency_bonus';
-  title: string;
-  timestamp: any;
-  score?: number;
-}
 
 export interface StudyPlan {
   targetCourse?: string; // e.g., 'Engenharia Informática'

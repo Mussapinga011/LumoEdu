@@ -78,8 +78,7 @@ export const useAuthStore = create<AuthState>((set) => ({
               lastStudyDate: null,
               lastExamDate: null,
               lastChallengeDate: null,
-              milestones: [],
-              recentActivity: []
+              milestones: []
             };
             console.warn(`⚠️ Using session metadata fallback (Role: ${roleFromMetadata})`);
             set({ user: sessionFallback, loading: false });
@@ -109,8 +108,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             lastStudyDate: null,
             lastExamDate: null,
             lastChallengeDate: null,
-            milestones: [],
-            recentActivity: []
+            milestones: []
           };
           set({ user: sessionFallback, loading: false });
         }

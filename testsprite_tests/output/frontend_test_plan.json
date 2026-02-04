@@ -1,0 +1,49 @@
+[
+  {
+    "test_id": "TEST-AUTH-001",
+    "feature": "Authentication",
+    "test_case": "User Login Flow",
+    "steps": [
+      "Navigate to /login",
+      "Enter valid credentials (test@example.com)",
+      "Click Login button",
+      "Verify redirection to /dashboard",
+      "Verify user profile data is loaded"
+    ]
+  },
+  {
+    "test_id": "TEST-DASH-001",
+    "feature": "Student Dashboard",
+    "test_case": "Dashboard Rendering",
+    "steps": [
+      "Navigate to /dashboard",
+      "Verify 'Welcome Back' message",
+      "Check if StudyStreak component is visible",
+      "Check if AIInsightsPanel is visible"
+    ]
+  },
+  {
+    "test_id": "TEST-IA-001",
+    "feature": "Professor IA",
+    "test_case": "AI Insights Generation",
+    "steps": [
+      "Navigate to /dashboard",
+      "Locate AIInsightsPanel",
+      "Verify that performance prediction is displayed",
+      "Verify that at least one study recommendation is shown"
+    ]
+  },
+  {
+    "test_id": "TEST-EXAM-001",
+    "feature": "Learning System",
+    "test_case": "Practice Quiz Access",
+    "steps": [
+      "Navigate to /practice",
+      "Select a discipline",
+      "Start a quiz",
+      "Verify question is displayed",
+      "Select an option and submit",
+      "Verify feedback (Correct/Incorrect)"
+    ]
+  }
+]

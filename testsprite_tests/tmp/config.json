@@ -1,0 +1,20 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:5173",
+  "executionArgs": {
+    "projectName": "admission-platform",
+    "projectPath": "c:\\Users\\Mussapinga\\Documents\\Trabalho\\admission-platform",
+    "testIds": [
+      "TEST-AUTH-001",
+      "TEST-DASH-001",
+      "TEST-IA-001",
+      "TEST-EXAM-001"
+    ],
+    "additionalInstruction": "Use React Testing Library and Vitest. Mock Supabase calls using verify-compatible mocks. Ensure tests run in JSDOM environment.",
+    "envs": {
+      "API_KEY": "sk-user-DlCr-ZQ14vD3P8HwDobeQ0wXRlIlSe_CzBQvTOA7F7c5zN2Wariqg-guCiOqQPYs7-ItlcyiD5Lf0E97iRZASkbFu5quzUYkN3UlIlrCZRYNBZ2jvLrf1aZ0rOcdGdJH09A"
+    }
+  }
+}

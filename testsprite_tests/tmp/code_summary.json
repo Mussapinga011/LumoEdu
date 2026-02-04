@@ -1,0 +1,56 @@
+{
+  "tech_stack": [
+    "TypeScript",
+    "React",
+    "Vite",
+    "Supabase",
+    "Zustand",
+    "TailwindCSS"
+  ],
+  "features": [
+    {
+      "name": "Authentication",
+      "description": "User login, registration, and session management using Supabase Auth.",
+      "files": [
+        "src/stores/useAuthStore.ts",
+        "src/pages/LoginPage.tsx",
+        "src/pages/RegisterPage.tsx"
+      ]
+    },
+    {
+      "name": "Professor IA",
+      "description": "AI prediction engine for student performance, plateau detection, and schedule optimization.",
+      "files": [
+        "src/services/academicAI.service.ts",
+        "src/components/ai/AIInsightsPanel.tsx",
+        "src/components/ai/OptimizedSchedulePanel.tsx"
+      ]
+    },
+    {
+      "name": "Student Dashboard",
+      "description": "Main dashboard for students showing progress, streaks, and quick actions.",
+      "files": [
+        "src/pages/StudentDashboard.tsx",
+        "src/components/dashboard/StudyStreak.tsx"
+      ]
+    },
+    {
+      "name": "Admin Panel",
+      "description": "Backoffice for managing exams, users, and content.",
+      "files": [
+        "src/pages/admin/AdminDashboard.tsx",
+        "src/pages/admin/AdminExamsPage.tsx",
+        "src/pages/admin/AdminUsersPage.tsx"
+      ]
+    },
+    {
+      "name": "Learning System",
+      "description": "Practice quizzes, full exams, and learning materials.",
+      "files": [
+        "src/pages/PracticeQuizPage.tsx",
+        "src/services/practiceService.supabase.ts",
+        "src/pages/LearningPage.tsx"
+      ]
+    }
+  ]
+}

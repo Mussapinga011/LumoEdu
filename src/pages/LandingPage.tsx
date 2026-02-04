@@ -1,6 +1,5 @@
 import { Link, Navigate } from 'react-router-dom';
 import { 
-  Globe, 
   CheckCircle, 
   Zap, 
   Shield, 
@@ -9,10 +8,7 @@ import {
   BookOpen, 
   Target, 
   ArrowRight,
-  Star,
-  Sparkles,
-  School,
-  Lock
+  School
 } from 'lucide-react';
 import { useAuthStore } from '../stores/useAuthStore';
 import clsx from 'clsx';
@@ -93,7 +89,7 @@ const LandingPage = () => {
                 ))}
               </div>
               <p className="text-sm font-bold text-gray-400 italic">
-                Mais de <span className="text-gray-700">2,000+ alunos</span> estudando hoje
+                Mais de <span className="text-gray-700">10+ alunos</span> estudando hoje
               </p>
             </div>
           </div>

@@ -15,6 +15,7 @@ import AdminRoute from './components/AdminRoute';
 import { useAuthStore } from './stores/useAuthStore';
 import OfflineIndicator from './components/OfflineIndicator';
 import SupabaseAuthTest from './pages/SupabaseAuthTest';
+import NotFoundRedirect from './components/NotFoundRedirect';
 
 // Lazy load páginas secundárias para reduzir bundle inicial
 const DisciplinesPage = lazy(() => import('./pages/DisciplinesPage'));
@@ -303,6 +304,9 @@ function App() {
           } />
           
         </Route>
+
+        {/* Catch-all route for 404 - Redirect to home with warning */}
+        <Route path="*" element={<NotFoundRedirect />} />
       </Routes>
       </Suspense>
     </Router>

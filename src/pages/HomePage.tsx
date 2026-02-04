@@ -15,8 +15,8 @@ const HomePage = () => {
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        console.log('🔀 No user, redirecting to /login');
-        navigate('/login', { replace: true });
+        console.log('🔀 No user, redirecting to /landing');
+        navigate('/landing', { replace: true });
       } else if (user.role === 'admin') {
         console.log('🔀 Admin user, redirecting to /admin');
         navigate('/admin', { replace: true });

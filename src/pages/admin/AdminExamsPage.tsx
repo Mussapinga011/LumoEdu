@@ -4,8 +4,8 @@ import { getAllExams, deleteExam } from '../../services/examService.supabase';
 import { Exam } from '../../types/exam';
 import { 
   Plus, Edit2, Trash2, Search, Upload, 
-  FileText, Calendar, CheckCircle, 
-  Filter, GraduationCap, List
+  FileText, CheckCircle, 
+  Filter, GraduationCap
 } from 'lucide-react';
 import { useContentStore } from '../../stores/useContentStore';
 import { useModal, useToast } from '../../hooks/useNotifications';

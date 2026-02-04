@@ -12,9 +12,7 @@ import {
   AlertCircle, 
   Layers,
   Loader2,
-  Building2,
-  MoreVertical,
-  ExternalLink
+  Building2
 } from 'lucide-react';
 import clsx from 'clsx';
 

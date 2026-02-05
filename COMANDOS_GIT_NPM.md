@@ -103,6 +103,8 @@ git status
 # Fazer commit de mudanças futuras
 git add .
 git commit -m "Descrição das mudanças"
+git commit -m "Atualização do README.md"
+
 git push
 
 # Ver histórico

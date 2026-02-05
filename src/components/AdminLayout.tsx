@@ -8,7 +8,8 @@ import {
   Download,
   School,
   BookMarked,
-  ArrowLeftCircle
+  ArrowLeftCircle,
+  GraduationCap
 } from 'lucide-react';
 import clsx from 'clsx';
 import MobileNav from './MobileNav';
@@ -27,6 +28,7 @@ const AdminLayout = () => {
     { name: 'Gerenciar Grupos', path: '/admin/groups', icon: MessageCircle },
     { name: 'Gerenciar Downloads', path: '/admin/downloads', icon: Download },
     { name: 'Gerenciar Universidades', path: '/admin/universities', icon: School },
+    { name: 'Gerenciar Cursos', path: '/admin/courses', icon: GraduationCap },
   ];
 
   return (

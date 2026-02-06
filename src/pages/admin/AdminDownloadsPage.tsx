@@ -217,40 +217,40 @@ const AdminDownloadsPage = () => {
       )}
 
       {/* Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-950 p-8 md:p-12 rounded-[2.5rem] text-white shadow-2xl">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-500/10 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2"></div>
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-950 p-6 md:p-8 rounded-[2rem] text-white shadow-xl">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-primary/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
         
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-primary-light text-xs font-black uppercase tracking-[0.2em] mb-4 border border-white/10">
-              <Shield size={14} /> Repositório de Arquivos
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full text-primary-light text-[10px] font-black uppercase tracking-[0.15em] mb-3 border border-white/10">
+              <Shield size={12} /> Repositório de Arquivos
             </div>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-4 leading-none uppercase italic">
+            <h1 className="text-3xl md:text-4xl font-black tracking-tighter mb-3 leading-none uppercase italic">
               CENTRAL DE <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent italic">DOWNLOADS</span>
             </h1>
-            <p className="text-blue-100/70 font-medium max-w-md text-lg italic">
+            <p className="text-blue-100/70 font-medium max-w-md text-sm italic">
               Organize provas, gabaritos e materiais complementares com foco em conversão e utilidade.
             </p>
           </div>
           
-          <div className="flex flex-col gap-6 w-full md:w-auto">
+          <div className="flex flex-col gap-4 w-full md:w-auto">
             <button 
               onClick={handleOpenCreateModal} 
-              className="flex items-center justify-center gap-3 bg-white text-indigo-950 px-10 py-5 rounded-2xl font-black text-lg hover:bg-white/90 transition-all shadow-xl shadow-white/10 active:scale-95 group uppercase"
+              className="flex items-center justify-center gap-2 bg-white text-indigo-950 px-6 py-3 rounded-xl font-black text-sm hover:bg-white/90 transition-all shadow-lg shadow-white/10 active:scale-95 group uppercase"
             >
-              <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" /> 
+              <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" /> 
               NOVO MATERIAL
             </button>
-            <div className="flex items-center justify-center md:justify-end gap-8 text-indigo-200/50">
+            <div className="flex items-center justify-center md:justify-end gap-6 text-indigo-200/50">
               <div className="text-center">
-                <div className="text-3xl font-black text-white italic leading-none">{stats.total}</div>
-                <div className="text-[10px] uppercase font-bold tracking-[0.2em] mt-1">Materiais</div>
+                <div className="text-2xl font-black text-white italic leading-none">{stats.total}</div>
+                <div className="text-[9px] uppercase font-bold tracking-[0.15em] mt-0.5">Materiais</div>
               </div>
-              <div className="w-px h-10 bg-white/10"></div>
+              <div className="w-px h-8 bg-white/10"></div>
               <div className="text-center">
-                <div className="text-3xl font-black text-white italic leading-none">{stats.downloads}</div>
-                <div className="text-[10px] uppercase font-bold tracking-[0.2em] mt-1">Baixados</div>
+                <div className="text-2xl font-black text-white italic leading-none">{stats.downloads}</div>
+                <div className="text-[9px] uppercase font-bold tracking-[0.15em] mt-0.5">Baixados</div>
               </div>
             </div>
           </div>
@@ -258,77 +258,77 @@ const AdminDownloadsPage = () => {
       </div>
 
       {/* Filters & Search */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:w-96 group">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={20} />
+      <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div className="relative w-full md:w-80 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={16} />
           <input 
             type="text" 
             placeholder="Pesquisar por título ou disciplina..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white border-2 border-gray-100 rounded-[1.5rem] py-5 pl-14 pr-6 font-bold text-gray-800 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all shadow-sm italic"
+            className="w-full bg-white border-2 border-gray-100 rounded-xl py-3 pl-11 pr-4 text-sm font-bold text-gray-800 focus:border-primary focus:ring-2 focus:ring-primary/5 outline-none transition-all shadow-sm italic"
           />
         </div>
       </div>
 
       {/* List / Table */}
-      <div className="bg-white rounded-[2.5rem] shadow-xl border border-gray-50 overflow-hidden">
+      <div className="bg-white rounded-[2rem] shadow-xl border border-gray-50 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/50">
-                <th className="p-8 font-black text-gray-400 uppercase text-[10px] tracking-widest">Identidade do Arquivo</th>
-                <th className="p-8 font-black text-gray-400 uppercase text-[10px] tracking-widest hidden md:table-cell">Ano/Info</th>
-                <th className="p-8 font-black text-gray-400 uppercase text-[10px] tracking-widest">Categoria</th>
-                <th className="p-8 font-black text-gray-400 uppercase text-[10px] tracking-widest">Status</th>
-                <th className="p-8 text-right font-black text-gray-400 uppercase text-[10px] tracking-widest">Ações</th>
+                <th className="px-6 py-4 font-black text-gray-400 uppercase text-[9px] tracking-widest">Identidade do Arquivo</th>
+                <th className="px-6 py-4 font-black text-gray-400 uppercase text-[9px] tracking-widest hidden md:table-cell">Ano/Info</th>
+                <th className="px-6 py-4 font-black text-gray-400 uppercase text-[9px] tracking-widest">Categoria</th>
+                <th className="px-6 py-4 font-black text-gray-400 uppercase text-[9px] tracking-widest">Status</th>
+                <th className="px-6 py-4 text-right font-black text-gray-400 uppercase text-[9px] tracking-widest">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filteredDownloads.map((item) => (
                 <tr key={item.id} className="hover:bg-indigo-50/20 transition-all group">
-                  <td className="p-8">
-                    <div className="flex items-center gap-5">
+                  <td className="px-6 py-3">
+                    <div className="flex items-center gap-4">
                       <div className={clsx(
-                        "w-16 h-16 rounded-[1.25rem] flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 duration-300",
-                        item.type === 'exam' ? "bg-blue-100 text-blue-600 shadow-blue-100" : 
-                        item.type === 'guide' ? "bg-purple-100 text-purple-600 shadow-purple-100" :
-                        "bg-teal-100 text-teal-600 shadow-teal-100"
+                        "w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-105 duration-300",
+                        item.type === 'exam' ? "bg-blue-100 text-blue-600 shadow-blue-100/20" : 
+                        item.type === 'guide' ? "bg-purple-100 text-purple-600 shadow-purple-100/20" :
+                        "bg-teal-100 text-teal-600 shadow-teal-100/20"
                       )}>
-                        {item.type === 'exam' ? <FileText size={28} /> : 
-                         item.type === 'guide' ? <MonitorPlay size={28} /> : <FileBadge size={28} />}
+                        {item.type === 'exam' ? <FileText size={20} /> : 
+                         item.type === 'guide' ? <MonitorPlay size={20} /> : <FileBadge size={20} />}
                       </div>
                       <div>
-                        <div className="font-black text-gray-800 text-xl leading-none uppercase tracking-tighter mb-1">{item.title}</div>
-                        <div className="text-gray-400 font-bold text-xs line-clamp-1 italic">{item.description || 'Sem descrição'}</div>
+                        <div className="font-black text-gray-800 text-base leading-none uppercase tracking-tighter mb-1">{item.title}</div>
+                        <div className="text-gray-400 font-bold text-[10px] line-clamp-1 italic">{item.description || 'Sem descrição'}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="p-8 hidden md:table-cell">
-                     <div className="flex items-center gap-2 text-gray-500 font-black text-xs uppercase italic">
-                       <Calendar size={14} className="text-gray-400" />
+                  <td className="px-6 py-3 hidden md:table-cell">
+                     <div className="flex items-center gap-1.5 text-gray-500 font-black text-[10px] uppercase italic">
+                       <Calendar size={12} className="text-gray-400" />
                        {item.year}
                      </div>
-                     <div className="text-[10px] text-gray-400 font-bold uppercase mt-1 tracking-widest">{item.fileSize || '---'}</div>
+                     <div className="text-[9px] text-gray-400 font-bold uppercase mt-0.5 tracking-widest">{item.fileSize || '---'}</div>
                   </td>
-                  <td className="p-8">
-                    <div className="font-black text-gray-700 uppercase tracking-tighter italic text-sm">{item.disciplineName}</div>
-                    <div className="text-[10px] font-black text-primary uppercase opacity-60 tracking-widest mt-0.5">{item.universityName}</div>
+                  <td className="px-6 py-3">
+                    <div className="font-black text-gray-700 uppercase tracking-tighter italic text-xs leading-none">{item.disciplineName}</div>
+                    <div className="text-[9px] font-black text-primary uppercase opacity-60 tracking-widest mt-1 leading-none">{item.universityName}</div>
                   </td>
-                  <td className="p-8">
+                  <td className="px-6 py-3">
                     <span className={clsx(
-                      "px-4 py-1.5 rounded-full font-black text-[9px] uppercase tracking-[0.15em] border-2 flex w-fit items-center gap-1.5",
+                      "px-3 py-1 rounded-full font-black text-[8px] uppercase tracking-[0.12em] border flex w-fit items-center gap-1",
                       item.isPremium ? "bg-amber-50 text-amber-600 border-amber-100 shadow-sm" : "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm"
                     )}>
-                      {item.isPremium && <Shield size={10} />}
+                      {item.isPremium && <Shield size={8} />}
                       {item.isPremium ? 'PREMIUM' : 'GRATUITO'}
                     </span>
                   </td>
-                  <td className="p-8 text-right">
-                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-300">
-                      <a href={item.fileUrl} target="_blank" rel="noopener noreferrer" className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-primary-light hover:text-white transition-all shadow-sm" title="Abrir"><ExternalLink size={20} /></a>
-                      <button onClick={() => handleOpenEditModal(item)} className="p-3 bg-gray-50 text-gray-400 rounded-xl hover:bg-secondary hover:text-white transition-all shadow-sm" title="Editar"><Edit size={20} /></button>
-                      <button onClick={() => setDeleteConfirm({ id: item.id, title: item.title })} className="p-3 bg-red-50 text-red-400 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm" title="Deletar"><Trash2 size={20} /></button>
+                  <td className="px-6 py-3 text-right">
+                    <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+                      <a href={item.fileUrl} target="_blank" rel="noopener noreferrer" className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-primary-light hover:text-white transition-all shadow-sm" title="Abrir"><ExternalLink size={16} /></a>
+                      <button onClick={() => handleOpenEditModal(item)} className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-secondary hover:text-white transition-all shadow-sm" title="Editar"><Edit size={16} /></button>
+                      <button onClick={() => setDeleteConfirm({ id: item.id, title: item.title })} className="p-2 bg-red-50 text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition-all shadow-sm" title="Deletar"><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -341,77 +341,77 @@ const AdminDownloadsPage = () => {
       {/* Modal CRUD */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-900/90 backdrop-blur-xl flex items-center justify-center z-[120] p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[3rem] p-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-3xl border-4 border-white animate-in zoom-in-95 duration-200 relative custom-scrollbar">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-32 translate-x-32 pointer-events-none"></div>
+          <div className="bg-white rounded-[2rem] p-8 md:p-10 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-3xl border-4 border-white animate-in zoom-in-95 duration-200 relative custom-scrollbar">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full -translate-y-24 translate-x-24 pointer-events-none"></div>
             
-            <div className="flex items-center justify-between mb-10 relative z-10">
+            <div className="flex items-center justify-between mb-8 relative z-10">
                <div>
-                 <h2 className="text-4xl font-black tracking-tighter uppercase italic">{editingId ? 'Editar Registro' : 'Novo Arquivo'}</h2>
-                 <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mt-1 italic">Biblioteca de Download</p>
+                 <h2 className="text-2xl font-black tracking-tighter uppercase italic">{editingId ? 'Editar Registro' : 'Novo Arquivo'}</h2>
+                 <p className="text-gray-400 font-bold uppercase tracking-widest text-[9px] mt-1 italic">Biblioteca de Download</p>
                </div>
-               <button onClick={() => setIsModalOpen(false)} className="bg-gray-100 text-gray-500 p-3 rounded-full hover:bg-gray-200 transition-all"><X size={24} /></button>
+               <button onClick={() => setIsModalOpen(false)} className="bg-gray-100 text-gray-500 p-2 rounded-full hover:bg-gray-200 transition-all"><X size={20} /></button>
             </div>
             
-            <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="md:col-span-2 space-y-2">
-                  <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Título do Documento</label>
+            <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2 space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Título do Documento</label>
                   <input 
                     type="text" 
                     required 
                     value={formData.title} 
                     onChange={e => setFormData({...formData, title: e.target.value})} 
-                    className="w-full p-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-white outline-none font-bold text-gray-800 transition-all italic text-lg shadow-inner" 
+                    className="w-full p-3.5 bg-gray-50 rounded-xl border-2 border-transparent focus:border-primary focus:bg-white outline-none font-bold text-gray-800 transition-all italic text-base shadow-inner" 
                     placeholder="Ex: Prova de Matemática UEM 2024" 
                   />
                 </div>
 
-                <div className="md:col-span-2 space-y-2">
-                  <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">URL da Fonte (Cloud)</label>
+                <div className="md:col-span-2 space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">URL da Fonte (Cloud)</label>
                   <div className="relative group">
-                    <LinkIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-primary transition-colors" size={20} />
+                    <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-primary transition-colors" size={18} />
                     <input 
                       type="url" 
                       required 
                       value={formData.fileUrl} 
                       onChange={e => setFormData({...formData, fileUrl: e.target.value})} 
-                      className="w-full pl-14 p-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-white outline-none font-bold text-gray-800 transition-all shadow-inner" 
+                      className="w-full pl-11 p-3.5 bg-gray-50 rounded-xl border-2 border-transparent focus:border-primary focus:bg-white outline-none font-bold text-gray-800 transition-all shadow-inner text-sm" 
                       placeholder="https://drive.google.com/..." 
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Instituição</label>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Instituição</label>
                   <select 
                     value={formData.universityId} 
                     onChange={e => setFormData({...formData, universityId: e.target.value})} 
-                    className="w-full p-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary outline-none font-bold text-gray-800 appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik02IDlsNiA2IDYtNiIvPjwvc3ZnPg==')] bg-[length:20px] bg-[right_1.25rem_center] bg-no-repeat"
+                    className="w-full p-3.5 bg-gray-50 rounded-xl border-2 border-transparent focus:border-primary outline-none font-bold text-gray-800 appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik02IDlsNiA2IDYtNiIvPjwvc3ZnPg==')] bg-[length:18px] bg-[right_1rem_center] bg-no-repeat text-sm"
                   >
                     <option value="all">Foco Geral</option>
                     {universities.map(uni => <option key={uni.id} value={uni.id}>{uni.shortName}</option>)}
                   </select>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Disciplina Principal</label>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Disciplina Principal</label>
                   <select 
                     required 
                     value={formData.disciplineId} 
                     onChange={e => setFormData({...formData, disciplineId: e.target.value})} 
-                    className="w-full p-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary outline-none font-bold text-gray-800 appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik02IDlsNiA2IDYtNiIvPjwvc3ZnPg==')] bg-[length:20px] bg-[right_1.25rem_center] bg-no-repeat"
+                    className="w-full p-3.5 bg-gray-50 rounded-xl border-2 border-transparent focus:border-primary outline-none font-bold text-gray-800 appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik02IDlsNiA2IDYtNiIvPjwvc3ZnPg==')] bg-[length:18px] bg-[right_1rem_center] bg-no-repeat text-sm"
                   >
                     <option value="">Selecione...</option>
                     {disciplines.map(d => <option key={d.id} value={d.id}>{d.title}</option>)}
                   </select>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Categoria de Arquivo</label>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Categoria de Arquivo</label>
                   <select 
                     value={formData.type} 
                     onChange={e => setFormData({...formData, type: e.target.value as any})} 
-                    className="w-full p-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary outline-none font-bold text-gray-800 appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik02IDlsNiA2IDYtNiIvPjwvc3ZnPg==')] bg-[length:20px] bg-[right_1.25rem_center] bg-no-repeat"
+                    className="w-full p-3.5 bg-gray-50 rounded-xl border-2 border-transparent focus:border-primary outline-none font-bold text-gray-800 appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik02IDlsNiA2IDYtNiIvPjwvc3ZnPg==')] bg-[length:18px] bg-[right_1rem_center] bg-no-repeat text-sm"
                   >
                     <option value="exam">PROVA / EXAME</option>
                     <option value="guide">GUIA DE ESTUDO</option>
@@ -420,29 +420,29 @@ const AdminDownloadsPage = () => {
                   </select>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Ano de Referência</label>
-                  <input type="number" value={formData.year} onChange={e => setFormData({...formData, year: parseInt(e.target.value)})} className="w-full p-5 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary outline-none font-bold text-gray-800 shadow-inner" />
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Ano de Referência</label>
+                  <input type="number" value={formData.year} onChange={e => setFormData({...formData, year: parseInt(e.target.value)})} className="w-full p-3.5 bg-gray-50 rounded-xl border-2 border-transparent focus:border-primary outline-none font-bold text-gray-800 shadow-inner text-sm" />
                 </div>
 
-                <div className="md:col-span-2 flex items-center gap-6 bg-amber-50/50 p-6 rounded-[2rem] border-2 border-amber-100/50 group hover:border-amber-400 transition-all cursor-pointer" onClick={() => setFormData({...formData, isPremium: !formData.isPremium})}>
+                <div className="md:col-span-2 flex items-center gap-4 bg-amber-50/50 p-4 rounded-2xl border-2 border-amber-100/50 group hover:border-amber-400 transition-all cursor-pointer" onClick={() => setFormData({...formData, isPremium: !formData.isPremium})}>
                   <div className={clsx(
-                    "w-12 h-12 rounded-xl flex items-center justify-center transition-all shadow-md",
+                    "w-10 h-10 rounded-lg flex items-center justify-center transition-all shadow-md",
                     formData.isPremium ? "bg-amber-500 text-white rotate-12" : "bg-gray-200 text-gray-400"
                   )}>
-                    <Shield size={24} />
+                    <Shield size={20} />
                   </div>
                   <div className="flex-1">
-                    <div className="font-black text-amber-700 uppercase tracking-tighter italic text-sm">Bloqueio Premium ⭐</div>
-                    <div className="text-[10px] text-amber-600/70 font-bold uppercase tracking-widest">Apenas assinantes poderão visualizar.</div>
+                    <div className="font-black text-amber-700 uppercase tracking-tighter italic text-xs">Bloqueio Premium ⭐</div>
+                    <div className="text-[9px] text-amber-600/70 font-bold uppercase tracking-widest">Apenas assinantes poderão visualizar.</div>
                   </div>
-                  <input type="checkbox" checked={formData.isPremium} readOnly className="w-6 h-6 rounded-lg text-amber-500 border-amber-200 focus:ring-amber-500" />
+                  <input type="checkbox" checked={formData.isPremium} readOnly className="w-5 h-5 rounded text-amber-500 border-amber-200 focus:ring-amber-500" />
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-6">
-                <button type="submit" disabled={saving} className="flex-1 bg-primary text-white py-6 rounded-3xl font-black text-xl shadow-xl shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-3">
-                  {saving ? <Loader2 className="animate-spin" /> : <FileDown size={24} />}
+              <div className="flex gap-4 pt-4">
+                <button type="submit" disabled={saving} className="flex-1 bg-primary text-white py-4 rounded-2xl font-black text-base shadow-xl shadow-primary/30 active:scale-95 transition-all flex items-center justify-center gap-2">
+                  {saving ? <Loader2 className="animate-spin" size={20} /> : <FileDown size={20} />}
                   {editingId ? 'ATUALIZAR ARQUIVO' : 'LANÇAR MATÉRIA-PRIMA'}
                 </button>
               </div>
@@ -454,28 +454,28 @@ const AdminDownloadsPage = () => {
       {/* Delete confirmation */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-gray-900/95 backdrop-blur-xl flex items-center justify-center z-[130] p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[3rem] p-12 w-full max-w-md text-center shadow-3xl border-4 border-red-50 relative overflow-hidden">
-             <div className="absolute top-0 left-0 w-full h-2 bg-red-500"></div>
+          <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm text-center shadow-3xl border-4 border-red-50 relative overflow-hidden">
+             <div className="absolute top-0 left-0 w-full h-1.5 bg-red-500"></div>
             
-            <div className="w-24 h-24 bg-red-50 text-red-600 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 rotate-12 shadow-lg shadow-red-100">
-              <Trash2 size={48} />
+            <div className="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6 rotate-12 shadow-lg shadow-red-100">
+              <Trash2 size={32} />
             </div>
             
-            <h2 className="text-4xl font-black text-gray-800 mb-4 tracking-tighter uppercase italic">Expurgar Arquivo?</h2>
-            <p className="text-gray-500 font-medium mb-10 text-lg leading-relaxed italic">
+            <h2 className="text-2xl font-black text-gray-800 mb-3 tracking-tighter uppercase italic">Expurgar Arquivo?</h2>
+            <p className="text-gray-500 font-medium mb-8 text-base leading-relaxed italic">
               Este arquivo <span className="text-gray-800 font-black">"{deleteConfirm.title}"</span> será apagado do repositório.
             </p>
             
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5">
               <button 
                 onClick={confirmDelete} 
-                className="w-full bg-red-600 text-white py-6 rounded-2xl font-black text-xl shadow-xl shadow-red-200 active:scale-95 transition-all uppercase tracking-tighter"
+                className="w-full bg-red-600 text-white py-4 rounded-xl font-black text-lg shadow-xl shadow-red-200 active:scale-95 transition-all uppercase tracking-tighter"
               >
                 Sim, Remover Permanentemente
               </button>
               <button 
                 onClick={() => setDeleteConfirm(null)} 
-                className="w-full py-4 font-black text-gray-400 uppercase tracking-widest text-xs hover:text-gray-600 transition-colors"
+                className="w-full py-2 font-black text-gray-400 uppercase tracking-widest text-[10px] hover:text-gray-600 transition-colors"
               >
                 Desistir e Voltar
               </button>

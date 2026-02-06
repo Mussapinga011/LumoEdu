@@ -23,22 +23,22 @@ const LiveInput = ({
 }: {
   label: string, value: string, onChange: (v: string) => void, height?: string, placeholder?: string, required?: boolean
 }) => (
-  <div className="space-y-2">
-    <div className="flex justify-between items-end px-2">
-        <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">{label} <span className="text-gray-400 font-normal normal-case text-[10px]">(Markdown/LaTeX)</span></label>
-        {required && <span className="text-red-500 text-xs font-bold">*Obrigatório</span>}
+  <div className="space-y-1.5">
+    <div className="flex justify-between items-end px-1">
+        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">{label} <span className="text-gray-300 font-bold normal-case text-[8px] italic">(MD/LaTeX)</span></label>
+        {required && <span className="text-red-500 text-[9px] font-black uppercase tracking-tighter">*Obrigatório</span>}
     </div>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
       <textarea 
           required={required}
           value={value} 
           onChange={e => onChange(e.target.value)} 
-          className={`w-full p-3 bg-gray-50 rounded-xl font-mono text-sm border border-gray-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10 outline-none transition-all resize-y ${height}`}
-          placeholder={placeholder || "Digite aqui... Use $$ formula $$ para LaTeX"}
+          className={`w-full p-3 bg-gray-50 rounded-xl font-mono text-xs border-2 border-transparent focus:border-violet-500 focus:bg-white outline-none transition-all resize-y shadow-inner ${height}`}
+          placeholder={placeholder || "Use $$ formula $$ para LaTeX"}
       />
-      <div className={`w-full p-3 bg-white rounded-xl border border-gray-200 overflow-x-auto overflow-y-auto ${height} prose prose-sm max-w-none`}>
-          <div className="px-2 pb-2">
-            {value ? <RichTextRenderer content={value} /> : <span className="text-gray-300 italic text-sm">A pré-visualização aparecerá aqui...</span>}
+      <div className={`w-full p-3 bg-white rounded-xl border-2 border-gray-50 overflow-x-auto overflow-y-auto ${height} prose prose-xs max-w-none shadow-sm`}>
+          <div className="px-1 pb-1">
+            {value ? <RichTextRenderer content={value} /> : <span className="text-gray-300 italic text-[10px]">Preview...</span>}
           </div>
       </div>
     </div>
@@ -231,26 +231,28 @@ const AdminLearningQuestionsPage = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between bg-white p-5 rounded-2xl border border-gray-100 shadow-sm sticky top-4 z-40 gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between bg-white/90 backdrop-blur-md p-4 rounded-3xl border-2 border-gray-50 shadow-xl sticky top-4 z-40 gap-4">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate(`/admin/learning/${disciplineId}/sections/${sectionId}/sessions`)} className="p-2 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors">
-             <ArrowLeft size={24} />
+          <button onClick={() => navigate(`/admin/learning/${disciplineId}/sections/${sectionId}/sessions`)} className="p-2.5 bg-gray-50 text-gray-400 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-all active:scale-95">
+             <ArrowLeft size={18} />
           </button>
           <div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-               Conteúdo da Aula
+            <h1 className="text-lg font-black bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent uppercase tracking-tighter italic leading-none">
+               ENGENHARIA DE CONTEÚDO
             </h1>
             <div className="flex items-center gap-2 mt-1">
-                <span className="bg-gray-100 px-2 py-0.5 rounded text-xs font-bold text-gray-500">{content.length} itens</span>
+                <span className="bg-violet-50 text-violet-600 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest border border-violet-100 italic">
+                  {content.length} módulos ativos
+                </span>
             </div>
           </div>
         </div>
         <div className="flex gap-2 w-full lg:w-auto">
-           <button onClick={() => openTheoryModal()} className="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white px-5 py-2.5 rounded-xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all text-sm">
-             <Plus size={16} /> Teoria
+           <button onClick={() => openTheoryModal()} className="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white px-5 py-2.5 rounded-xl font-black text-xs hover:shadow-lg active:scale-95 transition-all uppercase tracking-tighter">
+             <Plus size={16} /> ADICIONAR TEORIA
            </button>
-           <button onClick={() => openQuestionModal()} className="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all text-sm">
-             <Plus size={16} /> Questão
+           <button onClick={() => openQuestionModal()} className="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-5 py-2.5 rounded-xl font-black text-xs hover:shadow-lg active:scale-95 transition-all uppercase tracking-tighter">
+             <Plus size={16} /> CRIAR QUESTÃO
            </button>
         </div>
       </div>
@@ -266,42 +268,42 @@ const AdminLearningQuestionsPage = () => {
                <p className="text-gray-300 text-sm">Adicione teoria ou questões para começar.</p>
            </div>
         ) : content.map((item, idx) => (
-          <div key={item.id} className={clsx("group relative p-6 rounded-2xl border shadow-sm hover:shadow-md transition-all", item.type === 'theory' ? "bg-gradient-to-br from-violet-50/30 to-purple-50/30 border-violet-100 hover:border-violet-300" : "bg-white border-gray-100 hover:border-green-200")}>
+          <div key={item.id} className={clsx("group relative p-5 rounded-[2rem] border shadow-xl transition-all", item.type === 'theory' ? "bg-gradient-to-br from-violet-50/20 to-indigo-50/20 border-violet-100 hover:border-violet-300" : "bg-white border-gray-100 hover:border-emerald-200")}>
              
              {/* Ações */}
-             <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-xs font-mono text-gray-300 mr-1">#{idx + 1}</span>
-                <button onClick={() => item.type === 'theory' ? openTheoryModal(item) : openQuestionModal(item)} className="p-2 bg-white text-gray-400 border border-gray-100 rounded-lg hover:text-violet-600 hover:border-violet-200 transition-colors">
+             <div className="absolute top-6 right-6 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all translate-x-1 group-hover:translate-x-0">
+                <span className="text-[10px] font-black text-gray-300 uppercase italic tracking-widest mr-2">ID: {idx + 1}</span>
+                <button onClick={() => item.type === 'theory' ? openTheoryModal(item) : openQuestionModal(item)} className="p-2 bg-white text-gray-400 border-2 border-gray-50 rounded-xl hover:text-violet-600 hover:border-violet-100 transition-colors shadow-sm">
                    <Edit2 size={14} />
                 </button>
-                <button onClick={() => handleDelete(item)} className="p-2 bg-white text-gray-400 border border-gray-100 rounded-lg hover:text-red-500 hover:border-red-200 transition-colors">
+                <button onClick={() => handleDelete(item)} className="p-2 bg-white text-gray-400 border-2 border-gray-50 rounded-xl hover:text-red-500 hover:border-red-100 transition-colors shadow-sm">
                    <Trash2 size={14} />
                 </button>
              </div>
 
-             <div className="flex gap-5">
-                <div className={clsx("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border", item.type === 'theory' ? "bg-violet-100 border-violet-200 text-violet-600" : "bg-green-100 border-green-200 text-green-600")}>
+             <div className="flex gap-4">
+                <div className={clsx("w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border-2 shadow-sm", item.type === 'theory' ? "bg-violet-100 border-violet-200 text-violet-600" : "bg-emerald-100 border-emerald-200 text-emerald-600")}>
                    {item.type === 'theory' ? <BookOpen size={20} /> : <HelpCircle size={20} />}
                 </div>
                 
                 <div className="flex-1 min-w-0">
                    {item.type === 'theory' ? (
-                      <div className="space-y-3">
-                         <h3 className="font-bold text-gray-800 text-lg">{item.title}</h3>
-                         <div className="bg-white/60 p-4 rounded-xl border border-violet-100 text-gray-600 prose prose-sm max-w-none line-clamp-4">
+                      <div className="space-y-2">
+                         <h3 className="font-black text-gray-800 text-base uppercase tracking-tighter italic leading-none">{item.title}</h3>
+                         <div className="bg-white/40 backdrop-blur-sm p-4 rounded-2xl border border-white/60 text-gray-600 prose prose-xs max-w-none line-clamp-3 italic">
                              <RichTextRenderer content={item.content} />
                          </div>
                       </div>
                    ) : (
                       <div className="space-y-3">
-                         <h3 className="font-semibold text-gray-700 text-base"><RichTextRenderer content={item.statement} /></h3>
-                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                         <h3 className="font-black text-gray-700 text-sm leading-relaxed uppercase italic tracking-tight"><RichTextRenderer content={item.statement} /></h3>
+                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                             {item.options.map((opt, i) => (
-                               <div key={i} className={clsx("text-sm p-2.5 rounded-lg border flex items-center gap-2", i === item.correct_option ? "bg-green-50 border-green-200 text-green-800 font-semibold" : "bg-white border-gray-100 text-gray-500")}>
-                                  <span className={clsx("w-5 h-5 rounded flex items-center justify-center text-xs font-bold border", i === item.correct_option ? "bg-green-200 border-green-300 text-green-700" : "bg-gray-50 border-gray-200 text-gray-400")}>
+                               <div key={i} className={clsx("text-[10px] p-2 rounded-xl border-2 flex items-center gap-2 transition-all", i === item.correct_option ? "bg-emerald-50 border-emerald-100 text-emerald-800 font-black shadow-sm" : "bg-gray-50/50 border-transparent text-gray-400 italic")}>
+                                  <span className={clsx("w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black border-2 shrink-0", i === item.correct_option ? "bg-emerald-100 border-emerald-200 text-emerald-600" : "bg-white border-gray-100 text-gray-300")}>
                                     {String.fromCharCode(65 + i)}
                                   </span>
-                                  <span className="truncate text-xs"><RichTextRenderer content={opt} /></span>
+                                  <span className="truncate"><RichTextRenderer content={opt} /></span>
                                </div>
                             ))}
                          </div>
@@ -315,47 +317,50 @@ const AdminLearningQuestionsPage = () => {
 
       {/* --- MODAL TEORIA --- */}
       {isTheoryModalOpen && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-end md:items-center justify-center z-50 p-0 md:p-6">
-          <div className="bg-white rounded-t-3xl md:rounded-2xl p-6 md:p-8 w-full max-w-4xl shadow-2xl animate-in slide-in-from-bottom-10 md:zoom-in-95 duration-200 h-[92vh] flex flex-col">
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
-                    <span className="w-9 h-9 bg-violet-100 text-violet-600 rounded-lg flex items-center justify-center">
-                       <BookOpen size={18}/>
-                    </span>
-                    {editingId ? 'Editar Teoria' : 'Nova Teoria'}
-                </h2>
-                <button onClick={() => setIsTheoryModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full text-gray-400">
-                   <X size={22} />
+        <div className="fixed inset-0 bg-gray-900/95 backdrop-blur-xl flex items-center justify-center z-[120] p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2rem] p-8 md:p-10 w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-3xl border-4 border-white animate-in zoom-in-95 duration-200 relative custom-scrollbar flex flex-col">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/5 rounded-full -translate-y-32 translate-x-32 pointer-events-none"></div>
+            
+            <div className="flex justify-between items-center mb-8 relative z-10">
+                <div>
+                  <h2 className="text-2xl font-black text-gray-800 uppercase tracking-tighter italic leading-none">
+                     {editingId ? 'Editar Teoria' : 'Fundar Tópico'}
+                  </h2>
+                  <p className="text-gray-400 font-bold uppercase tracking-widest text-[9px] mt-1 italic">Módulo de Transmissão Teórica</p>
+                </div>
+                <button onClick={() => setIsTheoryModalOpen(false)} className="bg-gray-100 text-gray-400 p-2 rounded-full hover:bg-gray-200 transition-all">
+                   <X size={20} />
                 </button>
             </div>
             
-            <form onSubmit={handleSaveTheory} className="flex-1 flex flex-col gap-5 overflow-hidden">
-               <div className="flex-1 overflow-y-auto space-y-5 pr-2">
-                   <div className="space-y-2">
-                       <label className="text-xs font-bold text-gray-600 uppercase tracking-wider ml-1">Título do Tópico</label>
-                       <input 
-                           required 
-                           value={theoryForm.title} 
-                           onChange={e => setTheoryForm({...theoryForm, title: e.target.value})}
-                           placeholder="Ex: Introdução à Cinemática" 
-                           className="w-full p-3 bg-gray-50 rounded-xl font-bold text-lg border border-gray-200 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10 outline-none transition-all" 
-                        />
-                   </div>
-                   
-                   <LiveInput 
-                      label="Conteúdo da Teoria"
-                      required
-                      value={theoryForm.content}
-                      onChange={v => setTheoryForm({...theoryForm, content: v})}
-                      height="h-[400px]"
-                      placeholder="# Título Principal\n\nTexto explicativo...\n\n$$ E = mc^2 $$"
-                   />
-               </div>
+            <form onSubmit={handleSaveTheory} className="relative z-10 flex-1 flex flex-col gap-6">
+                <div className="space-y-6">
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Título do Tópico</label>
+                        <input 
+                            required 
+                            value={theoryForm.title} 
+                            onChange={e => setTheoryForm({...theoryForm, title: e.target.value})}
+                            placeholder="Ex: Introdução à Cinemática" 
+                            className="w-full p-3.5 bg-gray-50 border-2 border-transparent focus:border-violet-500 focus:bg-white rounded-xl outline-none font-black text-lg text-gray-800 transition-all shadow-inner italic" 
+                         />
+                    </div>
+                    
+                    <LiveInput 
+                       label="Conteúdo da Teoria"
+                       required
+                       value={theoryForm.content}
+                       onChange={v => setTheoryForm({...theoryForm, content: v})}
+                       height="h-[400px]"
+                       placeholder="# Use Markdown e LaTeX..."
+                    />
+                </div>
 
-               <div className="flex gap-3 pt-4 border-t border-gray-100">
-                  <button type="button" onClick={() => setIsTheoryModalOpen(false)} className="px-6 py-3 font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-all">Cancelar</button>
-                  <button type="submit" className="flex-1 py-3 bg-violet-600 text-white rounded-xl font-bold shadow-lg shadow-violet-500/20 hover:bg-violet-700 transition-all active:scale-[0.98]">Salvar Teoria</button>
-               </div>
+                <div className="flex gap-4 pt-6 mt-auto">
+                   <button type="submit" className="flex-1 py-4 bg-violet-600 text-white rounded-xl font-black text-base shadow-xl shadow-violet-500/20 hover:bg-violet-700 transition-all active:scale-[0.98] uppercase tracking-tighter">
+                      {editingId ? 'Atualizar Conhecimento' : 'Imortalizar Teoria'}
+                   </button>
+                </div>
             </form>
           </div>
         </div>
@@ -363,24 +368,25 @@ const AdminLearningQuestionsPage = () => {
 
       {/* --- MODAL QUESTÃO --- */}
       {isQuestionModalOpen && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-end md:items-center justify-center z-50 p-0 md:p-6">
-          <div className="bg-white rounded-t-3xl md:rounded-2xl p-6 md:p-8 w-full max-w-5xl shadow-2xl animate-in slide-in-from-bottom-10 md:zoom-in-95 duration-200 h-[95vh] flex flex-col">
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
-                    <span className="w-9 h-9 bg-green-100 text-green-600 rounded-lg flex items-center justify-center">
-                       <HelpCircle size={18}/>
-                    </span>
-                    {editingId ? 'Editar Questão' : 'Nova Questão'}
-                </h2>
-                <button onClick={() => setIsQuestionModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full text-gray-400">
-                   <X size={22} />
+        <div className="fixed inset-0 bg-gray-900/95 backdrop-blur-xl flex items-center justify-center z-[120] p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2rem] p-8 md:p-10 w-full max-w-5xl max-h-[90vh] overflow-y-auto shadow-3xl border-4 border-white animate-in zoom-in-95 duration-200 relative custom-scrollbar flex flex-col">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full -translate-y-32 translate-x-32 pointer-events-none"></div>
+            
+            <div className="flex justify-between items-center mb-8 relative z-10">
+                <div>
+                   <h2 className="text-2xl font-black text-gray-800 uppercase tracking-tighter italic leading-none">
+                     {editingId ? 'Editar Desafio' : 'Forjar Questão'}
+                   </h2>
+                   <p className="text-gray-400 font-bold uppercase tracking-widest text-[9px] mt-1 italic">Avaliação de Performance</p>
+                </div>
+                <button onClick={() => setIsQuestionModalOpen(false)} className="bg-gray-100 text-gray-400 p-2 rounded-full hover:bg-gray-200 transition-all">
+                   <X size={20} />
                 </button>
             </div>
 
-            <form onSubmit={handleSaveQuestion} className="flex-1 flex flex-col gap-6 overflow-hidden">
-               <div className="flex-1 overflow-y-auto space-y-6 pr-3">
+            <form onSubmit={handleSaveQuestion} className="relative z-10 flex-1 flex flex-col gap-6">
+               <div className="flex-1 space-y-8">
                   
-                  {/* ENUNCIADO */}
                   <LiveInput 
                       label="Enunciado da Questão"
                       required
@@ -389,23 +395,25 @@ const AdminLearningQuestionsPage = () => {
                       height="h-32"
                   />
 
-                  {/* ALTERNATIVAS */}
                   <div className="space-y-4">
-                      <div className="flex justify-between items-center px-2 border-b border-gray-100 pb-2">
-                          <label className="text-xs font-bold text-gray-600 uppercase tracking-wider">Alternativas ({questionForm.options.length})</label>
+                      <div className="flex justify-between items-center px-1 border-b-2 border-gray-50 pb-2">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Alternativas de Resposta</label>
                           <button 
                             type="button" 
                             onClick={handleAddOption} 
                             disabled={questionForm.options.length >= 5}
-                            className="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-lg text-xs font-bold text-gray-600 disabled:opacity-50"
+                            className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-100 disabled:opacity-50 transition-all"
                           >+ Adicionar</button>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-5">
+                      <div className="grid grid-cols-1 gap-4">
                           {questionForm.options.map((opt, i) => (
-                             <div key={i} className="flex gap-3 items-start group">
-                                <div className="pt-3 flex flex-col items-center gap-2">
-                                   <div className="w-7 h-7 rounded-full bg-gray-200 text-gray-600 font-bold flex items-center justify-center text-sm">
+                             <div key={i} className="flex gap-4 items-start group relative">
+                                <div className="pt-2 flex flex-col items-center gap-2">
+                                   <div className={clsx(
+                                       "w-8 h-8 rounded-xl font-black flex items-center justify-center text-sm shadow-sm border-2 transition-all",
+                                       questionForm.correctOption === i ? "bg-emerald-500 border-emerald-400 text-white" : "bg-gray-100 border-transparent text-gray-400"
+                                   )}>
                                       {String.fromCharCode(65 + i)}
                                    </div>
                                    <input 
@@ -413,26 +421,26 @@ const AdminLearningQuestionsPage = () => {
                                      name="correctOption" 
                                      checked={questionForm.correctOption === i} 
                                      onChange={() => setQuestionForm({...questionForm, correctOption: i})}
-                                     className="w-4 h-4 accent-green-500 cursor-pointer"
+                                     className="w-4 h-4 accent-emerald-500 cursor-pointer"
                                      title="Marcar como correta"
                                    />
                                 </div>
                                 
                                 <div className="flex-1">
                                     <LiveInput 
-                                        label={`Opção ${String.fromCharCode(65 + i)} ${questionForm.correctOption === i ? '✓ CORRETA' : ''}`}
+                                        label={`Opção ${String.fromCharCode(65 + i)} ${questionForm.correctOption === i ? '✓ GABARITO' : ''}`}
                                         value={opt}
                                         onChange={(v) => handleOptionChange(i, v)}
                                         height="h-20"
                                         required
-                                        placeholder={`Texto da alternativa ${String.fromCharCode(65 + i)}`}
+                                        placeholder={`Explique aqui...`}
                                     />
                                 </div>
 
                                 <button 
                                   type="button" 
                                   onClick={() => handleRemoveOption(i)} 
-                                  className="mt-6 p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                  className="mt-6 p-2 text-gray-200 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                   title="Remover opção"
                                 >
                                     <Trash2 size={16} />
@@ -442,22 +450,22 @@ const AdminLearningQuestionsPage = () => {
                       </div>
                   </div>
 
-                  {/* EXPLICAÇÃO */}
-                  <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
+                  <div className="bg-blue-50/30 p-5 rounded-[2rem] border-2 border-blue-50 shadow-inner">
                       <LiveInput 
-                          label="Explicação da Resposta (Opcional)"
+                          label="Solução Detalhada (Opcional)"
                           value={questionForm.explanation}
                           onChange={v => setQuestionForm({...questionForm, explanation: v})}
-                          height="h-20"
-                          placeholder="Aparecerá para o aluno após responder..."
+                          height="h-24"
+                          placeholder="Aparecerá após a resposta do aluno..."
                       />
                   </div>
 
                </div>
 
-               <div className="flex gap-3 pt-4 border-t border-gray-100 bg-white z-10">
-                  <button type="button" onClick={() => setIsQuestionModalOpen(false)} className="px-6 py-3 font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-all">Cancelar</button>
-                  <button type="submit" className="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-500/20 hover:bg-green-700 transition-all active:scale-[0.98]">Salvar Questão</button>
+               <div className="flex gap-4 pt-4 mt-auto">
+                  <button type="submit" className="flex-1 py-4 bg-emerald-600 text-white rounded-xl font-black text-base shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 transition-all active:scale-[0.98] uppercase tracking-tighter">
+                    {editingId ? 'Confirmar Alterações' : 'Publicar no Sistema'}
+                  </button>
                </div>
             </form>
           </div>

@@ -61,67 +61,70 @@ const AdminLearningSectionsPage = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-12">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-2 border-b border-gray-200">
-        <div className="flex items-center gap-4">
-           <button 
-              onClick={() => navigate('/admin/learning')} 
-              className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
-           >
-              <ArrowLeft size={24} />
-           </button>
-           <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-teal-100 text-teal-600 rounded-lg">
-                  <Layers size={24} />
-                </div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
-                  Unidades de Ensino
-                </h1>
-              </div>
-             <p className="text-gray-500 font-medium ml-1">
-                Organize os capítulos e módulos da disciplina.
-             </p>
-           </div>
-        </div>
+      {/* Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-teal-900 via-cyan-900 to-teal-950 p-6 md:p-8 rounded-[2rem] text-white shadow-xl">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-teal-400/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-400/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
         
-        <button 
-           onClick={() => { setEditingSection(null); setIsModalOpen(true); }} 
-           className="flex items-center gap-2 bg-gradient-to-r from-teal-600 to-cyan-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-teal-500/20 hover:shadow-xl hover:-translate-y-0.5 transition-all text-sm"
-        >
-          <Plus size={18} /> Nova Unidade
-        </button>
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-4">
+            <button 
+                onClick={() => navigate('/admin/learning')} 
+                className="p-2.5 bg-white/10 text-white hover:bg-white/20 rounded-xl transition-all active:scale-95"
+            >
+                <ArrowLeft size={18} />
+            </button>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full text-teal-300 text-[10px] font-black uppercase tracking-[0.15em] mb-3 border border-white/10">
+                <Layers size={12} /> Arquitetura de Ensino
+              </div>
+              <h1 className="text-3xl md:text-4xl font-black tracking-tighter mb-1 leading-none uppercase italic">
+                UNIDADES DE <span className="bg-gradient-to-r from-teal-300 to-cyan-300 bg-clip-text text-transparent italic">ENSINO</span>
+              </h1>
+              <p className="text-teal-100/70 font-medium max-w-md text-sm italic">
+                Organize os capítulos e módulos desta disciplina geral.
+              </p>
+            </div>
+          </div>
+          
+          <button 
+             onClick={() => { setEditingSection(null); setIsModalOpen(true); }} 
+             className="flex items-center gap-2 bg-white text-teal-950 px-6 py-3 rounded-xl font-black text-sm hover:bg-white/90 transition-all shadow-lg active:scale-95 group uppercase tracking-tighter"
+          >
+            <Plus size={18} className="group-hover:rotate-90 transition-transform" /> Nova Unidade
+          </button>
+        </div>
       </div>
 
       {/* Lista de Seções */}
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {sections.length === 0 ? (
-          <div className="py-20 text-center bg-white rounded-2xl border-2 border-dashed border-gray-200">
-             <Layers className="mx-auto text-gray-200 mb-4" size={64} />
-             <p className="text-gray-400 font-medium">Nenhuma unidade cadastrada nesta disciplina.</p>
+          <div className="col-span-full py-16 text-center bg-white rounded-[2rem] border-2 border-dashed border-gray-100">
+             <Layers className="mx-auto text-gray-200 mb-4" size={48} />
+             <p className="text-gray-400 font-black uppercase text-[10px] tracking-widest">Plano de aula vazio nesta disciplina.</p>
           </div>
         ) : (
           sections.map((s, idx) => (
-            <div key={s.id} className="group bg-white p-6 rounded-2xl border border-gray-100 hover:border-teal-200 transition-all hover:shadow-lg">
+            <div key={s.id} className="group bg-white p-4 rounded-2xl border border-gray-100 hover:border-teal-200 transition-all hover:shadow-lg">
               <div className="flex items-center justify-between">
                 <div className="flex gap-4 flex-1 cursor-pointer" onClick={() => navigate(`/admin/learning/${disciplineId}/sections/${s.id}/sessions`)}>
-                  <div className="w-14 h-14 bg-gradient-to-br from-teal-50 to-cyan-50 text-teal-600 rounded-xl flex items-center justify-center font-black text-2xl shrink-0 border border-teal-100">
+                  <div className="w-12 h-12 bg-gradient-to-br from-teal-50 to-cyan-50 text-teal-600 rounded-xl flex items-center justify-center font-black text-xl shrink-0 border border-teal-100 shadow-sm">
                      {s.icon || (idx + 1)}
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-800 mb-1">{s.title}</h3>
-                    <p className="text-gray-500 text-sm">{s.description || 'Sem descrição definida.'}</p>
-                    <div className="mt-3 flex items-center gap-2 text-xs font-bold text-teal-600 uppercase tracking-wider">
-                       <List size={14} /> Gerenciar Aulas
+                    <h3 className="text-lg font-black text-gray-800 leading-tight uppercase tracking-tighter mb-0.5">{s.title}</h3>
+                    <p className="text-gray-400 font-bold text-[10px] line-clamp-1 italic">{s.description || 'Sem descrição definida.'}</p>
+                    <div className="mt-2 flex items-center gap-1.5 text-[9px] font-black text-teal-600 uppercase tracking-[0.15em] opacity-70 group-hover:opacity-100 transition-opacity">
+                       <List size={12} /> Gerenciar Aulas
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity ml-4 shrink-0">
-                  <button onClick={() => { setEditingSection(s); setIsModalOpen(true); }} className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors">
-                     <Edit2 size={18} />
+                <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all translate-x-1 group-hover:translate-x-0 ml-4 shrink-0">
+                  <button onClick={(e) => { e.stopPropagation(); setEditingSection(s); setIsModalOpen(true); }} className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors">
+                     <Edit2 size={16} />
                   </button>
-                  <button onClick={() => handleDelete(s.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                     <Trash2 size={18} />
+                  <button onClick={(e) => { e.stopPropagation(); handleDelete(s.id); }} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                     <Trash2 size={16} />
                   </button>
                 </div>
               </div>
@@ -132,37 +135,35 @@ const AdminLearningSectionsPage = () => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl p-6 md:p-8 w-full max-w-lg shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between mb-6">
-               <h2 className="text-2xl font-bold text-gray-800">
-                 {editingSection ? 'Editar Unidade' : 'Nova Unidade'}
-               </h2>
-               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-                  <X size={24} />
-               </button>
+        <div className="fixed inset-0 bg-gray-900/90 backdrop-blur-xl flex items-center justify-center z-[120] p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2rem] p-8 md:p-10 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-3xl border-4 border-white animate-in zoom-in-95 duration-200 relative custom-scrollbar">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-teal-500/5 rounded-full -translate-y-24 translate-x-24 pointer-events-none"></div>
+            
+            <div className="flex items-center justify-between mb-8 relative z-10">
+               <div>
+                 <h2 className="text-2xl font-black tracking-tighter uppercase italic">{editingSection ? 'Editar Unidade' : 'Nova Unidade'}</h2>
+                 <p className="text-gray-400 font-bold uppercase tracking-widest text-[9px] mt-1 italic">Gestão de Módulos</p>
+               </div>
+               <button onClick={() => setIsModalOpen(false)} className="bg-gray-100 text-gray-400 p-2 rounded-full hover:bg-gray-200 transition-all"><X size={20} /></button>
             </div>
             
-            <form onSubmit={handleSave} className="space-y-5">
-              <div>
-                <label className="text-sm font-semibold text-gray-700 block mb-1.5">Título da Unidade</label>
-                <input name="title" required defaultValue={editingSection?.title} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 outline-none font-bold transition-all" placeholder="Ex: Mecânica Clássica" />
+            <form onSubmit={handleSave} className="space-y-5 relative z-10">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Título da Unidade</label>
+                <input name="title" required defaultValue={editingSection?.title} className="w-full p-3.5 bg-gray-50 border-2 border-transparent focus:border-teal-500 focus:bg-white rounded-xl outline-none font-bold text-gray-800 transition-all text-base shadow-inner italic" placeholder="Ex: Mecânica Clássica" />
               </div>
-              <div>
-                <label className="text-sm font-semibold text-gray-700 block mb-1.5">Descrição Breve</label>
-                <input name="description" defaultValue={editingSection?.description} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 outline-none transition-all" placeholder="Conceitos fundamentais de movimento e força." />
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Descrição Breve</label>
+                <input name="description" defaultValue={editingSection?.description} className="w-full p-3.5 bg-gray-50 border-2 border-transparent focus:border-teal-500 focus:bg-white rounded-xl outline-none font-bold text-gray-800 transition-all text-sm shadow-inner" placeholder="Conceitos fundamentais de movimento e força." />
               </div>
-              <div>
-                <label className="text-sm font-semibold text-gray-700 block mb-1.5">Ícone (Emoji)</label>
-                <input name="icon" defaultValue={editingSection?.icon} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 outline-none font-bold text-center text-2xl" placeholder="⚙️" />
+              <div className="space-y-1.5 text-center">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Ícone Representativo</label>
+                <input name="icon" defaultValue={editingSection?.icon} className="w-20 h-20 mx-auto bg-gray-50 border-2 border-transparent focus:border-teal-500 focus:bg-white rounded-[1.5rem] outline-none font-black text-center text-3xl shadow-inner transition-all" placeholder="⚙️" />
               </div>
               
-              <div className="flex gap-3 mt-8">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 bg-white border border-gray-200 text-gray-600 rounded-xl font-bold hover:bg-gray-50 transition-colors">
-                  Cancelar
-                </button>
-                <button type="submit" className="flex-[2] bg-teal-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-teal-500/20 active:translate-y-0.5 hover:bg-teal-700 transition-all">
-                  Salvar
+              <div className="flex gap-3 pt-6">
+                <button type="submit" className="flex-1 bg-teal-600 text-white py-4 rounded-xl font-black text-base shadow-xl shadow-teal-500/20 active:scale-95 hover:bg-teal-700 transition-all uppercase tracking-tighter">
+                  {editingSection ? 'Atualizar Unidade' : 'Fundar Unidade'}
                 </button>
               </div>
             </form>

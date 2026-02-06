@@ -158,8 +158,7 @@ export const getGroupMembers = async (groupId: string) => {
         user:user_profiles (
           id,
           display_name,
-          photo_url,
-          email
+          photo_url
         )
       `)
       .eq('group_id', groupId);
@@ -171,8 +170,7 @@ export const getGroupMembers = async (groupId: string) => {
       role: m.role,
       joinedAt: m.joined_at,
       displayName: m.user?.display_name || 'Usuário',
-      photoURL: m.user?.photo_url,
-      email: m.user?.email
+      photoURL: m.user?.photo_url
     }));
   } catch (error) {
     console.error('Error in getGroupMembers:', error);

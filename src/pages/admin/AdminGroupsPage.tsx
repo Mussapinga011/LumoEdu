@@ -124,7 +124,7 @@ const AdminGroupsPage = () => {
   const handleEdit = (group: StudyGroup) => {
     setFormName(group.name);
     setFormDesc(group.description);
-    setFormDiscipline(group.disciplineId);
+    setFormDiscipline(group.disciplineId || '');
     setEditingGroup(group);
     setShowCreateModal(true);
   };

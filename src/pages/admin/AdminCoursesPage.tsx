@@ -302,40 +302,40 @@ const AdminCoursesPage = () => {
       )}
 
       {/* Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-indigo-900 to-blue-950 p-8 md:p-12 rounded-[2.5rem] text-white shadow-2xl">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2"></div>
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-indigo-900 to-blue-950 p-6 md:p-8 rounded-[2rem] text-white shadow-xl">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-blue-400/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
         
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-blue-300 text-xs font-black uppercase tracking-[0.2em] mb-4 border border-white/10">
-              <Shield size={14} /> Requisitos Acadêmicos
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full text-blue-300 text-[10px] font-black uppercase tracking-[0.15em] mb-3 border border-white/10">
+              <Shield size={12} /> Requisitos Acadêmicos
             </div>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-4 leading-none uppercase italic">
+            <h1 className="text-3xl md:text-4xl font-black tracking-tighter mb-3 leading-none uppercase italic">
               GESTÃO DE <span className="bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent italic">CURSOS</span>
             </h1>
-            <p className="text-blue-100/70 font-medium max-w-md text-lg italic leading-tight">
+            <p className="text-blue-100/70 font-medium max-w-md text-sm italic leading-tight">
               Configure os requisitos de admissão, disciplinas obrigatórias e pesos para cada curso universitário.
             </p>
           </div>
           
-          <div className="flex flex-col gap-6 w-full md:w-auto">
+          <div className="flex flex-col gap-4 w-full md:w-auto">
             <button 
               onClick={() => openModal()} 
-              className="flex items-center justify-center gap-3 bg-white text-blue-950 px-10 py-5 rounded-2xl font-black text-lg hover:bg-blue-50 transition-all shadow-xl shadow-white/10 active:scale-95 group uppercase"
+              className="flex items-center justify-center gap-2 bg-white text-blue-950 px-6 py-3 rounded-xl font-black text-sm hover:bg-blue-50 transition-all shadow-lg shadow-white/10 active:scale-95 group uppercase"
             >
-              <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" /> 
+              <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" /> 
               NOVO CURSO
             </button>
-            <div className="flex items-center justify-center md:justify-end gap-8 text-blue-200/50">
+            <div className="flex items-center justify-center md:justify-end gap-6 text-blue-200/50">
               <div className="text-center">
-                <div className="text-3xl font-black text-white italic">{courses.length}</div>
-                <div className="text-[10px] uppercase font-bold tracking-[0.2em] mt-1">Cadastrados</div>
+                <div className="text-2xl font-black text-white italic">{courses.length}</div>
+                <div className="text-[9px] uppercase font-bold tracking-[0.15em] mt-0.5">Cadastrados</div>
               </div>
-              <div className="w-px h-10 bg-white/10"></div>
+              <div className="w-px h-8 bg-white/10"></div>
               <div className="text-center">
-                <div className="text-3xl font-black text-white italic">{universities.length}</div>
-                <div className="text-[10px] uppercase font-bold tracking-[0.2em] mt-1">Universidades</div>
+                <div className="text-2xl font-black text-white italic">{universities.length}</div>
+                <div className="text-[9px] uppercase font-bold tracking-[0.15em] mt-0.5">Universidades</div>
               </div>
             </div>
           </div>
@@ -343,87 +343,87 @@ const AdminCoursesPage = () => {
       </div>
 
       {/* Filters & Search */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:w-96 group">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={20} />
+      <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div className="relative w-full md:w-80 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={16} />
           <input 
             type="text" 
             placeholder="Pesquisar por nome do curso..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white border-2 border-gray-100 rounded-[1.5rem] py-5 pl-14 pr-6 font-bold text-gray-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all shadow-sm italic"
+            className="w-full bg-white border-2 border-gray-100 rounded-xl py-3 pl-11 pr-4 text-sm font-bold text-gray-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/5 outline-none transition-all shadow-sm italic"
           />
         </div>
       </div>
 
       {/* Courses Grid (Grouped by University) */}
       {filteredCourses.length === 0 ? (
-        <div className="bg-white rounded-[2.5rem] p-20 text-center border-2 border-dashed border-gray-200 animate-in fade-in zoom-in-95">
-          <div className="w-24 h-24 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center mx-auto mb-6">
-            <BookOpen size={48} />
+        <div className="bg-white rounded-[2rem] p-12 text-center border-2 border-dashed border-gray-200 animate-in fade-in zoom-in-95">
+          <div className="w-16 h-16 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+            <BookOpen size={32} />
           </div>
-          <h2 className="text-2xl font-black text-gray-800 uppercase tracking-tighter italic">Nenhum curso encontrado</h2>
-          <p className="text-gray-400 font-medium mt-2 italic">Adicione um novo curso ou ajuste sua busca.</p>
+          <h2 className="text-lg font-black text-gray-800 uppercase tracking-tighter italic">Nenhum curso encontrado</h2>
+          <p className="text-sm text-gray-400 font-medium mt-1 italic">Adicione um novo curso ou ajuste sua busca.</p>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {Object.entries(coursesByUniversity).map(([uniName, uniCourses]) => (
             <div key={uniName}>
-              <div className="flex items-center gap-3 mb-4">
-                <GraduationCap className="text-blue-500" size={24} />
-                <h2 className="text-2xl font-black text-gray-800 uppercase tracking-tighter italic">{uniName}</h2>
+              <div className="flex items-center gap-2 mb-3">
+                <GraduationCap className="text-blue-500" size={20} />
+                <h2 className="text-xl font-black text-gray-800 uppercase tracking-tighter italic">{uniName}</h2>
                 <div className="flex-1 h-px bg-gray-200"></div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {uniCourses.map((course) => (
-                  <div key={course.id} className="group bg-white rounded-[2rem] p-6 border-2 border-gray-50 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 relative overflow-hidden">
+                  <div key={course.id} className="group bg-white rounded-[1.5rem] p-5 border-2 border-gray-50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
                     
                     {/* Pattern Background */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-500 opacity-50"></div>
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-500 opacity-50"></div>
                     
-                    <h3 className="text-xl font-black text-gray-800 mb-4 leading-tight uppercase tracking-tighter line-clamp-2 italic relative z-10">
+                    <h3 className="text-lg font-black text-gray-800 mb-3 leading-tight uppercase tracking-tighter line-clamp-2 italic relative z-10">
                       {course.course_name}
                     </h3>
                     
                     {/* Disciplines */}
-                    <div className="space-y-2 mb-4 relative z-10">
+                    <div className="space-y-1.5 mb-3 relative z-10">
                       {course.disciplines.slice(0, 3).map((disc, idx) => (
-                        <div key={idx} className="flex items-center justify-between text-sm">
+                        <div key={idx} className="flex items-center justify-between text-xs">
                           <span className="text-gray-600 font-medium">{disc.disciplineName}</span>
                           <span className="text-blue-600 font-black">{(disc.weight * 100).toFixed(0)}%</span>
                         </div>
                       ))}
                       {course.disciplines.length > 3 && (
-                        <p className="text-xs text-gray-400 italic">+{course.disciplines.length - 3} mais...</p>
+                        <p className="text-[10px] text-gray-400 italic">+{course.disciplines.length - 3} mais...</p>
                       )}
                     </div>
 
                     {/* Stats */}
-                    <div className="flex items-center gap-4 mb-6 text-xs text-gray-500 relative z-10">
+                    <div className="flex items-center gap-3 mb-4 text-[11px] text-gray-500 relative z-10">
                       <div className="flex items-center gap-1">
-                        <Target size={14} />
+                        <Target size={12} />
                         <span className="font-bold">{course.minimum_score} pts</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Clock size={14} />
+                        <Clock size={12} />
                         <span className="font-bold">{course.estimated_study_hours}h</span>
                       </div>
                     </div>
                     
                     {/* Footer Actions */}
-                    <div className="flex gap-2 relative z-10">
+                    <div className="flex gap-1.5 relative z-10">
                       <button 
                         onClick={() => openModal(course)} 
-                        className="flex-1 p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all shadow-sm font-bold text-sm"
+                        className="flex-1 p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all shadow-sm font-bold text-xs"
                       >
-                        <Edit2 size={16} className="inline mr-1" /> Editar
+                        <Edit2 size={14} className="inline mr-0.5" /> Editar
                       </button>
                       <button 
                         onClick={() => setDeleteConfirm({ id: course.id, name: course.course_name })} 
-                        className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all shadow-sm"
+                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all shadow-sm"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>

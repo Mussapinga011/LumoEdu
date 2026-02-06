@@ -101,72 +101,72 @@ const AdminExamsPage = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-20 px-4">
       {/* HEADER & STATS */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
-          <h1 className="text-4xl font-black text-gray-800 tracking-tight mb-2">Editor de Exames</h1>
-          <p className="text-gray-500 font-medium">Gerencie e publique exames oficiais das universidades.</p>
+          <h1 className="text-2xl font-black text-gray-800 tracking-tight mb-1">Editor de Exames</h1>
+          <p className="text-sm text-gray-500 font-medium">Gerencie e publique exames oficiais das universidades.</p>
         </div>
         
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => navigate('/admin/exams/bulk-import')}
-            className="flex items-center gap-2 bg-white text-gray-700 border border-gray-200 px-5 py-3 rounded-2xl font-bold hover:bg-gray-50 transition-all shadow-sm active:scale-95"
+            className="flex items-center gap-2 bg-white text-gray-700 border border-gray-200 px-3 py-2 rounded-xl font-bold text-sm hover:bg-gray-50 transition-all shadow-sm active:scale-95"
           >
-            <Upload size={20} className="text-green-500" />
+            <Upload size={16} className="text-green-500" />
             Importação em Massa
           </button>
           <button
             onClick={() => navigate('/admin/exams/create')}
-            className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all active:translate-y-0"
+            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all active:translate-y-0"
           >
-            <Plus size={22} />
+            <Plus size={18} />
             Novo Exame
           </button>
         </div>
       </div>
 
       {/* QUICK STATS CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           { label: 'Total de Exames', value: stats.total, icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
           { label: 'Exames Ativos', value: stats.active, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
           { label: 'Disciplinas Atendidas', value: stats.disciplines, icon: GraduationCap, color: 'text-purple-600', bg: 'bg-purple-50' }
         ].map((s, i) => (
-          <div key={i} className={clsx("p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-5", s.bg)}>
-            <div className={clsx("p-3 rounded-2xl bg-white shadow-sm", s.color)}>
-              <s.icon size={24} />
+          <div key={i} className={clsx("p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3", s.bg)}>
+            <div className={clsx("p-2 rounded-xl bg-white shadow-sm", s.color)}>
+              <s.icon size={20} />
             </div>
             <div>
-              <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest leading-none mb-1">{s.label}</p>
-              <p className="text-2xl font-black text-gray-800">{s.value}</p>
+              <p className="text-[9px] uppercase font-black text-gray-400 tracking-widest leading-none mb-1">{s.label}</p>
+              <p className="text-xl font-black text-gray-800">{s.value}</p>
             </div>
           </div>
         ))}
       </div>
 
       {/* SEARCH AND FILTERS */}
-      <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-3 items-center">
         <div className="flex-1 relative w-full group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={20} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={16} />
           <input
             type="text"
             placeholder="Pesquisar por nome do exame..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3.5 bg-gray-50/50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-medium"
+            className="w-full pl-10 pr-3 py-2 text-sm bg-gray-50/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all font-medium"
           />
         </div>
         
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 md:w-56">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="relative flex-1 md:w-48">
+            <Filter className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
             <select
               value={selectedUniversity}
               onChange={(e) => {
                 setSelectedUniversity(e.target.value);
                 setSelectedDiscipline('all');
               }}
-              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-2xl outline-none focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm appearance-none"
+              className="w-full pl-8 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/10 transition-all font-bold appearance-none"
             >
               <option value="all">Todas Universidades</option>
               {universities.map(u => (
@@ -175,12 +175,12 @@ const AdminExamsPage = () => {
             </select>
           </div>
 
-          <div className="relative flex-1 md:w-56">
-            <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+          <div className="relative flex-1 md:w-48">
+            <GraduationCap className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
             <select
               value={selectedDiscipline}
               onChange={(e) => setSelectedDiscipline(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-2xl outline-none focus:ring-4 focus:ring-primary/10 transition-all font-bold text-sm appearance-none"
+              className="w-full pl-8 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-primary/10 transition-all font-bold appearance-none"
             >
               <option value="all">Todas Disciplinas</option>
               {disciplines
@@ -194,22 +194,22 @@ const AdminExamsPage = () => {
       </div>
 
       {/* LIST VIEW */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-100">
-                <th className="p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest">Exame / Disciplina</th>
-                <th className="p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest">Instituição</th>
-                <th className="p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest text-center">Ano</th>
-                <th className="p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest text-center">Status</th>
-                <th className="p-6 text-[11px] font-black text-gray-400 uppercase tracking-widest text-right">Ações</th>
+                <th className="p-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Exame / Disciplina</th>
+                <th className="p-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Instituição</th>
+                <th className="p-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Ano</th>
+                <th className="p-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Status</th>
+                <th className="p-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filteredExams.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-20 text-center text-gray-400 font-bold">Nenhum exame encontrado</td>
+                  <td colSpan={5} className="p-12 text-center text-gray-400 font-bold text-sm">Nenhum exame encontrado</td>
                 </tr>
               ) : (
                 filteredExams.map((exam) => {
@@ -217,30 +217,30 @@ const AdminExamsPage = () => {
                   const university = universities.find(u => u.id === exam.universityId);
                   return (
                     <tr key={exam.id} className="hover:bg-gray-50/50 transition-colors group">
-                      <td className="p-6">
+                      <td className="p-3">
                         <div className="flex flex-col">
-                          <span className="font-bold text-gray-800 group-hover:text-primary transition-colors">{exam.name}</span>
+                          <span className="font-bold text-sm text-gray-800 group-hover:text-primary transition-colors">{exam.name}</span>
                           <span className="text-xs text-gray-400 font-medium">{discipline?.title || 'N/A'}</span>
                         </div>
                       </td>
-                      <td className="p-6">
-                        <span className="px-2.5 py-1 bg-purple-50 text-purple-600 rounded-lg text-[10px] font-black uppercase">
+                      <td className="p-3">
+                        <span className="px-2 py-0.5 bg-purple-50 text-purple-600 rounded-lg text-[9px] font-black uppercase">
                           {university?.shortName || exam.universityId}
                         </span>
                       </td>
-                      <td className="p-6 text-center text-gray-600 font-black text-sm">
+                      <td className="p-3 text-center text-gray-600 font-black text-sm">
                         {exam.year}
                       </td>
-                      <td className="p-6 flex justify-center items-center">
+                      <td className="p-3 flex justify-center items-center">
                         <div className={clsx(
-                          "w-2.5 h-2.5 rounded-full",
-                          exam.isActive ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" : "bg-gray-300"
+                          "w-2 h-2 rounded-full",
+                          exam.isActive ? "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.4)]" : "bg-gray-300"
                         )} />
                       </td>
-                      <td className="p-6 text-right">
-                         <div className="flex justify-end gap-2 text-gray-400 opacity-50 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => navigate(`/admin/exams/${exam.id}/edit`)} className="p-2 hover:text-primary hover:bg-gray-100 rounded-lg transition-all" title="Editar"><Edit2 size={18} /></button>
-                            <button onClick={() => handleDeleteClick(exam.id)} className="p-2 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Excluir"><Trash2 size={18} /></button>
+                      <td className="p-3 text-right">
+                         <div className="flex justify-end gap-1 text-gray-400 opacity-50 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => navigate(`/admin/exams/${exam.id}/edit`)} className="p-1.5 hover:text-primary hover:bg-gray-100 rounded-lg transition-all" title="Editar"><Edit2 size={16} /></button>
+                            <button onClick={() => handleDeleteClick(exam.id)} className="p-1.5 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Excluir"><Trash2 size={16} /></button>
                          </div>
                       </td>
                     </tr>

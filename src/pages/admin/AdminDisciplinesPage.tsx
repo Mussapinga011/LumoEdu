@@ -183,40 +183,40 @@ const AdminDisciplinesPage = () => {
       )}
 
       {/* Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900 via-violet-900 to-fuchsia-950 p-8 md:p-12 rounded-[2.5rem] text-white shadow-2xl">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-violet-400/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-fuchsia-500/10 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2"></div>
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900 via-violet-900 to-fuchsia-950 p-6 md:p-8 rounded-[2rem] text-white shadow-xl">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-violet-400/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-fuchsia-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
         
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-violet-200 text-xs font-black uppercase tracking-[0.2em] mb-4 border border-white/10 italic">
-              <BookMarked size={14} /> Mapa de Conhecimento
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full text-violet-200 text-[10px] font-black uppercase tracking-[0.15em] mb-3 border border-white/10 italic">
+              <BookMarked size={12} /> Mapa de Conhecimento
             </div>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-4 leading-none uppercase italic">
+            <h1 className="text-3xl md:text-4xl font-black tracking-tighter mb-3 leading-none uppercase italic">
               GERIR <span className="bg-gradient-to-r from-violet-400 to-fuchsia-300 bg-clip-text text-transparent italic">DISCIPLINAS</span>
             </h1>
-            <p className="text-violet-100/70 font-medium max-w-md text-lg italic leading-tight">
+            <p className="text-violet-100/70 font-medium max-w-md text-sm italic leading-tight">
               Organize os pilares do aprendizado e defina a estrutura curricular da plataforma.
             </p>
           </div>
           
-          <div className="flex flex-col gap-6 w-full md:w-auto">
+          <div className="flex flex-col gap-4 w-full md:w-auto">
             <button 
               onClick={() => { setEditingItem(null); setIsModalOpen(true); }} 
-              className="flex items-center justify-center gap-3 bg-white text-violet-950 px-10 py-5 rounded-2xl font-black text-lg hover:bg-violet-50 transition-all shadow-xl shadow-white/10 active:scale-95 group uppercase italic"
+              className="flex items-center justify-center gap-2 bg-white text-violet-950 px-6 py-3 rounded-xl font-black text-sm hover:bg-violet-50 transition-all shadow-lg shadow-white/10 active:scale-95 group uppercase italic"
             >
-              <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" /> 
+              <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" /> 
               NOVA MATÉRIA
             </button>
-            <div className="flex items-center justify-center md:justify-end gap-10 text-violet-200/50">
+            <div className="flex items-center justify-center md:justify-end gap-8 text-violet-200/50">
               <div className="text-center">
-                <div className="text-3xl font-black text-white italic">{disciplines.length}</div>
-                <div className="text-[10px] uppercase font-bold tracking-[0.2em] mt-1">Total</div>
+                <div className="text-2xl font-black text-white italic">{disciplines.length}</div>
+                <div className="text-[9px] uppercase font-bold tracking-[0.15em] mt-0.5">Total</div>
               </div>
-              <div className="w-px h-10 bg-white/10"></div>
+              <div className="w-px h-8 bg-white/10"></div>
               <div className="text-center">
-                <div className="text-3xl font-black text-white italic">{disciplines.filter(d => d.is_active).length}</div>
-                <div className="text-[10px] uppercase font-bold tracking-[0.2em] mt-1">Ativas</div>
+                <div className="text-2xl font-black text-white italic">{disciplines.filter(d => d.is_active).length}</div>
+                <div className="text-[9px] uppercase font-bold tracking-[0.15em] mt-0.5">Ativas</div>
               </div>
             </div>
           </div>
@@ -224,24 +224,24 @@ const AdminDisciplinesPage = () => {
       </div>
 
       {/* Filters & Control Bar */}
-      <div className="flex flex-col xl:flex-row gap-6 bg-white p-6 rounded-[2rem] shadow-xl border border-gray-50 items-center">
+      <div className="flex flex-col xl:flex-row gap-4 bg-white p-4 rounded-[1.5rem] shadow-lg border border-gray-50 items-center">
          <div className="flex-1 relative w-full group">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-violet-500 transition-colors" size={22} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-violet-500 transition-colors" size={18} />
             <input 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Pesquisar por nome da disciplina..." 
-              className="w-full pl-16 pr-6 py-5 bg-gray-50 border-2 border-transparent focus:border-violet-500 focus:bg-white outline-none rounded-2xl font-bold text-gray-800 transition-all shadow-inner italic"
+              className="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-transparent focus:border-violet-500 focus:bg-white outline-none rounded-xl text-sm font-bold text-gray-800 transition-all shadow-inner italic"
             />
          </div>
          
-         <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
-            <div className="relative min-w-[280px]">
-               <School className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+         <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+            <div className="relative min-w-[240px]">
+               <School className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                <select 
                   value={filterUniversity}
                   onChange={(e) => setFilterUniversity(e.target.value)}
-                  className="w-full pl-14 pr-10 py-5 bg-gray-50 border-2 border-transparent focus:border-violet-500 outline-none rounded-2xl font-bold text-gray-700 appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik02IDlsNiA2IDYtNiIvPjwvc3ZnPg==')] bg-[length:20px] bg-[right_1.25rem_center] bg-no-repeat shadow-inner italic"
+                  className="w-full pl-11 pr-8 py-3 bg-gray-50 border-2 border-transparent focus:border-violet-500 outline-none rounded-xl text-sm font-bold text-gray-700 appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik02IDlsNiA2IDYtNiIvPjwvc3ZnPg==')] bg-[length:18px] bg-[right_1rem_center] bg-no-repeat shadow-inner italic"
                >
                  <option value="all">Todas Universidades</option>
                  <option value="">Foco Geral</option>
@@ -249,7 +249,7 @@ const AdminDisciplinesPage = () => {
                </select>
             </div>
 
-            <div className="flex bg-gray-100 p-1.5 rounded-2xl">
+            <div className="flex bg-gray-100 p-1 rounded-xl">
                {[
                   { id: 'all', label: 'TUDO' },
                   { id: 'active', label: 'ATIVAS' },
@@ -259,9 +259,9 @@ const AdminDisciplinesPage = () => {
                     key={opt.id}
                     onClick={() => setFilterStatus(opt.id as any)}
                     className={clsx(
-                      "px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", 
+                      "px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all", 
                       filterStatus === opt.id 
-                         ? "bg-white text-violet-600 shadow-lg scale-105" 
+                         ? "bg-white text-violet-600 shadow-md scale-105" 
                          : "text-gray-400 hover:text-gray-600"
                     )}
                   >

@@ -278,29 +278,29 @@ const AdminGroupsPage = () => {
       )}
 
       {/* Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 to-indigo-950 p-8 md:p-12 rounded-[2.5rem] text-white shadow-2xl">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
+      <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 to-indigo-950 p-6 md:p-8 rounded-[2rem] text-white shadow-xl">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-primary/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2"></div>
         
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-primary-light text-xs font-black uppercase tracking-[0.2em] mb-4 border border-white/10">
-              <Shield size={14} /> Painel Administrativo
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full text-primary-light text-[10px] font-black uppercase tracking-[0.15em] mb-3 border border-white/10">
+              <Shield size={12} /> Painel Administrativo
             </div>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-4 leading-none uppercase italic">
+            <h1 className="text-3xl md:text-4xl font-black tracking-tighter mb-3 leading-none uppercase italic">
               GESTÃO DE <span className="bg-gradient-to-r from-primary to-indigo-400 bg-clip-text text-transparent italic">COMUNIDADE</span>
             </h1>
-            <p className="text-indigo-100/70 font-medium max-w-md text-lg italic">
+            <p className="text-indigo-100/70 font-medium max-w-md text-sm italic">
               Controle moderado e suporte para maximizar a troca de conhecimentos no LumoEdu.
             </p>
           </div>
           
-          <div className="flex flex-col gap-4 w-full md:w-auto">
+          <div className="flex flex-col gap-3 w-full md:w-auto">
             <button 
               onClick={handleCreateNew} 
-              className="flex items-center justify-center gap-3 bg-primary text-white px-10 py-5 rounded-2xl font-black text-lg hover:bg-primary-dark transition-all shadow-xl shadow-primary/30 active:scale-95 group uppercase"
+              className="flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-primary-dark transition-all shadow-lg shadow-primary/30 active:scale-95 group uppercase"
             >
-              <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" /> 
+              <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" /> 
               LANÇAR CANAL DE ELITE
             </button>
           </div>
@@ -308,76 +308,76 @@ const AdminGroupsPage = () => {
       </div>
 
       {/* Filters & Search */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full md:w-96 group">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={20} />
+      <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div className="relative w-full md:w-80 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={16} />
           <input 
             type="text" 
             placeholder="Buscar por nome ou disciplina..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white border-2 border-gray-100 rounded-[1.5rem] py-4 pl-14 pr-6 font-bold text-gray-800 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all shadow-sm"
+            className="w-full bg-white border-2 border-gray-100 rounded-xl py-3 pl-11 pr-4 text-sm font-bold text-gray-800 focus:border-primary focus:ring-2 focus:ring-primary/5 outline-none transition-all shadow-sm"
           />
         </div>
       </div>
 
       {/* Groups Grid */}
       {filteredGroups.length === 0 ? (
-        <div className="bg-white rounded-[2.5rem] p-20 text-center border-2 border-dashed border-gray-200">
-          <div className="w-24 h-24 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Users size={48} />
+        <div className="bg-white rounded-[2rem] p-12 text-center border-2 border-dashed border-gray-200">
+          <div className="w-16 h-16 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Users size={32} />
           </div>
-          <h2 className="text-2xl font-black text-gray-800 uppercase tracking-tighter">Nenhum grupo encontrado</h2>
-          <p className="text-gray-400 font-medium mt-2">Tente ajustar sua busca ou crie um novo canal de estudo.</p>
+          <h2 className="text-lg font-black text-gray-800 uppercase tracking-tighter">Nenhum grupo encontrado</h2>
+          <p className="text-sm text-gray-400 font-medium mt-1">Tente ajustar sua busca ou crie um novo canal de estudo.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredGroups.map((group) => (
-            <div key={group.id} className="bg-white rounded-[2rem] p-8 border-2 border-gray-50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group relative overflow-hidden">
+            <div key={group.id} className="bg-white rounded-[1.5rem] p-6 border-2 border-gray-50 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all group relative overflow-hidden">
                {/* Accent decoration */}
-               <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-500"></div>
+               <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-full -translate-y-10 translate-x-10 group-hover:scale-150 transition-transform duration-500"></div>
                
-               <div className="flex justify-between items-start mb-6">
-                 <div className="bg-indigo-50 text-indigo-600 p-4 rounded-2xl group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                   <MessageCircle size={32} />
+               <div className="flex justify-between items-start mb-4">
+                 <div className="bg-indigo-50 text-indigo-600 p-3 rounded-xl group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                   <MessageCircle size={24} />
                  </div>
-                 <div className="flex gap-2">
-                   <button onClick={() => handleEdit(group)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Editar"><Edit2 size={18} /></button>
-                   <button onClick={() => handleDelete(group.id, group.name)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Excluir"><Trash2 size={18} /></button>
+                 <div className="flex gap-1">
+                   <button onClick={() => handleEdit(group)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Editar"><Edit2 size={16} /></button>
+                   <button onClick={() => handleDelete(group.id, group.name)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Excluir"><Trash2 size={16} /></button>
                  </div>
                </div>
 
-               <div className="space-y-4">
-                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 text-gray-500 rounded-lg text-[10px] font-black uppercase tracking-widest">
-                   <Layers size={12} /> {group.disciplineName || 'Geral'}
+               <div className="space-y-3">
+                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-gray-100 text-gray-500 rounded-lg text-[9px] font-black uppercase tracking-widest">
+                   <Layers size={10} /> {group.disciplineName || 'Geral'}
                  </div>
-                 <h3 className="text-2xl font-black text-gray-800 leading-tight tracking-tighter uppercase line-clamp-1">{group.name}</h3>
-                 <p className="text-gray-400 font-medium text-sm line-clamp-2 leading-relaxed h-10 italic">
+                 <h3 className="text-xl font-black text-gray-800 leading-tight tracking-tighter uppercase line-clamp-1">{group.name}</h3>
+                 <p className="text-gray-400 font-medium text-xs line-clamp-2 leading-relaxed h-8 italic">
                     {group.description}
                  </p>
                </div>
 
-               <div className="mt-8 pt-6 border-t border-gray-50 flex items-center justify-between">
+               <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between">
                  <button 
                   onClick={() => handleManageMembers(group)}
-                  className="flex items-center gap-3 hover:bg-gray-50 px-3 py-2 rounded-xl transition-all"
+                  className="flex items-center gap-2 hover:bg-gray-50 px-2 py-1.5 rounded-lg transition-all"
                  >
-                   <div className="flex -space-x-2">
+                   <div className="flex -space-x-1.5">
                       {[1, 2, 3].map(i => (
-                        <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-[8px] font-bold text-gray-400 overflow-hidden">
-                           <User size={14} />
+                        <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-[7px] font-bold text-gray-400 overflow-hidden">
+                           <User size={12} />
                         </div>
                       ))}
-                      <div className="w-8 h-8 rounded-full border-2 border-white bg-primary/10 text-primary flex items-center justify-center text-[10px] font-black">
+                      <div className="w-6 h-6 rounded-full border-2 border-white bg-primary/10 text-primary flex items-center justify-center text-[9px] font-black">
                          {group.memberCount}
                       </div>
                    </div>
-                   <span className="text-xs font-black text-gray-400 uppercase tracking-widest hover:text-primary transition-colors">Gerenciar Membros</span>
+                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-primary transition-colors">Gerenciar Membros</span>
                  </button>
                  
-                 <div className="flex items-center gap-2 text-gray-400">
-                   <Calendar size={14} />
-                   <span className="text-[10px] font-extrabold uppercase tracking-widest">Ativo</span>
+                 <div className="flex items-center gap-1.5 text-gray-400">
+                   <Calendar size={12} />
+                   <span className="text-[9px] font-extrabold uppercase tracking-widest">Ativo</span>
                  </div>
                </div>
             </div>

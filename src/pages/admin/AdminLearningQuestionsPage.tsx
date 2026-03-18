@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   getLearningQuestionsBySession, saveLearningQuestion, deleteLearningQuestion,
-  getLearningSectionsBySession, saveLearningSection, deleteLearningSection
+  getLearningSectionsBySession, saveLearningSection, deleteLearningSection,
+  uploadTheoryHtml
 } from '../../services/contentService.supabase';
 import { Plus, Edit2, Trash2, ArrowLeft, X, BookOpen, HelpCircle, Sparkles } from 'lucide-react';
 import clsx from 'clsx';
 import RichTextRenderer from '../../components/RichTextRenderer';
+import VisualizadorTeoria from '../../components/VisualizadorTeoria';
 
 type ContentItem = 
   | { type: 'theory', id: string, title?: string, content: string, order_index: number }
@@ -61,6 +63,8 @@ const AdminLearningQuestionsPage = () => {
   
   // States dos Formulários
   const [theoryForm, setTheoryForm] = useState({ title: '', content: '', order_index: 0 });
+  const [htmlFile, setHtmlFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   
   const [questionForm, setQuestionForm] = useState<{
     statement: string,
@@ -112,6 +116,7 @@ const AdminLearningQuestionsPage = () => {
 
   // --- THEORY HANDLERS ---
   const openTheoryModal = (item?: any) => {
+    setHtmlFile(null);
     if (item) {
       setEditingId(item.id);
       setTheoryForm({ title: item.title, content: item.content, order_index: item.order_index });
@@ -124,17 +129,36 @@ const AdminLearningQuestionsPage = () => {
 
   const handleSaveTheory = async (e: React.FormEvent) => {
     e.preventDefault();
-    const theory = {
-      id: editingId || crypto.randomUUID(),
-      sessionId,
-      discipline_id: disciplineId,
-      title: theoryForm.title,
-      content: theoryForm.content,
-      orderIndex: theoryForm.order_index,
-    };
-    await saveLearningSection(theory);
-    setIsTheoryModalOpen(false);
-    fetchContent();
+    if (!htmlFile && !theoryForm.content) {
+      alert("Por favor, faça o upload de um ficheiro HTML.");
+      return;
+    }
+
+    setIsUploading(true);
+    let finalContent = theoryForm.content;
+
+    try {
+      if (htmlFile) {
+         finalContent = await uploadTheoryHtml(htmlFile);
+      }
+
+      const theory = {
+        id: editingId || crypto.randomUUID(),
+        sessionId,
+        discipline_id: disciplineId,
+        title: theoryForm.title,
+        content: finalContent,
+        orderIndex: theoryForm.order_index,
+      };
+      await saveLearningSection(theory);
+      setIsTheoryModalOpen(false);
+      fetchContent();
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao salvar teoria. Tente novamente.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // --- QUESTION HANDLERS ---
@@ -288,10 +312,17 @@ const AdminLearningQuestionsPage = () => {
                 
                 <div className="flex-1 min-w-0">
                    {item.type === 'theory' ? (
-                      <div className="space-y-2">
+                       <div className="space-y-4">
                          <h3 className="font-black text-gray-800 text-base uppercase tracking-tighter italic leading-none">{item.title}</h3>
-                         <div className="bg-white/40 backdrop-blur-sm p-4 rounded-2xl border border-white/60 text-gray-600 prose prose-xs max-w-none line-clamp-3 italic">
-                             <RichTextRenderer content={item.content} />
+                         <div className="bg-white/40 backdrop-blur-sm p-4 rounded-2xl border border-white/60 text-gray-600 w-full overflow-hidden">
+                             {item.content && (item.content.startsWith('http') || item.content.endsWith('.html')) ? (
+                               <div className="h-[200px] rounded-xl overflow-hidden relative">
+                                  <div className="absolute inset-0 bg-transparent z-10 pointer-events-none shadow-[inset_0_0_20px_rgba(0,0,0,0.05)]"></div>
+                                  <VisualizadorTeoria url={item.content} previewMode={true} />
+                               </div>
+                             ) : (
+                               <span className="text-xs italic text-violet-400 font-medium">Link HTML não encontrado.</span>
+                             )}
                          </div>
                       </div>
                    ) : (
@@ -346,19 +377,30 @@ const AdminLearningQuestionsPage = () => {
                          />
                     </div>
                     
-                    <LiveInput 
-                       label="Conteúdo da Teoria"
-                       required
-                       value={theoryForm.content}
-                       onChange={v => setTheoryForm({...theoryForm, content: v})}
-                       height="h-[400px]"
-                       placeholder="# Use Markdown e LaTeX..."
-                    />
+                    <div className="space-y-1.5">
+                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Ficheiro HTML (Teoria Interativa)</label>
+                       <input 
+                           type="file" 
+                           accept=".html"
+                           onChange={(e) => setHtmlFile(e.target.files?.[0] || null)}
+                           className="w-full p-3.5 bg-gray-50 border-2 border-transparent focus:border-violet-500 rounded-xl outline-none font-medium text-gray-600 transition-all shadow-inner" 
+                        />
+                        {theoryForm.content && !htmlFile && (
+                          <div className="text-xs text-violet-500 mt-2 p-2 bg-violet-50 rounded-lg border border-violet-100 italic">
+                             Um ficheiro já está associado ({theoryForm.content.split('/').pop()?.substring(0, 20)}...). 
+                             <br />Envie um novo para substituir.
+                          </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="flex gap-4 pt-6 mt-auto">
-                   <button type="submit" className="flex-1 py-4 bg-violet-600 text-white rounded-xl font-black text-base shadow-xl shadow-violet-500/20 hover:bg-violet-700 transition-all active:scale-[0.98] uppercase tracking-tighter">
-                      {editingId ? 'Atualizar Conhecimento' : 'Imortalizar Teoria'}
+                   <button 
+                      type="submit" 
+                      disabled={isUploading}
+                      className="flex-1 py-4 bg-violet-600 text-white rounded-xl font-black text-base shadow-xl shadow-violet-500/20 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98] uppercase tracking-tighter"
+                   >
+                      {isUploading ? 'Transferindo ficheiro...' : (editingId ? 'Atualizar Conhecimento' : 'Imortalizar Teoria')}
                    </button>
                 </div>
             </form>

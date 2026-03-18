@@ -13,6 +13,7 @@ import clsx from 'clsx';
 // @ts-ignore
 import { useReward } from 'react-rewards';
 import RichTextRenderer from '../components/RichTextRenderer';
+import VisualizadorTeoria from '../components/VisualizadorTeoria';
 
 // Definir tipos para os passos da aula
 type StepType = 'theory' | 'question';
@@ -290,15 +291,16 @@ const PracticeQuizPage = () => {
       <div className="flex-1 px-4 md:px-8 py-6 md:py-8 overflow-y-auto custom-scrollbar">
         {isTheory ? (
           // RENDERIZAÇÃO DE TEORIA
-          <div className="space-y-6 animate-in fade-in slide-in-from-right duration-300 pb-20">
+          <div className="space-y-6 animate-in fade-in slide-in-from-right duration-300 pb-20 mt-4 md:mt-2">
              <div className="flex items-center gap-2 text-primary font-black uppercase text-[10px] md:text-xs tracking-widest mb-2 md:mb-4 bg-primary/5 w-fit px-3 py-1 rounded-full">
                 <BookOpen size={14} className="md:w-4 md:h-4" /> Material Teórico
              </div>
-             <h2 className="text-2xl md:text-3xl font-black text-gray-800 leading-tight">{currentStep.data.title}</h2>
-             <div className="w-full overflow-x-auto pb-6 px-6"> {/* Container de Scroll da Teoria */}
-               <div className="prose prose-base md:prose-lg prose-slate text-gray-700 leading-relaxed max-w-none min-w-0">
-                  <RichTextRenderer content={currentStep.data.content} />
-               </div>
+             
+             <div className="w-full h-full pb-6 px-1 md:px-6"> 
+               {currentStep.data.title && currentStep.data.title !== "Teoria" && (
+                   <h2 className="text-2xl md:text-3xl font-black text-gray-800 leading-tight mb-4">{currentStep.data.title}</h2>
+               )}
+               <VisualizadorTeoria url={currentStep.data.content} />
              </div>
           </div>
         ) : (

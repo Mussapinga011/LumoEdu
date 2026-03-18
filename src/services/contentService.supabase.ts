@@ -246,6 +246,36 @@ export const deleteLearningSection = async (id: string) => {
 };
 
 /**
+ * Upload de ficheiro HTML de Teoria
+ */
+export const uploadTheoryHtml = async (file: File): Promise<string> => {
+  const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.html`;
+
+  // Ler o ficheiro como texto e re-criar como Blob com Content-Type explícito
+  const text = await file.text();
+  const blob = new Blob([text], { type: 'text/html' });
+
+  const { error: uploadError } = await supabase.storage
+    .from('materiais_estudo')
+    .upload(fileName, blob, {
+      upsert: true,
+      contentType: 'text/html',
+      cacheControl: '3600',
+    });
+
+  if (uploadError) {
+    console.error('Erro no upload HTML:', uploadError);
+    throw uploadError;
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from('materiais_estudo')
+    .getPublicUrl(fileName);
+
+  return publicUrlData.publicUrl;
+};
+
+/**
  * Learning Questions CRUD
  */
 export const getLearningQuestionsBySession = async (sessionId: string) => {

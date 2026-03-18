@@ -39,7 +39,7 @@ interface MemberWithDetails {
   joinedAt: string;
   displayName: string;
   photoURL?: string;
-  email: string;
+  email?: string;
 }
 
 const AdminGroupsPage = () => {

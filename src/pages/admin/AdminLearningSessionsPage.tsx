@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getSessionsBySection, saveSession, deleteSession, getSyllabusTopicsByDiscipline } from '../../services/practiceService.supabase';
-import { Plus, Edit2, Trash2, ArrowLeft, Layout, X, PlayCircle, BookText } from 'lucide-react';
+import { Plus, Edit2, Trash2, ArrowLeft, Layout, X, PlayCircle, BookText, ChevronUp, ChevronDown } from 'lucide-react';
 
 const AdminLearningSessionsPage = () => {
   const { disciplineId, sectionId } = useParams<{ disciplineId: string, sectionId: string }>();
@@ -33,11 +33,41 @@ const AdminLearningSessionsPage = () => {
     setLoading(true);
     try {
       const data = await getSessionsBySection(disciplineId!, sectionId!);
-      setSessions(data || []);
+      // Garantir ordenação consistente se o banco retornar bagunçado ( backup filter)
+      const sorted = (data || []).sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0));
+      setSessions(sorted);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
+    const newSessions = [...sessions];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+    if (targetIndex < 0 || targetIndex >= newSessions.length) return;
+
+    // Trocar as posições no array local
+    const temp = newSessions[index];
+    newSessions[index] = newSessions[targetIndex];
+    newSessions[targetIndex] = temp;
+
+    // Atualizar order_index de todos para garantir integridade matemática (sem buracos)
+    const updated = newSessions.map((s, i) => ({
+      ...s,
+      order_index: i
+    }));
+
+    setSessions(updated); // Feedback instantâneo na UI
+
+    try {
+      // Salvar todas as sessões afetadas
+      await Promise.all(updated.map(s => saveSession(s)));
+    } catch (err) {
+      console.error('Erro ao salvar nova ordem:', err);
+      fetchSessions(); // Reverter em caso de erro no servidor
     }
   };
 
@@ -122,8 +152,29 @@ const AdminLearningSessionsPage = () => {
         ) : (
           sessions.map((s, idx) => (
             <div key={s.id} className="group bg-white p-4 rounded-2xl border border-gray-100 hover:border-cyan-200 transition-all hover:shadow-lg flex items-center justify-between">
+              
+              {/* Controles de Ordenação */}
+              <div className="flex flex-col gap-0.5 mr-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleMove(idx, 'up'); }}
+                  disabled={idx === 0}
+                  className="p-0.5 text-gray-300 hover:text-cyan-600 disabled:opacity-0 transition-colors"
+                  title="Mover para cima"
+                >
+                  <ChevronUp size={18} strokeWidth={3} />
+                </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleMove(idx, 'down'); }}
+                  disabled={idx === sessions.length - 1}
+                  className="p-0.5 text-gray-300 hover:text-cyan-600 disabled:opacity-0 transition-colors"
+                  title="Mover para baixo"
+                >
+                  <ChevronDown size={18} strokeWidth={3} />
+                </button>
+              </div>
+
               <div className="flex items-center gap-4 flex-1 cursor-pointer" onClick={() => navigate(`/admin/learning/${disciplineId}/sections/${sectionId}/sessions/${s.id}/questions`)}>
-                <div className="w-10 h-10 bg-gradient-to-br from-cyan-50 to-blue-50 text-cyan-600 rounded-xl flex items-center justify-center font-black text-sm border border-cyan-100 shadow-sm">
+                <div className="w-10 h-10 bg-gradient-to-br from-cyan-50 to-blue-50 text-cyan-600 rounded-xl flex items-center justify-center font-black text-sm border border-cyan-100 shadow-sm shrink-0">
                    {idx + 1}
                 </div>
                 <div className="flex-1">

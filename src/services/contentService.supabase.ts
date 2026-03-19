@@ -241,8 +241,54 @@ export const saveLearningSection = async (section: any) => {
 };
 
 export const deleteLearningSection = async (id: string) => {
+  // 1. Buscar a seção para verificar se há um ficheiro no Storage associado
+  const { data: section } = await supabase
+    .from('learning_contents')
+    .select('content')
+    .eq('id', id)
+    .single();
+
+  if (section?.content && (section.content.includes('supabase.co/storage') || section.content.includes('materiais_estudo'))) {
+    // 2. Extrair o nome do ficheiro da URL
+    // Padrão: .../storage/v1/object/public/materiais_estudo/[nome_arquivo.html]
+    try {
+      const parts = section.content.split('/');
+      const fileName = parts[parts.length - 1];
+      
+      if (fileName && fileName.endsWith('.html')) {
+        await supabase.storage
+          .from('materiais_estudo')
+          .remove([fileName]);
+      }
+    } catch (err) {
+      console.warn('Não foi possível remover o ficheiro do Storage, talvez já tenha sido removido:', err);
+    }
+  }
+
+  // 3. Deletar o registro no Banco de Dados
   const { error } = await supabase.from('learning_contents').delete().eq('id', id);
   if (error) throw error;
+};
+
+/**
+ * Remove um ficheiro do Storage pela URL (Helper)
+ */
+export const deleteStorageFileByUrl = async (url: string) => {
+  if (!url || !(url.includes('supabase.co/storage') || url.includes('materiais_estudo'))) return;
+  
+  try {
+    const parts = url.split('/');
+    const fileName = parts[parts.length - 1];
+    
+    if (fileName && fileName.endsWith('.html')) {
+      const { error } = await supabase.storage
+        .from('materiais_estudo')
+        .remove([fileName]);
+      if (error) console.error('Erro ao deletar ficheiro órfão:', error);
+    }
+  } catch (err) {
+    console.error('Erro ao processar limpeza de ficheiro Storage:', err);
+  }
 };
 
 /**

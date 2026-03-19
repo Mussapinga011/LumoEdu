@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   getLearningQuestionsBySession, saveLearningQuestion, deleteLearningQuestion,
   getLearningSectionsBySession, saveLearningSection, deleteLearningSection,
-  uploadTheoryHtml
+  uploadTheoryHtml, deleteStorageFileByUrl
 } from '../../services/contentService.supabase';
 import { Plus, Edit2, Trash2, ArrowLeft, X, BookOpen, HelpCircle, Sparkles } from 'lucide-react';
 import clsx from 'clsx';
@@ -139,6 +139,10 @@ const AdminLearningQuestionsPage = () => {
 
     try {
       if (htmlFile) {
+         // Se houver um novo arquivo e já existia um antigo, limpar o Storage
+         if (theoryForm.content && editingId) {
+            await deleteStorageFileByUrl(theoryForm.content);
+         }
          finalContent = await uploadTheoryHtml(htmlFile);
       }
 

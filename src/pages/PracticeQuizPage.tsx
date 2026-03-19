@@ -6,10 +6,12 @@ import { getQuestionsBySession, saveSessionProgress, getUserProgressByDiscipline
 import { getLearningSectionsBySession } from '../services/contentService.supabase'; // Importe a função de teoria
 import { checkAndUpdateMilestones } from '../services/milestoneService';
 import { AcademicTrackingService } from '../services/academicTrackingService';
+import { useTrackingStore } from '../stores/useTrackingStore';
 import { getSyllabusCoverage } from '../services/syllabusService';
 import { PracticeQuestion } from '../types/practice';
 import { X, CheckCircle2, AlertCircle, BookOpen } from 'lucide-react';
 import clsx from 'clsx';
+import { supabase } from '../lib/supabase';
 // @ts-ignore
 import { useReward } from 'react-rewards';
 import RichTextRenderer from '../components/RichTextRenderer';
@@ -42,6 +44,7 @@ const PracticeQuizPage = () => {
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isFinished, setIsFinished] = useState(false);
+  const [sessionTopicId, setSessionTopicId] = useState<string | null>(null);
 
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [startTime] = useState(Date.now());
@@ -57,11 +60,16 @@ const PracticeQuizPage = () => {
     const initPage = async () => {
       setLoading(true);
       try {
-        const [qData, tData, pData] = await Promise.all([
+        const [qData, tData, pData, sessionMetaData] = await Promise.all([
           getQuestionsBySession(sessionId!),               // Questões
           getLearningSectionsBySession(sessionId!),        // Teoria
-          user ? getUserProgressByDiscipline(user.id, disciplineId!) : Promise.resolve({} as Record<string, any>)
+          user ? getUserProgressByDiscipline(user.id, disciplineId!) : Promise.resolve({} as Record<string, any>),
+          supabase.from('learning_steps').select('topic_id').eq('id', sessionId!).single() // Obter topic_id vinculado
         ]);
+        
+        if (sessionMetaData.data?.topic_id) {
+           setSessionTopicId(sessionMetaData.data.topic_id);
+        }
         
         // Mapear e unificar passos
         const theorySteps: Step[] = (tData || []).map((t: any) => ({
@@ -134,6 +142,7 @@ const PracticeQuizPage = () => {
   const handleFinish = async () => {
     setIsFinished(true);
     if (!user || !sessionId || !disciplineId) return;
+    const { clearCache } = useTrackingStore.getState();
 
     const totalQuestions = steps.filter(s => s.type === 'question').length;
     
@@ -174,16 +183,20 @@ const PracticeQuizPage = () => {
        syllabusCoverage: coverageMap
     });
     
-    // 4. Registrar Sessão no Tracking Acadêmico
+    // 4. Registrar Sessão no Tracking Acadêmico (LumoIA)
+    // Se a sessão tem um topic_id (edital), nós avisamos a LumoIA que o aluno estudou este tópico
+    const topicsArray = sessionTopicId ? [sessionTopicId] : [];
+    
     await AcademicTrackingService.recordStudySession(user.id, disciplineId, {
       score: finalScore,
       questionsAnswered: totalQuestions,
       correctAnswers: correctAnswers,
       timeSpent: Math.round((Date.now() - startTime) / 60000) || 1, // Mínimo 1 min
-      topicsStudied: steps
-        .filter(s => s.type === 'question')
-        .map(s => (s.data as PracticeQuestion).id) // Passando IDs das questões por enquanto, service pode tratar
+      topicsStudied: topicsArray
     });
+    
+    // Limpar cache do store para que a Dashboard recarregue com os novos dados
+    clearCache();
   };
 
   if (loading) return (

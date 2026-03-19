@@ -82,10 +82,10 @@ const AIInsightsPanel = ({ userId }: AIInsightsPanelProps) => {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-3xl p-8 border border-indigo-100">
+      <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-3xl p-8 border border-indigo-100">
         <div className="flex items-center justify-center gap-4">
           <div className="animate-spin rounded-full h-8 w-8 border-4 border-indigo-600 border-t-transparent"></div>
-          <p className="text-indigo-700 font-bold">🧠 Analisando seus dados com IA...</p>
+          <p className="text-indigo-700 font-bold">✨ Analisando com LumoIA...</p>
         </div>
       </div>
     );
@@ -96,7 +96,7 @@ const AIInsightsPanel = ({ userId }: AIInsightsPanelProps) => {
       <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl p-8 border border-gray-200">
         <div className="text-center">
           <Brain className="mx-auto text-gray-300 mb-4" size={48} />
-          <h3 className="text-xl font-bold text-gray-700 mb-2">Professor IA em Treinamento</h3>
+          <h3 className="text-xl font-bold text-gray-700 mb-2">LumoIA em Treinamento</h3>
           <p className="text-gray-500">
             Continue estudando! Preciso de pelo menos 5 sessões de estudo para gerar previsões precisas.
           </p>
@@ -135,19 +135,19 @@ const AIInsightsPanel = ({ userId }: AIInsightsPanelProps) => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl">
+          <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shrink-0">
             <Brain className="text-white" size={28} />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-gray-800">Professor IA</h2>
-            <p className="text-sm text-gray-500">Insights preditivos personalizados</p>
+            <h2 className="text-2xl font-black text-gray-800">LumoIA</h2>
+            <p className="text-sm text-gray-500">Insights preditivos da sua plataforma</p>
           </div>
         </div>
         
         {/* Seletor de período */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           {[30, 60, 90].map(days => (
             <button
               key={days}
@@ -166,13 +166,13 @@ const AIInsightsPanel = ({ userId }: AIInsightsPanelProps) => {
       </div>
 
       {/* Botão: Otimizar Cronograma */}
-      <div className="flex justify-center">
+      <div className="flex justify-center w-full">
         <button
           onClick={() => setShowScheduleModal(true)}
-          className="group px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-black shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all flex items-center gap-3"
+          className="group px-4 md:px-8 py-3 md:py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-black shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all flex items-center justify-center gap-2 md:gap-3 w-full sm:w-auto text-sm md:text-base"
         >
           <Calendar size={24} />
-          Gerar Cronograma Otimizado com IA
+          Gerar Cronograma com LumoIA
           <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
         </button>
       </div>
@@ -182,7 +182,7 @@ const AIInsightsPanel = ({ userId }: AIInsightsPanelProps) => {
         <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-3xl p-6 border border-purple-100">
           <div className="flex items-center gap-2 mb-6">
             <Brain className="text-purple-600" size={24} />
-            <h3 className="text-xl font-black text-gray-800">Recomendações Inteligentes</h3>
+            <h3 className="text-xl font-black text-gray-800">Recomendações LumoIA</h3>
             <span className="text-xs bg-purple-200 text-purple-700 px-2 py-1 rounded-full font-bold">
               {recommendations.length} ações
             </span>
@@ -226,7 +226,7 @@ const AIInsightsPanel = ({ userId }: AIInsightsPanelProps) => {
 
           <div className="mt-4 p-3 bg-white/60 rounded-xl">
             <p className="text-xs text-gray-600 text-center">
-              🧠 <strong>IA Multi-Algoritmo:</strong> Combinando 6+ algoritmos para maximizar seu aprendizado
+              ✨ <strong>LumoIA:</strong> Combinando 6+ algoritmos para maximizar seu aprendizado
             </p>
           </div>
         </div>

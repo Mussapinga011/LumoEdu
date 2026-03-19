@@ -474,7 +474,9 @@ export class AcademicTrackingService {
       minutesToStudy: baseTime,
       topicsToReview: profile?.weakTopics.slice(0, 2) || [],
       isCompleted: false,
-      completionRate: 0
+      completionRate: 0,
+      questionsSolved: 0,
+      minutesStudied: 0
     };
     
     const { data, error } = await supabase
@@ -507,8 +509,9 @@ export class AcademicTrackingService {
     const goal = await AcademicTrackingService.getDailyGoal(userId);
     if (!goal) return;
     
-    const newQuestionsSolved = (goal.isCompleted ? 0 : update.questionsSolved) || 0;
-    const newMinutesStudied = (goal.isCompleted ? 0 : update.minutesStudied) || 0;
+    // ACUMULAR: somar ao que já existe no dia, não sobrescrever
+    const newQuestionsSolved = (goal.questionsSolved || 0) + (update.questionsSolved || 0);
+    const newMinutesStudied = (goal.minutesStudied || 0) + (update.minutesStudied || 0);
     
     const completionRate = Math.min(100, Math.round(
       ((newQuestionsSolved / goal.questionsToSolve) * 50) +
@@ -876,7 +879,9 @@ export class AcademicTrackingService {
       minutesToStudy: data.minutes_to_study,
       topicsToReview: data.topics_to_review || [],
       isCompleted: data.is_completed,
-      completionRate: data.completion_rate
+      completionRate: data.completion_rate || 0,
+      questionsSolved: data.questions_solved || 0,
+      minutesStudied: data.minutes_studied || 0
     };
   }
   

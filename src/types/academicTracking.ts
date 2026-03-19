@@ -335,4 +335,7 @@ export interface DailyGoal {
   topicsToReview: string[];
   isCompleted: boolean;
   completionRate: number; // 0-100
+  // Progresso actual do dia
+  questionsSolved: number;
+  minutesStudied: number;
 }

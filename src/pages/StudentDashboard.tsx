@@ -52,7 +52,7 @@ const StudentDashboard = () => {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="animate-pulse flex flex-col items-center gap-4">
           <div className="h-12 w-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-400 font-medium">Analisando seu progresso...</p>
+          <p className="text-gray-400 font-medium">LumoIA a analisar o seu progresso...</p>
         </div>
       </div>
     );
@@ -79,17 +79,17 @@ const StudentDashboard = () => {
     : null;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-20">
+    <div className="w-full max-w-[100vw] overflow-x-hidden mx-auto space-y-6 md:space-y-8 pb-20 px-2 md:px-0">
       
       {/* HEADER: Meta e Progresso Geral */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden">
+      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-3xl p-5 md:p-8 text-white shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-32 translate-x-32 blur-3xl" />
         
         <div className="relative z-10">
-          <div className="flex items-start justify-between mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
             <div>
-              <h1 className="text-3xl font-black mb-2">Seu Caminho para {profile.targetUniversity}</h1>
-              <p className="text-indigo-100 font-medium">{profile.targetCourse} • Turma {profile.targetYear}</p>
+              <h1 className="text-2xl md:text-3xl font-black mb-2">Seu Caminho para {profile.targetUniversity}</h1>
+              <p className="text-indigo-100 font-medium text-sm md:text-base">{profile.targetCourse} • Turma {profile.targetYear}</p>
             </div>
             {daysUntilExam && (
               <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-2xl border border-white/30">
@@ -100,7 +100,7 @@ const StudentDashboard = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             <StatCard
               icon={<Target size={24} />}
               label="Prontidão"
@@ -151,13 +151,13 @@ const StudentDashboard = () => {
           <div className="space-y-3">
             <GoalProgress
               label="Questões Resolvidas"
-              current={0}
+              current={dailyGoal.questionsSolved ?? 0}
               target={dailyGoal.questionsToSolve}
               icon={<BookOpen size={16} />}
             />
             <GoalProgress
               label="Tempo de Estudo"
-              current={0}
+              current={dailyGoal.minutesStudied ?? 0}
               target={dailyGoal.minutesToStudy}
               unit="min"
               icon={<Clock size={16} />}
